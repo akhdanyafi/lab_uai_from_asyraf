@@ -1,0 +1,170 @@
+'use server';
+
+import { db } from '@/db';
+import { itemLoans, items } from '@/db/schema';
+import { eq, and, desc, or } from 'drizzle-orm';
+import { revalidatePath } from 'next/cache';
+
+// Get available items for borrowing
+export async function getAvailableItems() {
+    const { itemCategories, rooms } = await import('@/db/schema');
+
+    const results = await db
+        .select({
+            item: items,
+            category: itemCategories,
+            room: rooms,
+        })
+        .from(items)
+        .leftJoin(itemCategories, eq(items.categoryId, itemCategories.id))
+        .leftJoin(rooms, eq(items.roomId, rooms.id))
+        .where(eq(items.status, 'Tersedia'))
+        .orderBy(desc(items.id));
+
+    return results.map(row => ({
+        ...row.item,
+        category: row.category!,
+        room: row.room!,
+    }));
+}
+
+// Create loan request
+export async function createLoanRequest(data: {
+    studentId: number;
+    itemId: number;
+    returnPlanDate: Date;
+}) {
+    await db.insert(itemLoans).values({
+        studentId: data.studentId,
+        itemId: data.itemId,
+        returnPlanDate: data.returnPlanDate,
+        status: 'Pending',
+    });
+    revalidatePath('/student/loans');
+    revalidatePath('/admin/loans');
+}
+
+// Get loan requests (for admin)
+export async function getLoanRequests(status?: string) {
+    const { users, items: itemsTable, itemCategories, rooms } = await import('@/db/schema');
+
+    let query = db
+        .select({
+            loan: itemLoans,
+            student: users,
+            item: itemsTable,
+            category: itemCategories,
+            room: rooms,
+        })
+        .from(itemLoans)
+        .leftJoin(users, eq(itemLoans.studentId, users.id))
+        .leftJoin(itemsTable, eq(itemLoans.itemId, itemsTable.id))
+        .leftJoin(itemCategories, eq(itemsTable.categoryId, itemCategories.id))
+        .leftJoin(rooms, eq(itemsTable.roomId, rooms.id))
+        .orderBy(desc(itemLoans.requestDate));
+
+    if (status) {
+        query = query.where(eq(itemLoans.status, status as any)) as any;
+    }
+
+    const results = await query;
+
+    return results.map(row => ({
+        ...row.loan,
+        student: row.student!,
+        item: {
+            ...row.item!,
+            category: row.category!,
+            room: row.room!,
+        },
+    }));
+}
+
+// Update loan status (admin approve/reject)
+export async function updateLoanStatus(
+    loanId: number,
+    status: 'Disetujui' | 'Ditolak',
+    validatorId: number
+) {
+    const loanResult = await db
+        .select()
+        .from(itemLoans)
+        .where(eq(itemLoans.id, loanId))
+        .limit(1);
+
+    const loan = loanResult[0];
+    if (!loan) throw new Error('Loan not found');
+
+    // Update loan status
+    await db.update(itemLoans)
+        .set({ status, validatorId })
+        .where(eq(itemLoans.id, loanId));
+
+    // If approved, update item status to "Dipinjam"
+    if (status === 'Disetujui') {
+        await db.update(items)
+            .set({ status: 'Dipinjam' })
+            .where(eq(items.id, loan.itemId));
+    }
+
+    revalidatePath('/admin/loans');
+    revalidatePath('/student/loans');
+    revalidatePath('/admin/items');
+}
+
+// Get user's loans
+export async function getMyLoans(userId: number) {
+    const { items: itemsTable, itemCategories, rooms } = await import('@/db/schema');
+
+    const results = await db
+        .select({
+            loan: itemLoans,
+            item: itemsTable,
+            category: itemCategories,
+            room: rooms,
+        })
+        .from(itemLoans)
+        .leftJoin(itemsTable, eq(itemLoans.itemId, itemsTable.id))
+        .leftJoin(itemCategories, eq(itemsTable.categoryId, itemCategories.id))
+        .leftJoin(rooms, eq(itemsTable.roomId, rooms.id))
+        .where(eq(itemLoans.studentId, userId))
+        .orderBy(desc(itemLoans.requestDate));
+
+    return results.map(row => ({
+        ...row.loan,
+        item: {
+            ...row.item!,
+            category: row.category!,
+            room: row.room!,
+        },
+    }));
+}
+
+// Mark item as returned
+export async function returnItem(loanId: number) {
+    const loanResult = await db
+        .select()
+        .from(itemLoans)
+        .where(eq(itemLoans.id, loanId))
+        .limit(1);
+
+    const loan = loanResult[0];
+    if (!loan) throw new Error('Loan not found');
+
+    // Update loan status to "Selesai"
+    await db.update(itemLoans)
+        .set({
+            status: 'Selesai',
+            actualReturnDate: new Date(),
+        })
+        .where(eq(itemLoans.id, loanId));
+
+    // Update item status back to "Tersedia"
+    await db.update(items)
+        .set({ status: 'Tersedia' })
+        .where(eq(items.id, loan.itemId));
+
+    revalidatePath('/student/loans');
+    revalidatePath('/admin/loans');
+    revalidatePath('/admin/items');
+}
