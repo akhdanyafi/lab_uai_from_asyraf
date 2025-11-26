@@ -1,13 +1,31 @@
-import { getBookingRequests, updateBookingStatus } from '@/lib/actions/bookings';
+import { getBookingRequests, updateBookingStatus, getAllRooms, getMonthBookings } from '@/lib/actions/bookings';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
-import { MapPin, User, Calendar, CheckCircle, XCircle } from 'lucide-react';
+import { MapPin, User, CheckCircle, XCircle } from 'lucide-react';
+import AdminCalendarView from '@/components/admin/AdminCalendarView';
 
 export default async function AdminBookingsPage() {
     const session = await getSession();
     if (!session) redirect('/login');
 
-    const bookings = await getBookingRequests();
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+
+    const [bookings, rooms, currentMonthBookings, nextMonthBookings, nextNextMonthBookings] = await Promise.all([
+        getBookingRequests(),
+        getAllRooms(),
+        getMonthBookings(currentMonth, currentYear),
+        getMonthBookings((currentMonth + 1) % 12, currentMonth + 1 > 11 ? currentYear + 1 : currentYear),
+        getMonthBookings((currentMonth + 2) % 12, currentMonth + 2 > 11 ? currentYear + 1 : currentYear),
+    ]);
+
+    const calendarBookings = [
+        ...currentMonthBookings,
+        ...nextMonthBookings,
+        ...nextNextMonthBookings
+    ];
+
     const pendingBookings = bookings.filter(b => b.status === 'Pending');
 
     return (
@@ -16,6 +34,8 @@ export default async function AdminBookingsPage() {
                 <h1 className="text-2xl font-bold text-gray-900">Validasi Booking Ruangan</h1>
                 <p className="text-gray-500 text-sm mt-1">Setujui atau tolak permintaan booking ruangan</p>
             </div>
+
+            <AdminCalendarView rooms={rooms} bookings={calendarBookings} />
 
             {/* Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -80,8 +100,8 @@ export default async function AdminBookingsPage() {
                                 </td>
                                 <td className="px-6 py-4">
                                     <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${booking.status === 'Pending' ? 'bg-yellow-50 text-yellow-700' :
-                                            booking.status === 'Disetujui' ? 'bg-green-50 text-green-700' :
-                                                'bg-red-50 text-red-700'
+                                        booking.status === 'Disetujui' ? 'bg-green-50 text-green-700' :
+                                            'bg-red-50 text-red-700'
                                         }`}>
                                         {booking.status}
                                     </span>

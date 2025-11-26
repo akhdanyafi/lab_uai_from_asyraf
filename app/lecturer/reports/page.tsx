@@ -1,8 +1,8 @@
-import { getAcademicDocs } from '@/lib/actions/documents';
+import { getDocuments } from '@/lib/actions/academic';
 import { FileText, Download } from 'lucide-react';
 
 export default async function LecturerReportsPage() {
-    const reports = await getAcademicDocs('Laporan Praktikum');
+    const reports = await getDocuments('Laporan Praktikum') as any[];
 
     return (
         <div>

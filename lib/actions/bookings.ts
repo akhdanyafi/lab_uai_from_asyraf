@@ -112,3 +112,27 @@ export async function getMyBookings(userId: number) {
         room: row.room!,
     }));
 }
+
+// Get bookings for a specific month (for calendar)
+export async function getMonthBookings(month: number, year: number) {
+    const startDate = new Date(year, month, 1);
+    const endDate = new Date(year, month + 1, 0, 23, 59, 59, 999);
+
+    const results = await db
+        .select({
+            booking: roomBookings,
+            room: rooms,
+        })
+        .from(roomBookings)
+        .leftJoin(rooms, eq(roomBookings.roomId, rooms.id))
+        .where(and(
+            eq(roomBookings.status, 'Disetujui'),
+            gte(roomBookings.startTime, startDate),
+            lte(roomBookings.endTime, endDate)
+        ));
+
+    return results.map(row => ({
+        ...row.booking,
+        room: row.room!,
+    }));
+}

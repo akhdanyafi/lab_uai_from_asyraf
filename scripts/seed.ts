@@ -1,5 +1,5 @@
-import { db } from "./db";
-import { roles, users } from "./db/schema";
+import { db } from "../db";
+import { roles, users } from "../db/schema";
 import { eq } from "drizzle-orm";
 
 async function main() {
@@ -29,7 +29,7 @@ async function main() {
         await db.insert(users).values({
             roleId: adminRole.id,
             fullName: "Administrator Lab",
-            identifier: "ADMIN001",
+            identifier: "1",
             email: adminEmail,
             passwordHash: "admin", // Plain text for demo, hash in production
         });
@@ -44,13 +44,26 @@ async function main() {
         await db.insert(users).values({
             roleId: studentRole.id,
             fullName: "Mahasiswa Contoh",
-            identifier: "123456789",
+            identifier: "2",
             email: studentEmail,
             passwordHash: "mahasiswa",
         });
         console.log("Created student user");
     }
+    // Seed Lecturer User
+    const dosenEmail = "dosen@uai.ac.id";
+    const existingDosen = await db.select().from(users).where(eq(users.email, dosenEmail));
 
+    if (existingDosen.length === 0) {
+        await db.insert(users).values({
+            roleId: lecturerRole.id,
+            fullName: "Dosen Contoh",
+            identifier: "3",
+            email: dosenEmail,
+            passwordHash: "dosen", // Plain text for demo, hash in production
+        });
+        console.log("Created lecturer user");
+    }
     console.log("Seeding complete!");
     process.exit(0);
 }

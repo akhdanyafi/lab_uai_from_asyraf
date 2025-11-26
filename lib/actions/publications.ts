@@ -1,30 +1,29 @@
 'use server';
 
 import { db } from '@/db';
-import { studentPublications } from '@/db/schema';
+import { publications } from '@/db/schema';
 import { eq, desc } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 
 export async function createPublication(data: {
-    studentId: number;
+    authorId: number;
     title: string;
     abstract?: string;
     link?: string;
+    filePath?: string;
     publishDate?: Date;
 }) {
-    await db.insert(studentPublications).values(data);
+    await db.insert(publications).values(data);
     revalidatePath('/student/publications');
     revalidatePath('/publications');
 }
 
 export async function getPublications() {
-    return await db.query.studentPublications.findMany({
-        orderBy: [desc(studentPublications.publishDate)],
-    });
+    return await db.select().from(publications).orderBy(desc(publications.publishDate));
 }
 
 export async function deletePublication(id: number) {
-    await db.delete(studentPublications).where(eq(studentPublications.id, id));
+    await db.delete(publications).where(eq(publications.id, id));
     revalidatePath('/student/publications');
     revalidatePath('/publications');
 }

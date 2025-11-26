@@ -3,14 +3,14 @@
 import { cookies } from 'next/headers';
 import { db } from '@/db';
 import { users, roles } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, or } from 'drizzle-orm';
 import { encrypt } from '@/lib/auth';
 
 export async function login(formData: any) {
     const { email, password } = formData;
 
     // Find user
-    const user = await db.select().from(users).where(eq(users.email, email)).limit(1);
+    const user = await db.select().from(users).where(or(eq(users.email, email), eq(users.identifier, email))).limit(1);
 
     if (user.length === 0) {
         throw new Error('User not found');

@@ -13,17 +13,17 @@ export async function getRooms() {
 
 export async function createRoom(data: { name: string; location: string; capacity: number }) {
     await db.insert(rooms).values(data);
-    revalidatePath('/admin/rooms');
+    revalidatePath('/admin/inventory');
 }
 
 export async function updateRoom(id: number, data: { name: string; location: string; capacity: number }) {
     await db.update(rooms).set(data).where(eq(rooms.id, id));
-    revalidatePath('/admin/rooms');
+    revalidatePath('/admin/inventory');
 }
 
 export async function deleteRoom(id: number) {
     await db.delete(rooms).where(eq(rooms.id, id));
-    revalidatePath('/admin/rooms');
+    revalidatePath('/admin/inventory');
 }
 
 // --- Categories ---
@@ -34,17 +34,17 @@ export async function getCategories() {
 
 export async function createCategory(data: { name: string }) {
     await db.insert(itemCategories).values(data);
-    revalidatePath('/admin/categories');
+    revalidatePath('/admin/inventory');
 }
 
 export async function updateCategory(id: number, data: { name: string }) {
     await db.update(itemCategories).set(data).where(eq(itemCategories.id, id));
-    revalidatePath('/admin/categories');
+    revalidatePath('/admin/inventory');
 }
 
 export async function deleteCategory(id: number) {
     await db.delete(itemCategories).where(eq(itemCategories.id, id));
-    revalidatePath('/admin/categories');
+    revalidatePath('/admin/inventory');
 }
 
 // --- Items ---
@@ -77,7 +77,7 @@ export async function createItem(data: {
     status: 'Tersedia' | 'Dipinjam' | 'Maintenance'
 }) {
     await db.insert(items).values(data);
-    revalidatePath('/admin/items');
+    revalidatePath('/admin/inventory');
 }
 
 export async function updateItem(id: number, data: {
@@ -88,10 +88,10 @@ export async function updateItem(id: number, data: {
     status: 'Tersedia' | 'Dipinjam' | 'Maintenance'
 }) {
     await db.update(items).set(data).where(eq(items.id, id));
-    revalidatePath('/admin/items');
+    revalidatePath('/admin/inventory');
 }
 
 export async function deleteItem(id: number) {
     await db.delete(items).where(eq(items.id, id));
-    revalidatePath('/admin/items');
+    revalidatePath('/admin/inventory');
 }

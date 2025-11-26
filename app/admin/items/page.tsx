@@ -1,6 +1,6 @@
 import { getItems, createItem, deleteItem, getRooms, getCategories } from '@/lib/actions/inventory';
 import { Plus, Trash2, Box, QrCode, MapPin, Tag } from 'lucide-react';
-import QRCodeDisplay from '@/components/QRCodeDisplay';
+import QRCodeDisplay from '@/components/shared/QRCodeDisplay';
 
 export default async function ItemsPage() {
     const [items, rooms, categories] = await Promise.all([
@@ -120,8 +120,8 @@ export default async function ItemsPage() {
                                 </td>
                                 <td className="px-6 py-4">
                                     <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${item.status === 'Tersedia' ? 'bg-green-50 text-green-700' :
-                                            item.status === 'Dipinjam' ? 'bg-orange-50 text-orange-700' :
-                                                'bg-gray-50 text-gray-700'
+                                        item.status === 'Dipinjam' ? 'bg-orange-50 text-orange-700' :
+                                            'bg-gray-50 text-gray-700'
                                         }`}>
                                         {item.status}
                                     </span>

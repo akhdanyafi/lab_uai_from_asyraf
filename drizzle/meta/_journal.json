@@ -8,6 +8,13 @@
       "when": 1763819196432,
       "tag": "0000_harsh_purple_man",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1764192016489,
+      "tag": "0001_rare_killraven",
+      "breakpoints": true
     }
   ]
 }

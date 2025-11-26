@@ -96,8 +96,8 @@ export default async function AdminDashboard() {
                                     <p className="text-xs text-gray-500">{loan.item.name}</p>
                                 </div>
                                 <span className={`text-xs px-2 py-1 rounded ${loan.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' :
-                                        loan.status === 'Disetujui' ? 'bg-green-100 text-green-700' :
-                                            'bg-red-100 text-red-700'
+                                    loan.status === 'Disetujui' ? 'bg-green-100 text-green-700' :
+                                        'bg-red-100 text-red-700'
                                     }`}>
                                     {loan.status}
                                 </span>
@@ -122,13 +122,13 @@ export default async function AdminDashboard() {
                             <div key={booking.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                                 <div className="flex-1">
                                     <p className="font-medium text-gray-900 text-sm">{booking.user.fullName}</p>
-                                    <p className="text-xs text-gray-500">
+                                    <p className="text-xs text-gray-500" suppressHydrationWarning>
                                         {booking.room.name} • {new Date(booking.startTime).toLocaleDateString('id-ID')}
                                     </p>
                                 </div>
                                 <span className={`text-xs px-2 py-1 rounded ${booking.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' :
-                                        booking.status === 'Disetujui' ? 'bg-green-100 text-green-700' :
-                                            'bg-red-100 text-red-700'
+                                    booking.status === 'Disetujui' ? 'bg-green-100 text-green-700' :
+                                        'bg-red-100 text-red-700'
                                     }`}>
                                     {booking.status}
                                 </span>

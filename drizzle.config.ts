@@ -7,10 +7,10 @@ export default defineConfig({
     out: './drizzle',
     dialect: 'mysql',
     dbCredentials: {
-        host: 'localhost',
-        user: 'root',
-        password: '',
-        database: 'be-labuai',
-        port: 3306,
+        host: process.env.DB_HOST || 'localhost',
+        user: process.env.DB_USER || 'root',
+        password: process.env.DB_PASSWORD,
+        database: process.env.DB_NAME || 'be-labuai',
+        port: parseInt(process.env.DB_PORT || '3306'),
     },
 });

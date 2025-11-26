@@ -1,16 +1,31 @@
-import { getAllRooms, getMyBookings, createRoomBooking } from '@/lib/actions/bookings';
+import { getAllRooms, getMyBookings, getMonthBookings } from '@/lib/actions/bookings';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
-import { CalendarDays, MapPin, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { MapPin, CheckCircle, XCircle, Clock } from 'lucide-react';
+import RoomBookingClient from '@/components/rooms/RoomBookingClient';
 
 export default async function LecturerRoomsPage() {
     const session = await getSession();
     if (!session) redirect('/login');
 
-    const [rooms, bookings] = await Promise.all([
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+
+    // Fetch bookings for current month and next 2 months
+    const [rooms, myBookings, currentMonthBookings, nextMonthBookings, nextNextMonthBookings] = await Promise.all([
         getAllRooms(),
-        getMyBookings(session.user.id)
+        getMyBookings(session.user.id),
+        getMonthBookings(currentMonth, currentYear),
+        getMonthBookings((currentMonth + 1) % 12, currentMonth + 1 > 11 ? currentYear + 1 : currentYear),
+        getMonthBookings((currentMonth + 2) % 12, currentMonth + 2 > 11 ? currentYear + 1 : currentYear),
     ]);
+
+    const calendarBookings = [
+        ...currentMonthBookings,
+        ...nextMonthBookings,
+        ...nextNextMonthBookings
+    ];
 
     const getStatusBadge = (status: string) => {
         const styles = {
@@ -37,78 +52,14 @@ export default async function LecturerRoomsPage() {
                 <p className="text-gray-500 text-sm mt-1">Ajukan pemesanan ruangan laboratorium</p>
             </div>
 
-            {/* Booking Form */}
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-8">
-                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                    <CalendarDays className="w-5 h-5 text-primary" />
-                    Buat Booking Baru
-                </h2>
-                <form action={async (formData) => {
-                    'use server';
-                    const roomId = parseInt(formData.get('roomId') as string);
-                    const date = formData.get('date') as string;
-                    const startTime = formData.get('startTime') as string;
-                    const endTime = formData.get('endTime') as string;
-                    const purpose = formData.get('purpose') as string;
-
-                    const startDateTime = new Date(`${date}T${startTime}`);
-                    const endDateTime = new Date(`${date}T${endTime}`);
-
-                    await createRoomBooking({
-                        userId: session!.user.id,
-                        roomId,
-                        startTime: startDateTime,
-                        endTime: endDateTime,
-                        purpose,
-                    });
-                }} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Ruangan</label>
-                        <select name="roomId" required className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20">
-                            <option value="">Pilih Ruangan</option>
-                            {rooms.map(room => (
-                                <option key={room.id} value={room.id}>{room.name} - {room.location}</option>
-                            ))}
-                        </select>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Tanggal</label>
-                        <input
-                            type="date"
-                            name="date"
-                            required
-                            min={new Date().toISOString().split('T')[0]}
-                            className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Waktu Mulai</label>
-                        <input type="time" name="startTime" required className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20" />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Waktu Selesai</label>
-                        <input type="time" name="endTime" required className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20" />
-                    </div>
-                    <div className="md:col-span-2">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Keperluan</label>
-                        <textarea
-                            name="purpose"
-                            required
-                            rows={3}
-                            placeholder="Jelaskan keperluan booking ruangan"
-                            className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20"
-                        />
-                    </div>
-                    <div className="md:col-span-2">
-                        <button type="submit" className="bg-primary text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium">
-                            Ajukan Booking
-                        </button>
-                    </div>
-                </form>
-            </div>
+            <RoomBookingClient
+                rooms={rooms}
+                calendarBookings={calendarBookings}
+                userId={session.user.id}
+            />
 
             {/* My Bookings */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mt-8">
                 <div className="px-6 py-4 border-b border-gray-100">
                     <h3 className="font-semibold text-gray-900">Booking Saya</h3>
                 </div>
@@ -122,7 +73,7 @@ export default async function LecturerRoomsPage() {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
-                        {bookings.map((booking) => (
+                        {myBookings.map((booking) => (
                             <tr key={booking.id} className="hover:bg-gray-50 transition-colors">
                                 <td className="px-6 py-4">
                                     <div className="flex items-center gap-2">
@@ -148,7 +99,7 @@ export default async function LecturerRoomsPage() {
                                 </td>
                             </tr>
                         ))}
-                        {bookings.length === 0 && (
+                        {myBookings.length === 0 && (
                             <tr>
                                 <td colSpan={4} className="px-6 py-12 text-center text-gray-500">
                                     Belum ada riwayat booking.

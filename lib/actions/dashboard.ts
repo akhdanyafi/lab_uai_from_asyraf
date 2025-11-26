@@ -1,7 +1,7 @@
 'use server';
 
 import { db } from '@/db';
-import { items, itemLoans, roomBookings, academicDocs, users, rooms } from '@/db/schema';
+import { items, itemLoans, roomBookings, practicalReports, users, rooms, itemCategories, modules, practicalSessions } from '@/db/schema';
 import { eq, and, gte, desc, sql } from 'drizzle-orm';
 
 export async function getAdminStats() {
@@ -76,33 +76,31 @@ export async function getAdminStats() {
 export async function getStudentDashboard(userId: number) {
     const today = new Date();
 
-    // Get active loans with manual joins
+    // Get active loans with manual joins including category and room
     const activeLoansRaw = await db
         .select({
             loan: itemLoans,
             item: items,
+            category: itemCategories,
+            room: rooms,
         })
         .from(itemLoans)
         .leftJoin(items, eq(itemLoans.itemId, items.id))
+        .leftJoin(itemCategories, eq(items.categoryId, itemCategories.id))
+        .leftJoin(rooms, eq(items.roomId, rooms.id))
         .where(and(
             eq(itemLoans.studentId, userId),
             eq(itemLoans.status, 'Disetujui')
         ))
         .orderBy(itemLoans.returnPlanDate);
 
-    // Get categories and rooms for items
-    const activeLoans = await Promise.all(activeLoansRaw.map(async (row) => {
-        const itemData = await db.query.items.findFirst({
-            where: eq(items.id, row.item!.id),
-            with: {
-                category: true,
-                room: true,
-            },
-        });
-        return {
-            ...row.loan,
-            item: itemData!,
-        };
+    const activeLoans = activeLoansRaw.map(row => ({
+        ...row.loan,
+        item: {
+            ...row.item!,
+            category: row.category!,
+            room: row.room!,
+        },
     }));
 
     // Get upcoming bookings with manual joins
@@ -174,13 +172,27 @@ export async function getLecturerDashboard(userId: number) {
         room: row.room!,
     }));
 
-    // Get recent reports
-    const recentReports = await db
-        .select()
-        .from(academicDocs)
-        .where(eq(academicDocs.type, 'Laporan Praktikum'))
-        .orderBy(desc(academicDocs.createdAt))
+    // Get recent practical reports
+    const recentReportsRaw = await db
+        .select({
+            report: practicalReports,
+            student: users,
+            session: practicalSessions,
+            module: modules,
+        })
+        .from(practicalReports)
+        .leftJoin(users, eq(practicalReports.studentId, users.id))
+        .leftJoin(practicalSessions, eq(practicalReports.sessionId, practicalSessions.id))
+        .leftJoin(modules, eq(practicalSessions.moduleId, modules.id))
+        .orderBy(desc(practicalReports.submissionDate))
         .limit(10);
+
+    const recentReports = recentReportsRaw.map(row => ({
+        ...row.report,
+        student: row.student!,
+        session: row.session!,
+        module: row.module!,
+    }));
 
     return {
         upcomingBookings,

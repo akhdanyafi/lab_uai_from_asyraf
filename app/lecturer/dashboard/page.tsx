@@ -80,13 +80,13 @@ export default async function LecturerDashboard() {
                     <div className="space-y-3">
                         {dashboard.recentReports.slice(0, 5).map((report) => (
                             <div key={report.id} className="p-3 bg-gray-50 rounded-lg">
-                                <p className="font-medium text-gray-900 text-sm">{report.title}</p>
+                                <p className="font-medium text-gray-900 text-sm">{report.module.title} - {report.student.fullName}</p>
                                 <div className="mt-2 flex items-center gap-2 text-xs text-gray-600">
                                     <FileText className="w-3 h-3" />
-                                    <span>{new Date(report.createdAt!).toLocaleDateString('id-ID')}</span>
+                                    <span>{new Date(report.submissionDate!).toLocaleDateString('id-ID')}</span>
                                 </div>
-                                {report.description && (
-                                    <p className="text-xs text-gray-500 mt-1 line-clamp-1">{report.description}</p>
+                                {report.feedback && (
+                                    <p className="text-xs text-gray-500 mt-1 line-clamp-1">Feedback: {report.feedback}</p>
                                 )}
                             </div>
                         ))}

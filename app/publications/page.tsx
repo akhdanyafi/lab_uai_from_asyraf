@@ -29,7 +29,7 @@ export default async function PublicationsPage() {
                             const publishDate = formData.get('publishDate') as string;
 
                             await createPublication({
-                                studentId: session!.user.id,
+                                authorId: session!.user.id,
                                 title,
                                 abstract: abstract || undefined,
                                 link: link || undefined,
@@ -75,7 +75,7 @@ export default async function PublicationsPage() {
                                     <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
                                         <BookOpen className="w-6 h-6 text-primary" />
                                     </div>
-                                    {session && session.user.id === pub.studentId && (
+                                    {session && session.user.id === pub.authorId && (
                                         <form action={async () => {
                                             'use server';
                                             await deletePublication(pub.id);

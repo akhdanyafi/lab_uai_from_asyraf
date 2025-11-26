@@ -2,7 +2,7 @@ import { getAvailableItems } from '@/lib/actions/loans';
 import { getCategories } from '@/lib/actions/inventory';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
-import ItemCard from '@/components/ItemCard';
+import ItemCard from '@/components/items/ItemCard';
 import { Box } from 'lucide-react';
 
 export default async function BrowseItemsPage() {
