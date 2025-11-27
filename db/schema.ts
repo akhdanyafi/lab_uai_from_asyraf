@@ -288,3 +288,13 @@ export const practicalReportsRelations = relations(practicalReports, ({ one }) =
     references: [users.id],
   }),
 }));
+
+// Activity Photos (Foto Kegiatan Homepage)
+export const heroPhotos = mysqlTable('hero_photos', {
+  id: int('id').autoincrement().primaryKey(),
+  title: varchar('title', { length: 255 }).notNull(),
+  description: text('description'),
+  imageUrl: text('image_url').notNull(),
+  link: text('link'), // Optional link
+  createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
+});

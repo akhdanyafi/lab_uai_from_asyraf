@@ -1,23 +1,25 @@
 'use client';
 
 import { useState } from 'react';
-import { FileText, Users, FileCheck } from 'lucide-react';
+import { FileText, Users, FileCheck, Image as ImageIcon } from 'lucide-react';
 import DocumentList from '@/components/academic/DocumentList'; // Reusing DocumentList
 import { deleteGovernanceDoc } from '@/lib/actions/governance';
 import GovernanceUploadForm from './GovernanceUploadForm';
 import UserList from './UserList';
 import UserForm from './UserForm';
+import HeroPhotoManager from '@/components/admin/HeroPhotoManager';
 
 interface GovernanceManagerProps {
     sops: any[];
     lpjs: any[];
     users: any[];
     roles: any[];
+    heroPhotos: any[];
     adminId: number;
 }
 
-export default function GovernanceManager({ sops, lpjs, users, roles, adminId }: GovernanceManagerProps) {
-    const [activeTab, setActiveTab] = useState<'sop' | 'lpj' | 'users'>('sop');
+export default function GovernanceManager({ sops, lpjs, users, roles, heroPhotos, adminId }: GovernanceManagerProps) {
+    const [activeTab, setActiveTab] = useState<'sop' | 'lpj' | 'users' | 'hero'>('sop');
     const [showUserForm, setShowUserForm] = useState(false);
     const [editingDoc, setEditingDoc] = useState<any>(null);
 
@@ -36,7 +38,7 @@ export default function GovernanceManager({ sops, lpjs, users, roles, adminId }:
             <div className="flex justify-between items-center mb-6">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">Tata Kelola</h1>
-                    <p className="text-gray-500 text-sm mt-1">Manajemen SOP, LPJ, dan Pengguna Sistem</p>
+                    <p className="text-gray-500 text-sm mt-1">Manajemen SOP, LPJ, Foto Hero, dan Pengguna Sistem</p>
                 </div>
             </div>
 
@@ -61,6 +63,16 @@ export default function GovernanceManager({ sops, lpjs, users, roles, adminId }:
                 >
                     <FileText className="w-4 h-4" />
                     LPJ Bulanan
+                </button>
+                <button
+                    onClick={() => { setActiveTab('hero'); setEditingDoc(null); }}
+                    className={`flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors border-b-2 whitespace-nowrap ${activeTab === 'hero'
+                        ? 'border-primary text-primary'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                        }`}
+                >
+                    <ImageIcon className="w-4 h-4" />
+                    Foto Hero
                 </button>
                 <button
                     onClick={() => { setActiveTab('users'); setEditingDoc(null); }}
@@ -108,6 +120,10 @@ export default function GovernanceManager({ sops, lpjs, users, roles, adminId }:
                             onDelete={deleteGovernanceDoc}
                         />
                     </>
+                )}
+
+                {activeTab === 'hero' && (
+                    <HeroPhotoManager initialPhotos={heroPhotos} />
                 )}
 
                 {activeTab === 'users' && (

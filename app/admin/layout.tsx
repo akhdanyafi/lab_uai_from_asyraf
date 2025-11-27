@@ -8,7 +8,8 @@ import {
     ClipboardList,
     FileText,
     LogOut,
-    CalendarDays
+    CalendarDays,
+    Image as ImageIcon
 } from 'lucide-react';
 import Sidebar from '@/components/shared/Sidebar';
 

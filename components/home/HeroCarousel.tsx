@@ -1,0 +1,121 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { ChevronLeft, ChevronRight, Image as ImageIcon } from 'lucide-react';
+
+interface HeroPhoto {
+    id: number;
+    title: string;
+    description: string | null;
+    imageUrl: string;
+    link: string | null;
+}
+
+export default function HeroCarousel({ photos }: { photos: HeroPhoto[] }) {
+    const [currentSlide, setCurrentSlide] = useState(0);
+
+    // Auto-advance slides
+    useEffect(() => {
+        if (photos.length <= 1) return;
+
+        const interval = setInterval(() => {
+            setCurrentSlide((prev) => (prev + 1) % photos.length);
+        }, 5000);
+
+        return () => clearInterval(interval);
+    }, [photos.length]);
+
+    const nextSlide = () => {
+        setCurrentSlide((prev) => (prev + 1) % photos.length);
+    };
+
+    const prevSlide = () => {
+        setCurrentSlide((prev) => (prev - 1 + photos.length) % photos.length);
+    };
+
+    if (photos.length === 0) {
+        return (
+            <div className="w-full aspect-[21/9] relative bg-gray-100 flex flex-col items-center justify-center overflow-hidden rounded-2xl">
+                <div className="p-4 bg-white rounded-full mb-4 shadow-sm">
+                    <ImageIcon className="w-8 h-8 text-gray-400" />
+                </div>
+                <h2 className="text-xl font-semibold text-gray-600">Belum ada foto kegiatan</h2>
+                <p className="text-gray-500 mt-2">Foto kegiatan akan muncul di sini</p>
+            </div>
+        );
+    }
+
+    return (
+        <div className="w-full aspect-[21/9] relative bg-gray-900 flex items-center justify-center overflow-hidden rounded-2xl shadow-lg group">
+            {photos.map((photo, index) => {
+                const Content = () => (
+                    <>
+                        {/* Image with Gradient Overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10" />
+                        <img
+                            src={photo.imageUrl}
+                            alt={photo.title}
+                            className="w-full h-full object-cover"
+                        />
+
+                        {/* Content */}
+                        <div className="absolute bottom-0 left-0 right-0 p-8 z-20 transform transition-transform duration-500 translate-y-0">
+                            <h2 className="text-3xl font-bold text-white mb-2 drop-shadow-md">{photo.title}</h2>
+                            {photo.description && (
+                                <p className="text-white/90 text-lg max-w-2xl drop-shadow-sm">{photo.description}</p>
+                            )}
+                        </div>
+                    </>
+                );
+
+                return (
+                    <div
+                        key={photo.id}
+                        className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${index === currentSlide ? 'opacity-100 z-10' : 'opacity-0 z-0'
+                            }`}
+                    >
+                        {photo.link ? (
+                            <a href={photo.link} target="_blank" rel="noopener noreferrer" className="block w-full h-full cursor-pointer">
+                                <Content />
+                            </a>
+                        ) : (
+                            <div className="w-full h-full">
+                                <Content />
+                            </div>
+                        )}
+                    </div>
+                );
+            })}
+
+            {photos.length > 1 && (
+                <>
+                    <button
+                        onClick={prevSlide}
+                        className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 hover:bg-white/30 backdrop-blur-md rounded-full transition-all text-white z-30 opacity-0 group-hover:opacity-100"
+                    >
+                        <ChevronLeft className="w-6 h-6" />
+                    </button>
+
+                    <button
+                        onClick={nextSlide}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 hover:bg-white/30 backdrop-blur-md rounded-full transition-all text-white z-30 opacity-0 group-hover:opacity-100"
+                    >
+                        <ChevronRight className="w-6 h-6" />
+                    </button>
+
+                    {/* Indicators */}
+                    <div className="absolute bottom-4 right-8 z-30 flex gap-2">
+                        {photos.map((_, index) => (
+                            <button
+                                key={index}
+                                onClick={() => setCurrentSlide(index)}
+                                className={`w-2.5 h-2.5 rounded-full transition-all ${index === currentSlide ? 'bg-white w-8' : 'bg-white/50 hover:bg-white/80'
+                                    }`}
+                            />
+                        ))}
+                    </div>
+                </>
+            )}
+        </div>
+    );
+}
