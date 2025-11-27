@@ -25,9 +25,8 @@ export default async function AdminLayout({
 
     const menuItems = [
         { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
+        { name: 'Validasi', href: '/admin/validations', icon: ClipboardList },
         { name: 'Manajemen Aset', href: '/admin/inventory', icon: Box },
-        { name: 'Peminjaman', href: '/admin/loans', icon: ClipboardList },
-        { name: 'Jadwal Ruangan', href: '/admin/bookings', icon: CalendarDays },
         { name: 'Mata Kuliah', href: '/admin/courses', icon: FileText },
         { name: 'Kelas', href: '/admin/classes', icon: FileText },
         { name: 'Modul', href: '/admin/modules', icon: FileText },
