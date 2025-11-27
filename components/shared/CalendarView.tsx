@@ -87,23 +87,8 @@ export default function CalendarView({
                 </div>
             </div>
 
-            {/* --- 2. TOOLBAR & LEGEND --- */}
-            <div className="px-6 py-3 bg-[#F3F4F6]/50 border-b border-gray-100 flex flex-wrap items-center gap-6 text-xs font-medium text-[#6B7280]">
-                {/* Statistik Sederhana */}
-                <div className="ml-auto flex items-center gap-4 hidden sm:flex">
-                    <div className="flex items-center gap-1.5 px-3 py-1 bg-white rounded-full border border-gray-200 shadow-sm">
-                        <Monitor className="w-3.5 h-3.5 text-[#0F4C81]" />
-                        <span>{rooms.length} Ruangan</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 px-3 py-1 bg-white rounded-full border border-gray-200 shadow-sm">
-                        <Clock className="w-3.5 h-3.5 text-[#F59E0B]" />
-                        <span>{activeBookingsCount} Jadwal Aktif</span>
-                    </div>
-                </div>
-            </div>
-
             {/* --- 3. CALENDAR AREA --- */}
-            <div className="flex-1 p-6 bg-white min-h-[600px] relative">
+            <div className="flex-1 p-6 bg-white overflow-y-auto relative custom-scrollbar">
                 {/* Disini kita membungkus RoomCalendar. 
                    Pastikan RoomCalendar menerima style height 100% 
                 */}

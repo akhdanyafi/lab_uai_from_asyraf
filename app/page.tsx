@@ -34,20 +34,20 @@ export default async function Home() {
       <div className="container mx-auto px-4 py-8 space-y-8">
         <HeroSection />
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div>
             <SOPSection sops={sops} />
           </div>
           <div className="space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-8">
-              <AnnouncementSection />
+            <div className="grid grid-cols-1 gap-8">
               <CalendarView
                 rooms={rooms}
                 bookings={calendarBookings}
                 title="Kalender Ruangan"
-                className="h-full"
+                className="h-[320px]"
                 layoutMode="stacked"
               />
+              <AnnouncementSection />
             </div>
           </div>
         </div>
