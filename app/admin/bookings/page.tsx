@@ -2,7 +2,7 @@ import { getBookingRequests, updateBookingStatus, getAllRooms, getMonthBookings 
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { MapPin, User, CheckCircle, XCircle } from 'lucide-react';
-import AdminCalendarView from '@/components/admin/AdminCalendarView';
+import CalendarView from '@/components/shared/CalendarView';
 
 export default async function AdminBookingsPage() {
     const session = await getSession();
@@ -35,7 +35,12 @@ export default async function AdminBookingsPage() {
                 <p className="text-gray-500 text-sm mt-1">Setujui atau tolak permintaan booking ruangan</p>
             </div>
 
-            <AdminCalendarView rooms={rooms} bookings={calendarBookings} />
+            <CalendarView
+                rooms={rooms}
+                bookings={calendarBookings}
+                title="Kalender Jadwal Ruangan"
+                className="mb-8"
+            />
 
             {/* Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">

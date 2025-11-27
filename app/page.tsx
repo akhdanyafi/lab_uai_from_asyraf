@@ -2,7 +2,7 @@ import Navbar from '@/components/home/Navbar';
 import HeroSection from '@/components/home/HeroSection';
 import SOPSection from '@/components/home/SOPSection';
 import AnnouncementSection from '@/components/home/AnnouncementSection';
-import CalendarSection from '@/components/home/CalendarSection';
+import CalendarView from '@/components/shared/CalendarView';
 import PublicationSection from '@/components/home/PublicationSection';
 import Footer from '@/components/home/Footer';
 import { getAllRooms, getMonthBookings } from '@/lib/actions/bookings';
@@ -41,7 +41,13 @@ export default async function Home() {
           <div className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-8">
               <AnnouncementSection />
-              <CalendarSection rooms={rooms} bookings={calendarBookings} />
+              <CalendarView
+                rooms={rooms}
+                bookings={calendarBookings}
+                title="Kalender Ruangan"
+                className="h-full"
+                layoutMode="stacked"
+              />
             </div>
           </div>
         </div>
