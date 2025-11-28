@@ -2,7 +2,7 @@
 
 import { db } from '@/db';
 import { itemLoans, items } from '@/db/schema';
-import { eq, and, desc, or } from 'drizzle-orm';
+import { eq, and, desc, or, sql } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 
 // Get available items for borrowing
@@ -45,7 +45,8 @@ export async function createLoanRequest(data: {
 }
 
 // Get loan requests (for admin)
-export async function getLoanRequests(status?: string) {
+// Get loan requests (for admin)
+export async function getLoanRequests(status?: string, startDate?: Date, endDate?: Date) {
     const { users, items: itemsTable, itemCategories, rooms } = await import('@/db/schema');
 
     let query = db
@@ -63,8 +64,28 @@ export async function getLoanRequests(status?: string) {
         .leftJoin(rooms, eq(itemsTable.roomId, rooms.id))
         .orderBy(desc(itemLoans.requestDate));
 
+    const conditions = [];
+
     if (status) {
-        query = query.where(eq(itemLoans.status, status as any)) as any;
+        conditions.push(eq(itemLoans.status, status as any));
+    }
+
+    if (startDate) {
+        // Ensure startDate is at the beginning of the day
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        conditions.push(sql`${itemLoans.requestDate} >= ${start}`);
+    }
+
+    if (endDate) {
+        // Ensure endDate is at the end of the day
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        conditions.push(sql`${itemLoans.requestDate} <= ${end}`);
+    }
+
+    if (conditions.length > 0) {
+        query = query.where(and(...conditions)) as any;
     }
 
     const results = await query;
