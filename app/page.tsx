@@ -30,10 +30,8 @@ export default async function Home() {
   return (
     <main className="min-h-screen bg-gray-100">
       <Navbar />
-
       <div className="container mx-auto px-4 py-8 space-y-8">
         <HeroSection />
-
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div>
             <SOPSection sops={sops} />
@@ -51,10 +49,8 @@ export default async function Home() {
             </div>
           </div>
         </div>
-
         <PublicationSection />
       </div>
-
       <Footer />
     </main>
   );

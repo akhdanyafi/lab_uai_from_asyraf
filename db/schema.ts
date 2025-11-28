@@ -144,7 +144,8 @@ export const governanceDocs = mysqlTable('governance_docs', {
 // Publications (Jurnal Publikasi)
 export const publications = mysqlTable('publications', {
   id: int('id').autoincrement().primaryKey(),
-  authorId: int('author_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  uploaderId: int('uploader_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  authorName: varchar('author_name', { length: 255 }).notNull(), // Manual input for author name
   title: varchar('title', { length: 255 }).notNull(),
   abstract: text('abstract'),
   filePath: varchar('file_path', { length: 255 }), // Optional if link is provided
@@ -152,12 +153,12 @@ export const publications = mysqlTable('publications', {
   publishDate: datetime('publish_date'),
   createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
 }, (table) => ({
-  authorIdx: index('author_idx').on(table.authorId),
+  uploaderIdx: index('uploader_idx').on(table.uploaderId),
 }));
 
 export const publicationsRelations = relations(publications, ({ one }) => ({
-  author: one(users, {
-    fields: [publications.authorId],
+  uploader: one(users, {
+    fields: [publications.uploaderId],
     references: [users.id],
   }),
 }));

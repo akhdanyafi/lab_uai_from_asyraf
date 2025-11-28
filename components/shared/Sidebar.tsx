@@ -1,10 +1,12 @@
 import SidebarLink from './SidebarLink';
+import SidebarSubmenu from './SidebarSubmenu';
 import LogoutButton from './LogoutButton';
 
 interface MenuItem {
     name: string;
     href: string;
     icon: any;
+    children?: MenuItem[];
 }
 
 interface SidebarProps {
@@ -42,10 +44,23 @@ export default function Sidebar({ subtitle, menuItems, user }: SidebarProps) {
             {/* --- NAVIGATION MENU --- */}
             <nav className="p-4 space-y-1.5 flex-1 overflow-y-auto custom-scrollbar">
                 {menuItems.map((item) => (
-                    <SidebarLink key={item.href} href={item.href}>
-                        <item.icon className="w-5 h-5" />
-                        <span>{item.name}</span>
-                    </SidebarLink>
+                    item.children ? (
+                        <SidebarSubmenu
+                            key={item.name}
+                            name={item.name}
+                            icon={<item.icon className="w-5 h-5" />}
+                            items={item.children.map(child => ({
+                                name: child.name,
+                                href: child.href,
+                                icon: <child.icon className="w-4 h-4" />
+                            }))}
+                        />
+                    ) : (
+                        <SidebarLink key={item.href} href={item.href}>
+                            <item.icon className="w-5 h-5" />
+                            <span>{item.name}</span>
+                        </SidebarLink>
+                    )
                 ))}
             </nav>
 

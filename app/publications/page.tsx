@@ -1,6 +1,6 @@
 import { getPublications, createPublication, deletePublication } from '@/lib/actions/publications';
 import { getSession } from '@/lib/auth';
-import { BookOpen, Trash2, ExternalLink, Plus } from 'lucide-react';
+import { BookOpen, Trash2, ExternalLink, Plus, User } from 'lucide-react';
 
 export default async function PublicationsPage() {
     const session = await getSession();
@@ -24,12 +24,14 @@ export default async function PublicationsPage() {
                         <form action={async (formData) => {
                             'use server';
                             const title = formData.get('title') as string;
+                            const authorName = formData.get('authorName') as string;
                             const abstract = formData.get('abstract') as string;
                             const link = formData.get('link') as string;
                             const publishDate = formData.get('publishDate') as string;
 
                             await createPublication({
-                                authorId: session!.user.id,
+                                uploaderId: session!.user.id,
+                                authorName,
                                 title,
                                 abstract: abstract || undefined,
                                 link: link || undefined,
@@ -39,6 +41,10 @@ export default async function PublicationsPage() {
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Judul Publikasi</label>
                                 <input name="title" required className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Nama Penulis</label>
+                                <input name="authorName" required defaultValue={session.user.fullName} className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20" />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Tanggal Publikasi</label>
@@ -75,7 +81,7 @@ export default async function PublicationsPage() {
                                     <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
                                         <BookOpen className="w-6 h-6 text-primary" />
                                     </div>
-                                    {session && session.user.id === pub.authorId && (
+                                    {session && session.user.id === pub.uploaderId && (
                                         <form action={async () => {
                                             'use server';
                                             await deletePublication(pub.id);
@@ -88,6 +94,11 @@ export default async function PublicationsPage() {
                                 </div>
 
                                 <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">{pub.title}</h3>
+
+                                <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+                                    <User className="w-4 h-4" />
+                                    <span>{pub.authorName}</span>
+                                </div>
 
                                 {pub.abstract && (
                                     <p className="text-sm text-gray-600 mb-4 line-clamp-3">{pub.abstract}</p>

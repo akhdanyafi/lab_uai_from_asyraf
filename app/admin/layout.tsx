@@ -28,10 +28,18 @@ export default async function AdminLayout({
         { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
         { name: 'Validasi', href: '/admin/validations', icon: ClipboardList },
         { name: 'Manajemen Aset', href: '/admin/inventory', icon: Box },
-        { name: 'Mata Kuliah', href: '/admin/courses', icon: FileText },
-        { name: 'Kelas', href: '/admin/classes', icon: FileText },
-        { name: 'Modul', href: '/admin/modules', icon: FileText },
-        { name: 'Akademik', href: '/admin/academic', icon: FileText },
+        {
+            name: 'Manajemen Akademik',
+            href: '#',
+            icon: FileText,
+            children: [
+                { name: 'Publikasi', href: '/admin/publications', icon: FileText },
+                { name: 'Mata Kuliah', href: '/admin/courses', icon: FileText },
+                { name: 'Kelas', href: '/admin/classes', icon: FileText },
+                { name: 'Bank Modul', href: '/admin/modules', icon: FileText },
+                { name: 'Manajemen Praktikum', href: '/admin/practicum', icon: FileText },
+            ]
+        },
         { name: 'Tata Kelola', href: '/admin/governance', icon: FileText },
     ];
 

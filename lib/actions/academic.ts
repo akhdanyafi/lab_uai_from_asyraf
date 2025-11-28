@@ -4,6 +4,8 @@ import { db } from '@/db';
 import { courses, classes, modules, practicalSessions, practicalReports, users, classEnrollments, publications, roles } from '@/db/schema';
 import { eq, desc, and, sql } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
+import { writeFile } from 'fs/promises';
+import path from 'path';
 
 // --- Courses ---
 export async function getCourses() {
@@ -71,7 +73,7 @@ export async function createModule(data: { courseId: number; title: string; desc
     revalidatePath('/admin/modules');
 }
 
-export async function deleteModule(id: number) {
+export async function deleteModule(id: number, type?: string) {
     await db.delete(modules).where(eq(modules.id, id));
     revalidatePath('/admin/modules');
 }
@@ -283,10 +285,10 @@ export async function getDocuments(type?: 'Modul Praktikum' | 'Jurnal Publikasi'
             filePath: publications.filePath,
             type: sql<string>`'Jurnal Publikasi'`,
             createdAt: publications.createdAt,
-            uploaderName: users.fullName
+            uploaderName: publications.authorName // Use manual author name
         })
             .from(publications)
-            .leftJoin(users, eq(publications.authorId, users.id))
+            .leftJoin(users, eq(publications.uploaderId, users.id))
             .orderBy(desc(publications.createdAt));
         return result;
     }
@@ -333,8 +335,7 @@ export async function deleteDocument(id: number, type: string) {
     revalidatePath('/student/academic');
 }
 
-import { writeFile } from 'fs/promises';
-import path from 'path';
+
 
 export async function uploadDocument(formData: FormData) {
     const uploaderId = parseInt(formData.get('uploaderId') as string);
@@ -343,22 +344,28 @@ export async function uploadDocument(formData: FormData) {
     const subject = formData.get('subject') as string;
     const description = formData.get('description') as string;
     const file = formData.get('file') as File;
+    const link = formData.get('link') as string;
+    const authorName = formData.get('authorName') as string; // Get author name
+    const publishDateStr = formData.get('publishDate') as string;
+    const publishDate = publishDateStr ? new Date(publishDateStr) : null;
 
-    if (!file) {
-        throw new Error('No file uploaded');
+    let publicPath = null;
+    if (file && file.size > 0) {
+        const bytes = await file.arrayBuffer();
+        const buffer = Buffer.from(bytes);
+
+        const filename = `${Date.now()}-${file.name.replace(/\s/g, '_')}`;
+        const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+        const filePath = path.join(uploadDir, filename);
+
+        await writeFile(filePath, buffer);
+        publicPath = `/uploads/${filename}`;
     }
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-
-    const filename = `${Date.now()}-${file.name.replace(/\s/g, '_')}`;
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads');
-    const filePath = path.join(uploadDir, filename);
-
-    await writeFile(filePath, buffer);
-    const publicPath = `/uploads/${filename}`;
-
     if (type === 'Modul Praktikum') {
+        if (!publicPath) {
+            throw new Error('File Modul wajib diupload.');
+        }
         const courseId = parseInt(subject);
         if (isNaN(courseId)) {
             throw new Error('Mata Kuliah (Course ID) diperlukan untuk Modul.');
@@ -372,12 +379,17 @@ export async function uploadDocument(formData: FormData) {
             order: 1
         });
     } else if (type === 'Jurnal Publikasi') {
+        if (!publicPath && !link) {
+            throw new Error('Harap sertakan File atau Link untuk Jurnal Publikasi.');
+        }
         await db.insert(publications).values({
-            authorId: uploaderId,
+            uploaderId: uploaderId, // Renamed from authorId
+            authorName: authorName || 'Admin', // Default if missing, though form should require it
             title,
             abstract: description,
             filePath: publicPath,
-            // link: ...
+            link: link || null,
+            publishDate: publishDate,
         });
     } else if (type === 'Laporan Praktikum') {
         throw new Error('Upload Laporan Praktikum hanya melalui Sesi Praktikum.');

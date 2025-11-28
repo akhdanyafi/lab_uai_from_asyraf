@@ -6,7 +6,8 @@ import { eq, desc } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 
 export async function createPublication(data: {
-    authorId: number;
+    uploaderId: number;
+    authorName: string;
     title: string;
     abstract?: string;
     link?: string;

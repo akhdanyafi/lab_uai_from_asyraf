@@ -44,7 +44,7 @@ export default function UploadForm({ uploaderId, allowedTypes }: UploadFormProps
 
                 <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-1">Judul Dokumen</label>
-                    <input name="title" required placeholder="Contoh: Modul Praktikum Basis Data" className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20" />
+                    <input name="title" required placeholder="Judul..." className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20" />
                 </div>
 
                 <div>
@@ -62,30 +62,45 @@ export default function UploadForm({ uploaderId, allowedTypes }: UploadFormProps
                     </select>
                 </div>
 
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                        {selectedType === 'Modul Praktikum' ? 'Mata Kuliah' : 'Subjek / Topik'}
-                    </label>
-                    {selectedType === 'Modul Praktikum' ? (
+                {selectedType === 'Modul Praktikum' && (
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Mata Kuliah</label>
                         <select name="subject" required className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20">
                             <option value="">Pilih Mata Kuliah</option>
                             {courses.map(c => (
                                 <option key={c.id} value={c.id}>{c.name} ({c.code})</option>
                             ))}
                         </select>
-                    ) : (
-                        <input name="subject" placeholder="Contoh: Basis Data" className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20" />
-                    )}
+                    </div>
+                )}
+
+                {selectedType === 'Jurnal Publikasi' && (
+                    <>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Nama Penulis</label>
+                            <input name="authorName" required placeholder="Nama Penulis..." className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20" />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Tanggal Publish</label>
+                            <input type="date" name="publishDate" className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20" />
+                        </div>
+                        <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Link Eksternal (Opsional)</label>
+                            <input name="link" placeholder="https://..." className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20" />
+                        </div>
+                    </>
+                )}
+
+                <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                        {selectedType === 'Jurnal Publikasi' ? 'Abstrak' : 'Deskripsi (Opsional)'}
+                    </label>
+                    <textarea name="description" rows={3} placeholder={selectedType === 'Jurnal Publikasi' ? 'Ringkasan jurnal...' : 'Keterangan tambahan...'} className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20" />
                 </div>
 
                 <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Deskripsi (Opsional)</label>
-                    <textarea name="description" rows={2} placeholder="Keterangan tambahan..." className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20" />
-                </div>
-
-                <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">File Dokumen</label>
-                    <input type="file" name="file" required className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20" />
+                    <label className="block text-sm font-medium text-gray-700 mb-1">File Dokumen {selectedType === 'Jurnal Publikasi' && '(Opsional jika ada link)'}</label>
+                    <input type="file" name="file" className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20" />
                 </div>
 
                 <div className="md:col-span-2">

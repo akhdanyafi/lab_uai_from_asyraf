@@ -11,10 +11,18 @@ interface AcademicManagerProps {
     reports: any[];
     userRole: string;
     userId: number;
+    visibleTabs?: ('modules' | 'journals' | 'reports')[];
 }
 
-export default function AcademicManager({ modules, journals, reports, userRole, userId }: AcademicManagerProps) {
-    const [activeTab, setActiveTab] = useState<'modules' | 'journals' | 'reports'>('modules');
+export default function AcademicManager({
+    modules,
+    journals,
+    reports,
+    userRole,
+    userId,
+    visibleTabs = ['modules', 'journals', 'reports']
+}: AcademicManagerProps) {
+    const [activeTab, setActiveTab] = useState<'modules' | 'journals' | 'reports'>(visibleTabs[0]);
 
     // Determine allowed upload types based on role
     const allowedUploadTypes = [];
@@ -46,44 +54,50 @@ export default function AcademicManager({ modules, journals, reports, userRole, 
 
             {/* Tabs */}
             <div className="flex border-b border-gray-200 mb-8 overflow-x-auto">
-                <button
-                    onClick={() => setActiveTab('modules')}
-                    className={`flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors border-b-2 whitespace-nowrap ${activeTab === 'modules'
+                {visibleTabs.includes('modules') && (
+                    <button
+                        onClick={() => setActiveTab('modules')}
+                        className={`flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors border-b-2 whitespace-nowrap ${activeTab === 'modules'
                             ? 'border-primary text-primary'
                             : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                        }`}
-                >
-                    <BookOpen className="w-4 h-4" />
-                    Modul Praktikum
-                </button>
-                <button
-                    onClick={() => setActiveTab('journals')}
-                    className={`flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors border-b-2 whitespace-nowrap ${activeTab === 'journals'
+                            }`}
+                    >
+                        <BookOpen className="w-4 h-4" />
+                        Modul Praktikum
+                    </button>
+                )}
+                {visibleTabs.includes('journals') && (
+                    <button
+                        onClick={() => setActiveTab('journals')}
+                        className={`flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors border-b-2 whitespace-nowrap ${activeTab === 'journals'
                             ? 'border-primary text-primary'
                             : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                        }`}
-                >
-                    <FileText className="w-4 h-4" />
-                    Jurnal Publikasi
-                </button>
-                <button
-                    onClick={() => setActiveTab('reports')}
-                    className={`flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors border-b-2 whitespace-nowrap ${activeTab === 'reports'
+                            }`}
+                    >
+                        <FileText className="w-4 h-4" />
+                        Jurnal Publikasi
+                    </button>
+                )}
+                {visibleTabs.includes('reports') && (
+                    <button
+                        onClick={() => setActiveTab('reports')}
+                        className={`flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors border-b-2 whitespace-nowrap ${activeTab === 'reports'
                             ? 'border-primary text-primary'
                             : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                        }`}
-                >
-                    <File className="w-4 h-4" />
-                    Laporan Praktikum
-                </button>
+                            }`}
+                    >
+                        <File className="w-4 h-4" />
+                        Laporan Praktikum
+                    </button>
+                )}
             </div>
 
             {/* Content */}
             <div>
                 {/* Upload Form - Show only if role is allowed to upload for the ACTIVE tab */}
-                {((activeTab === 'modules' && (userRole === 'Admin' || userRole === 'Dosen')) ||
-                    (activeTab === 'journals' && (userRole === 'Admin' || userRole === 'Dosen')) ||
-                    (activeTab === 'reports' && userRole === 'Mahasiswa')) && (
+                {((activeTab === 'modules' && visibleTabs.includes('modules') && (userRole === 'Admin' || userRole === 'Dosen')) ||
+                    (activeTab === 'journals' && visibleTabs.includes('journals') && (userRole === 'Admin' || userRole === 'Dosen')) ||
+                    (activeTab === 'reports' && visibleTabs.includes('reports') && userRole === 'Mahasiswa')) && (
                         <UploadForm
                             uploaderId={userId}
                             allowedTypes={
@@ -94,9 +108,9 @@ export default function AcademicManager({ modules, journals, reports, userRole, 
                         />
                     )}
 
-                {activeTab === 'modules' && <DocumentList documents={modules} canDelete={canDeleteModules} />}
-                {activeTab === 'journals' && <DocumentList documents={journals} canDelete={canDeleteJournals} />}
-                {activeTab === 'reports' && <DocumentList documents={reports} canDelete={canDeleteReports} />}
+                {activeTab === 'modules' && visibleTabs.includes('modules') && <DocumentList documents={modules} canDelete={canDeleteModules} />}
+                {activeTab === 'journals' && visibleTabs.includes('journals') && <DocumentList documents={journals} canDelete={canDeleteJournals} />}
+                {activeTab === 'reports' && visibleTabs.includes('reports') && <DocumentList documents={reports} canDelete={canDeleteReports} />}
             </div>
         </div>
     );
