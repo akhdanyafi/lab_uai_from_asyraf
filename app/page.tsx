@@ -6,7 +6,7 @@ import CalendarView from '@/components/shared/CalendarView';
 import PublicationSection from '@/components/home/PublicationSection';
 import Footer from '@/components/home/Footer';
 import { getAllRooms, getMonthBookings } from '@/lib/actions/bookings';
-import { getSops } from '@/lib/actions/sops';
+import { getGovernanceDocs } from '@/lib/actions/governance';
 
 export default async function Home() {
   const today = new Date();
@@ -18,7 +18,7 @@ export default async function Home() {
     getMonthBookings(currentMonth, currentYear),
     getMonthBookings((currentMonth + 1) % 12, currentMonth + 1 > 11 ? currentYear + 1 : currentYear),
     getMonthBookings((currentMonth + 2) % 12, currentMonth + 2 > 11 ? currentYear + 1 : currentYear),
-    getSops(),
+    getGovernanceDocs('SOP'),
   ]);
 
   const calendarBookings = [
