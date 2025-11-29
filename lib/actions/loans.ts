@@ -6,7 +6,13 @@ import { eq, and, desc, or, sql } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 
 // Get available items for borrowing
-export async function getAvailableItems() {
+export async function getAvailableItems(categoryId?: number) {
+    const conditions = [eq(items.status, 'Tersedia')];
+
+    if (categoryId) {
+        conditions.push(eq(items.categoryId, categoryId));
+    }
+
     const results = await db
         .select({
             item: items,
@@ -16,7 +22,7 @@ export async function getAvailableItems() {
         .from(items)
         .leftJoin(itemCategories, eq(items.categoryId, itemCategories.id))
         .leftJoin(rooms, eq(items.roomId, rooms.id))
-        .where(eq(items.status, 'Tersedia'))
+        .where(and(...conditions))
         .orderBy(desc(items.id));
 
     return results.map(row => ({
