@@ -59,7 +59,7 @@ export default async function PublicationsPage() {
                                 <textarea name="abstract" rows={3} className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20" />
                             </div>
                             <div className="md:col-span-2">
-                                <button type="submit" className="bg-primary text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                                <button type="submit" className="bg-[#0F4C81] text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-[#0F4C81]/90 transition-colors">
                                     Tambah Publikasi
                                 </button>
                             </div>

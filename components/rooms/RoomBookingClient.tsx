@@ -165,7 +165,7 @@ export default function RoomBookingClient({ rooms, calendarBookings, userId }: R
                         <button
                             type="submit"
                             disabled={isSubmitting}
-                            className="w-full bg-primary text-white px-6 py-2.5 rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full bg-[#0F4C81] text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-[#0F4C81]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {isSubmitting ? 'Mengirim...' : 'Ajukan Booking'}
                         </button>

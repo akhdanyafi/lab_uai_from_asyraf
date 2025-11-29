@@ -66,7 +66,7 @@ export default function ItemCard({ item, userId }: { item: any; userId: number }
 
                     <button
                         onClick={() => setShowModal(true)}
-                        className="w-full bg-primary text-white py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                        className="w-full bg-[#0F4C81] text-white py-2 rounded-lg text-sm font-medium hover:bg-[#0F4C81]/90 transition-colors"
                     >
                         Ajukan Peminjaman
                     </button>
@@ -104,7 +104,7 @@ export default function ItemCard({ item, userId }: { item: any; userId: number }
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className="flex-1 bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                                    className="flex-1 bg-[#0F4C81] text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-[#0F4C81]/90 transition-colors disabled:opacity-50"
                                 >
                                     {loading ? 'Mengirim...' : 'Kirim Permintaan'}
                                 </button>

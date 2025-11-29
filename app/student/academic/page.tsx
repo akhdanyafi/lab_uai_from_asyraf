@@ -1,18 +1,19 @@
-import { getDocuments } from '@/lib/actions/academic';
+import { getDocuments, getCourses, getClasses, getLecturers } from '@/lib/actions/academic';
+import { getSessions } from '@/lib/actions/practicum';
 import AcademicManager from '@/components/academic/AcademicManager';
 import { getSession } from '@/lib/auth';
 
 export default async function StudentAcademicPage() {
     const session = await getSession();
 
-    // Student sees all modules and journals
-    // Student sees ONLY their own reports (or maybe all? Requirement says "upload laporan", implies managing own. 
-    // Usually students don't see other students' reports. Let's filter by userId for reports.)
-
-    const [modules, journals, reports] = await Promise.all([
+    const [modules, journals, reports, courses, classes, lecturers, sessions] = await Promise.all([
         getDocuments('Modul Praktikum'),
         getDocuments('Jurnal Publikasi'),
-        getDocuments('Laporan Praktikum', session?.user.id)
+        getDocuments('Laporan Praktikum', session?.user.id),
+        getCourses(),
+        getClasses(),
+        getLecturers(),
+        getSessions()
     ]);
 
     return (
@@ -20,8 +21,13 @@ export default async function StudentAcademicPage() {
             modules={modules}
             journals={journals}
             reports={reports}
+            courses={courses}
+            classes={classes}
+            lecturers={lecturers}
+            sessions={sessions}
             userRole="Mahasiswa"
             userId={session?.user.id || 0}
+            visibleTabs={['modules', 'journals', 'reports']}
         />
     );
 }

@@ -43,12 +43,12 @@ export default function GovernanceManager({ sops, lpjs, users, roles, heroPhotos
             </div>
 
             {/* Tabs */}
-            <div className="flex border-b border-gray-200 mb-8 overflow-x-auto">
+            <div className="flex space-x-1 bg-gray-100 p-1 rounded-xl mb-6 w-fit overflow-x-auto">
                 <button
                     onClick={() => { setActiveTab('sop'); setEditingDoc(null); }}
-                    className={`flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors border-b-2 whitespace-nowrap ${activeTab === 'sop'
-                        ? 'border-primary text-primary'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${activeTab === 'sop'
+                        ? 'bg-white text-[#0F4C81] shadow-sm'
+                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'
                         }`}
                 >
                     <FileCheck className="w-4 h-4" />
@@ -56,9 +56,9 @@ export default function GovernanceManager({ sops, lpjs, users, roles, heroPhotos
                 </button>
                 <button
                     onClick={() => { setActiveTab('lpj'); setEditingDoc(null); }}
-                    className={`flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors border-b-2 whitespace-nowrap ${activeTab === 'lpj'
-                        ? 'border-primary text-primary'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${activeTab === 'lpj'
+                        ? 'bg-white text-[#0F4C81] shadow-sm'
+                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'
                         }`}
                 >
                     <FileText className="w-4 h-4" />
@@ -66,9 +66,9 @@ export default function GovernanceManager({ sops, lpjs, users, roles, heroPhotos
                 </button>
                 <button
                     onClick={() => { setActiveTab('hero'); setEditingDoc(null); }}
-                    className={`flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors border-b-2 whitespace-nowrap ${activeTab === 'hero'
-                        ? 'border-primary text-primary'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${activeTab === 'hero'
+                        ? 'bg-white text-[#0F4C81] shadow-sm'
+                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'
                         }`}
                 >
                     <ImageIcon className="w-4 h-4" />
@@ -76,9 +76,9 @@ export default function GovernanceManager({ sops, lpjs, users, roles, heroPhotos
                 </button>
                 <button
                     onClick={() => { setActiveTab('users'); setEditingDoc(null); }}
-                    className={`flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors border-b-2 whitespace-nowrap ${activeTab === 'users'
-                        ? 'border-primary text-primary'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${activeTab === 'users'
+                        ? 'bg-white text-[#0F4C81] shadow-sm'
+                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'
                         }`}
                 >
                     <Users className="w-4 h-4" />
@@ -133,7 +133,7 @@ export default function GovernanceManager({ sops, lpjs, users, roles, heroPhotos
                                 <div className="mb-6 flex justify-end">
                                     <button
                                         onClick={() => setShowUserForm(true)}
-                                        className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium flex items-center gap-2"
+                                        className="bg-[#0F4C81] text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-[#0F4C81]/90 transition-colors flex items-center gap-2"
                                     >
                                         <Users className="w-4 h-4" />
                                         Tambah User Baru

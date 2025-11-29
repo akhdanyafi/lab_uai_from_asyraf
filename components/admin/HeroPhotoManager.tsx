@@ -177,7 +177,7 @@ export default function HeroPhotoManager({ initialPhotos }: { initialPhotos: Her
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="bg-primary text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 w-full md:w-auto flex items-center justify-center gap-2"
+                            className="bg-[#0F4C81] text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-[#0F4C81]/90 transition-colors disabled:opacity-50 w-full md:w-auto flex items-center justify-center gap-2"
                         >
                             {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
                             {editingPhoto ? 'Simpan Perubahan' : 'Upload Foto'}

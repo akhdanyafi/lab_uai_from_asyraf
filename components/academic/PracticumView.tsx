@@ -1,12 +1,15 @@
-import { getSessions } from '@/lib/actions/practicum';
+'use client';
+
 import Link from 'next/link';
 import { Plus, Calendar, Clock, CheckCircle, XCircle, PlayCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 
-export default async function AdminPracticumPage() {
-    const sessions = await getSessions();
+interface PracticumViewProps {
+    sessions: any[];
+}
 
+export default function PracticumView({ sessions }: PracticumViewProps) {
     const getStatus = (start: Date, end: Date, isOpen: boolean) => {
         const now = new Date();
         if (!isOpen) return { label: 'Ditutup', color: 'bg-red-100 text-red-700', icon: XCircle };
@@ -18,10 +21,10 @@ export default async function AdminPracticumPage() {
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold text-gray-800">Manajemen Praktikum</h1>
+                <h2 className="text-lg font-semibold text-gray-900">Jadwal Praktikum</h2>
                 <Link
                     href="/admin/practicum/create"
-                    className="flex items-center gap-2 bg-[#0F4C81] text-white px-4 py-2 rounded-lg hover:bg-[#0F4C81]/90 transition-colors"
+                    className="flex items-center gap-2 bg-[#0F4C81] text-white px-4 py-2 rounded-lg hover:bg-[#0F4C81]/90 transition-colors text-sm font-medium"
                 >
                     <Plus className="w-4 h-4" />
                     <span>Buat Sesi Baru</span>

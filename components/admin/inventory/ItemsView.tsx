@@ -106,7 +106,7 @@ export default function ItemsView({ items, rooms, categories }: ItemsViewProps) 
                         <button
                             type="submit"
                             disabled={isSubmitting}
-                            className="bg-primary text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50"
+                            className="bg-[#0F4C81] text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-[#0F4C81]/90 transition-colors disabled:opacity-50"
                         >
                             {isSubmitting ? 'Menyimpan...' : 'Simpan Alat'}
                         </button>

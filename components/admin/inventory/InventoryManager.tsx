@@ -24,12 +24,12 @@ export default function InventoryManager({ categories, rooms, items }: Inventory
             </div>
 
             {/* Tabs */}
-            <div className="flex border-b border-gray-200 mb-8">
+            <div className="flex space-x-1 bg-gray-100 p-1 rounded-xl mb-6 w-fit">
                 <button
                     onClick={() => setActiveTab('items')}
-                    className={`flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors border-b-2 ${activeTab === 'items'
-                        ? 'border-primary text-primary'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'items'
+                        ? 'bg-white text-[#0F4C81] shadow-sm'
+                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'
                         }`}
                 >
                     <Box className="w-4 h-4" />
@@ -37,9 +37,9 @@ export default function InventoryManager({ categories, rooms, items }: Inventory
                 </button>
                 <button
                     onClick={() => setActiveTab('rooms')}
-                    className={`flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors border-b-2 ${activeTab === 'rooms'
-                        ? 'border-primary text-primary'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'rooms'
+                        ? 'bg-white text-[#0F4C81] shadow-sm'
+                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'
                         }`}
                 >
                     <MapPin className="w-4 h-4" />

@@ -1,14 +1,12 @@
 'use server';
 
 import { db } from '@/db';
-import { itemLoans, items } from '@/db/schema';
+import { itemLoans, items, itemCategories, rooms, users } from '@/db/schema';
 import { eq, and, desc, or, sql } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 
 // Get available items for borrowing
 export async function getAvailableItems() {
-    const { itemCategories, rooms } = await import('@/db/schema');
-
     const results = await db
         .select({
             item: items,
@@ -45,23 +43,20 @@ export async function createLoanRequest(data: {
 }
 
 // Get loan requests (for admin)
-// Get loan requests (for admin)
 export async function getLoanRequests(status?: string, startDate?: Date, endDate?: Date) {
-    const { users, items: itemsTable, itemCategories, rooms } = await import('@/db/schema');
-
     let query = db
         .select({
             loan: itemLoans,
             student: users,
-            item: itemsTable,
+            item: items,
             category: itemCategories,
             room: rooms,
         })
         .from(itemLoans)
         .leftJoin(users, eq(itemLoans.studentId, users.id))
-        .leftJoin(itemsTable, eq(itemLoans.itemId, itemsTable.id))
-        .leftJoin(itemCategories, eq(itemsTable.categoryId, itemCategories.id))
-        .leftJoin(rooms, eq(itemsTable.roomId, rooms.id))
+        .leftJoin(items, eq(itemLoans.itemId, items.id))
+        .leftJoin(itemCategories, eq(items.categoryId, itemCategories.id))
+        .leftJoin(rooms, eq(items.roomId, rooms.id))
         .orderBy(desc(itemLoans.requestDate));
 
     const conditions = [];
@@ -135,19 +130,17 @@ export async function updateLoanStatus(
 
 // Get user's loans
 export async function getMyLoans(userId: number) {
-    const { items: itemsTable, itemCategories, rooms } = await import('@/db/schema');
-
     const results = await db
         .select({
             loan: itemLoans,
-            item: itemsTable,
+            item: items,
             category: itemCategories,
             room: rooms,
         })
         .from(itemLoans)
-        .leftJoin(itemsTable, eq(itemLoans.itemId, itemsTable.id))
-        .leftJoin(itemCategories, eq(itemsTable.categoryId, itemCategories.id))
-        .leftJoin(rooms, eq(itemsTable.roomId, rooms.id))
+        .leftJoin(items, eq(itemLoans.itemId, items.id))
+        .leftJoin(itemCategories, eq(items.categoryId, itemCategories.id))
+        .leftJoin(rooms, eq(items.roomId, rooms.id))
         .where(eq(itemLoans.studentId, userId))
         .orderBy(desc(itemLoans.requestDate));
 

@@ -28,7 +28,7 @@ export default function Navbar() {
                     <div className="h-6 w-px bg-gray-200 hidden sm:block"></div>
                     <Link
                         href="/login"
-                        className="flex items-center gap-2 bg-[#0F4C81] hover:bg-[#1A365D] text-white px-5 py-2 rounded-full font-medium text-sm transition-all shadow-sm hover:shadow-md"
+                        className="flex items-center gap-2 bg-[#0F4C81] hover:bg-[#0F4C81]/90 text-white px-4 py-2 rounded-lg font-medium text-sm transition-all shadow-sm hover:shadow-md"
                     >
                         <LogIn className="w-4 h-4" />
                         <span>Login</span>
