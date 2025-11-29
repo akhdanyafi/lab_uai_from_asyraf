@@ -130,7 +130,7 @@ export async function updateLoanStatus(
 
     revalidatePath('/admin/loans');
     revalidatePath('/student/loans');
-    revalidatePath('/admin/items');
+    revalidatePath('/admin/inventory');
 }
 
 // Get user's loans
@@ -187,5 +187,5 @@ export async function returnItem(loanId: number) {
 
     revalidatePath('/student/loans');
     revalidatePath('/admin/loans');
-    revalidatePath('/admin/items');
+    revalidatePath('/admin/inventory');
 }

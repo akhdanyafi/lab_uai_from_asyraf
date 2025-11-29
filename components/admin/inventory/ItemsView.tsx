@@ -1,9 +1,11 @@
 'use client';
 
 import { createItem, deleteItem } from '@/lib/actions/inventory';
-import { Plus, Trash2, Box, Tag, MapPin } from 'lucide-react';
+import { Plus, Trash2, Box, Tag, MapPin, Settings } from 'lucide-react';
 import QRCodeDisplay from '@/components/shared/QRCodeDisplay';
 import { useState } from 'react';
+import Modal from '@/components/shared/Modal';
+import CategoriesView from './CategoriesView';
 
 interface Item {
     id: number;
@@ -33,15 +35,25 @@ interface ItemsViewProps {
 
 export default function ItemsView({ items, rooms, categories }: ItemsViewProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [showCategoryModal, setShowCategoryModal] = useState(false);
 
     return (
         <div>
             {/* Add Item Form */}
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-8">
-                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                    <Plus className="w-5 h-5 text-primary" />
-                    Tambah Alat Baru
-                </h2>
+                <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-semibold flex items-center gap-2">
+                        <Plus className="w-5 h-5 text-primary" />
+                        Tambah Alat Baru
+                    </h2>
+                    <button
+                        onClick={() => setShowCategoryModal(true)}
+                        className="text-sm text-primary hover:text-blue-700 font-medium flex items-center gap-1 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors"
+                    >
+                        <Settings className="w-4 h-4" />
+                        Kelola Kategori
+                    </button>
+                </div>
                 <form action={async (formData) => {
                     setIsSubmitting(true);
                     const name = formData.get('name') as string;
@@ -177,6 +189,15 @@ export default function ItemsView({ items, rooms, categories }: ItemsViewProps) 
                     </tbody>
                 </table>
             </div>
+
+            {/* Category Management Modal */}
+            <Modal
+                isOpen={showCategoryModal}
+                onClose={() => setShowCategoryModal(false)}
+                title="Manajemen Kategori"
+            >
+                <CategoriesView categories={categories} />
+            </Modal>
         </div>
     );
 }

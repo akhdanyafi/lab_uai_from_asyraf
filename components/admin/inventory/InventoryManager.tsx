@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Box, Tags, MapPin } from 'lucide-react';
-import CategoriesView from './CategoriesView';
+import { Box, MapPin } from 'lucide-react';
 import RoomsView from './RoomsView';
 import ItemsView from './ItemsView';
 
@@ -13,7 +12,7 @@ interface InventoryManagerProps {
 }
 
 export default function InventoryManager({ categories, rooms, items }: InventoryManagerProps) {
-    const [activeTab, setActiveTab] = useState<'items' | 'categories' | 'rooms'>('items');
+    const [activeTab, setActiveTab] = useState<'items' | 'rooms'>('items');
 
     return (
         <div>
@@ -29,28 +28,18 @@ export default function InventoryManager({ categories, rooms, items }: Inventory
                 <button
                     onClick={() => setActiveTab('items')}
                     className={`flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors border-b-2 ${activeTab === 'items'
-                            ? 'border-primary text-primary'
-                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                        ? 'border-primary text-primary'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                         }`}
                 >
                     <Box className="w-4 h-4" />
                     Daftar Alat
                 </button>
                 <button
-                    onClick={() => setActiveTab('categories')}
-                    className={`flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors border-b-2 ${activeTab === 'categories'
-                            ? 'border-primary text-primary'
-                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                        }`}
-                >
-                    <Tags className="w-4 h-4" />
-                    Kategori
-                </button>
-                <button
                     onClick={() => setActiveTab('rooms')}
                     className={`flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors border-b-2 ${activeTab === 'rooms'
-                            ? 'border-primary text-primary'
-                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                        ? 'border-primary text-primary'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                         }`}
                 >
                     <MapPin className="w-4 h-4" />
@@ -61,7 +50,6 @@ export default function InventoryManager({ categories, rooms, items }: Inventory
             {/* Content */}
             <div>
                 {activeTab === 'items' && <ItemsView items={items} rooms={rooms} categories={categories} />}
-                {activeTab === 'categories' && <CategoriesView categories={categories} />}
                 {activeTab === 'rooms' && <RoomsView rooms={rooms} />}
             </div>
         </div>
