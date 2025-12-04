@@ -67,3 +67,25 @@ export async function deleteUser(id: number) {
     await db.delete(users).where(eq(users.id, id));
     revalidatePath('/admin/governance');
 }
+
+export async function getPendingUsers() {
+    return await db.select({
+        id: users.id,
+        fullName: users.fullName,
+        identifier: users.identifier,
+        email: users.email,
+        createdAt: users.createdAt,
+        role: roles.name,
+    })
+        .from(users)
+        .innerJoin(roles, eq(users.roleId, roles.id))
+        .where(eq(users.status, 'Pending'));
+}
+
+export async function updateUserStatus(userId: number, status: 'Active' | 'Rejected') {
+    await db.update(users)
+        .set({ status })
+        .where(eq(users.id, userId));
+
+    revalidatePath('/admin/validations');
+}

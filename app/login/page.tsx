@@ -125,6 +125,13 @@ export default function LoginPage() {
                             )}
                         </button>
                     </form>
+
+                    <div className="mt-6 text-center text-sm text-gray-500">
+                        Belum punya akun?{' '}
+                        <Link href="/register" className="text-[#0F4C81] font-medium hover:underline">
+                            Ajukan Pembuatan Akun
+                        </Link>
+                    </div>
                 </div>
 
                 {/* Footer Card */}

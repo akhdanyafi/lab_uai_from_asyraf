@@ -5,6 +5,7 @@ import { db } from '@/db';
 import { users, roles } from '@/db/schema';
 import { eq, or } from 'drizzle-orm';
 import { encrypt } from '@/lib/auth';
+import bcrypt from 'bcryptjs';
 
 export async function login(formData: any) {
     const { email, password } = formData;
@@ -18,9 +19,18 @@ export async function login(formData: any) {
 
     const foundUser = user[0];
 
-    // Verify password (TODO: Use bcrypt or argon2 in production)
-    if (foundUser.passwordHash !== password) {
-        throw new Error('Invalid password');
+    // Verify password
+    const passwordMatch = await bcrypt.compare(password, foundUser.passwordHash);
+    if (!passwordMatch) {
+        throw new Error('Password salah');
+    }
+
+    // Check status
+    if (foundUser.status === 'Pending') {
+        throw new Error('Akun Anda sedang menunggu persetujuan admin');
+    }
+    if (foundUser.status === 'Rejected') {
+        throw new Error('Akun Anda ditolak oleh admin');
     }
 
     // Get role name

@@ -1,5 +1,6 @@
 import { getLoanRequests, updateLoanStatus } from '@/lib/actions/loans';
 import { getBookingRequests, updateBookingStatus, getAllRooms, getMonthBookings } from '@/lib/actions/bookings';
+import { getPendingUsers, updateUserStatus } from '@/lib/actions/users';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { Box, User, CheckCircle, XCircle, MapPin } from 'lucide-react';
@@ -42,6 +43,9 @@ export default async function AdminValidationsPage({
     ];
 
     const pendingBookings = bookings.filter(b => b.status === 'Pending');
+
+    // --- Data Fetching for Users ---
+    const pendingUsers = await getPendingUsers();
 
     // --- Loans Content ---
     const loansContent = (
@@ -344,6 +348,71 @@ export default async function AdminValidationsPage({
         </div>
     );
 
+    // --- Users Content ---
+    const usersContent = (
+        <div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <h3 className="text-gray-500 text-sm font-medium">Menunggu Persetujuan</h3>
+                    <p className="text-3xl font-bold text-orange-500 mt-2">{pendingUsers.length}</p>
+                </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <table className="w-full text-left">
+                    <thead className="bg-gray-50 border-b border-gray-100">
+                        <tr>
+                            <th className="px-6 py-4 font-semibold text-gray-700">Nama Lengkap</th>
+                            <th className="px-6 py-4 font-semibold text-gray-700">NIM</th>
+                            <th className="px-6 py-4 font-semibold text-gray-700">Email</th>
+                            <th className="px-6 py-4 font-semibold text-gray-700">Tanggal Daftar</th>
+                            <th className="px-6 py-4 font-semibold text-gray-700 text-right">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                        {pendingUsers.map((user) => (
+                            <tr key={user.id} className="hover:bg-gray-50 transition-colors">
+                                <td className="px-6 py-4 font-medium text-gray-900">{user.fullName}</td>
+                                <td className="px-6 py-4 text-gray-600">{user.identifier}</td>
+                                <td className="px-6 py-4 text-gray-600">{user.email}</td>
+                                <td className="px-6 py-4 text-gray-600 text-sm">
+                                    {new Date(user.createdAt!).toLocaleDateString('id-ID')}
+                                </td>
+                                <td className="px-6 py-4 text-right">
+                                    <div className="flex gap-2 justify-end">
+                                        <form action={async () => {
+                                            'use server';
+                                            await updateUserStatus(user.id, 'Active');
+                                        }}>
+                                            <button className="text-green-600 hover:text-green-700 p-2 hover:bg-green-50 rounded-lg transition-colors" title="Setujui">
+                                                <CheckCircle className="w-5 h-5" />
+                                            </button>
+                                        </form>
+                                        <form action={async () => {
+                                            'use server';
+                                            await updateUserStatus(user.id, 'Rejected');
+                                        }}>
+                                            <button className="text-red-600 hover:text-red-700 p-2 hover:bg-red-50 rounded-lg transition-colors" title="Tolak">
+                                                <XCircle className="w-5 h-5" />
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        ))}
+                        {pendingUsers.length === 0 && (
+                            <tr>
+                                <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
+                                    Tidak ada permintaan akun baru.
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    );
+
     return (
         <div>
             <div className="mb-6">
@@ -355,6 +424,7 @@ export default async function AdminValidationsPage({
                 loansContent={loansContent}
                 roomsContent={roomsContent}
                 historyContent={historyContent}
+                usersContent={usersContent}
             />
         </div>
     );

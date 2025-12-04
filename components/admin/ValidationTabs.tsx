@@ -7,10 +7,11 @@ interface ValidationTabsProps {
     loansContent: React.ReactNode;
     roomsContent: React.ReactNode;
     historyContent: React.ReactNode;
+    usersContent: React.ReactNode;
 }
 
-export default function ValidationTabs({ loansContent, roomsContent, historyContent }: ValidationTabsProps) {
-    const [activeTab, setActiveTab] = useState<'loans' | 'rooms' | 'history'>('loans');
+export default function ValidationTabs({ loansContent, roomsContent, historyContent, usersContent }: ValidationTabsProps) {
+    const [activeTab, setActiveTab] = useState<'loans' | 'rooms' | 'history' | 'users'>('loans');
 
     return (
         <div>
@@ -43,8 +44,17 @@ export default function ValidationTabs({ loansContent, roomsContent, historyCont
                         : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'
                         }`}
                 >
-                    <History className="w-4 h-4" />
                     Riwayat
+                </button>
+                <button
+                    onClick={() => setActiveTab('users')}
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'users'
+                        ? 'bg-white text-[#0F4C81] shadow-sm'
+                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'
+                        }`}
+                >
+                    <ClipboardList className="w-4 h-4" />
+                    Validasi Akun
                 </button>
             </div>
 
@@ -53,6 +63,7 @@ export default function ValidationTabs({ loansContent, roomsContent, historyCont
                 {activeTab === 'loans' && loansContent}
                 {activeTab === 'rooms' && roomsContent}
                 {activeTab === 'history' && historyContent}
+                {activeTab === 'users' && usersContent}
             </div>
         </div>
     );

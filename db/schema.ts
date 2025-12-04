@@ -15,6 +15,7 @@ export const users = mysqlTable('users', {
   identifier: varchar('identifier', { length: 50 }).notNull().unique(), // NIM or NIDN
   email: varchar('email', { length: 255 }).notNull().unique(),
   passwordHash: varchar('password_hash', { length: 255 }).notNull(),
+  status: mysqlEnum('status', ['Active', 'Pending', 'Rejected']).default('Pending'),
   createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
 }, (table) => ({
   roleIdx: index('role_idx').on(table.roleId),
