@@ -35,12 +35,17 @@ export default function HeroCarousel({ photos }: { photos: HeroPhoto[] }) {
 
     if (photos.length === 0) {
         return (
-            <div className="w-full aspect-[21/9] relative bg-gray-100 flex flex-col items-center justify-center overflow-hidden rounded-2xl">
-                <div className="p-4 bg-white rounded-full mb-4 shadow-sm">
-                    <ImageIcon className="w-8 h-8 text-gray-400" />
+            <div className="w-full aspect-[21/9] relative bg-gray-900 flex flex-col items-center justify-center overflow-hidden rounded-2xl shadow-lg">
+                {/* Gradient Overlay similar to actual slides */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10" />
+
+                <div className="z-20 flex flex-col items-center text-center p-8">
+                    <div className="p-4 bg-white/10 backdrop-blur-sm rounded-full mb-4 shadow-sm border border-white/20">
+                        <ImageIcon className="w-8 h-8 text-white/80" />
+                    </div>
+                    <h2 className="text-xl font-semibold text-white">Belum ada foto kegiatan</h2>
+                    <p className="text-white/80 mt-2">Foto kegiatan akan muncul di sini</p>
                 </div>
-                <h2 className="text-xl font-semibold text-gray-600">Belum ada foto kegiatan</h2>
-                <p className="text-gray-500 mt-2">Foto kegiatan akan muncul di sini</p>
             </div>
         );
     }
