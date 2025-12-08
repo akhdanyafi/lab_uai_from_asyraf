@@ -2,7 +2,7 @@
 
 import { db } from '@/db';
 import { publications } from '@/db/schema';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, sql } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 
 export async function createPublication(data: {
@@ -27,4 +27,19 @@ export async function deletePublication(id: number) {
     await db.delete(publications).where(eq(publications.id, id));
     revalidatePath('/student/publications');
     revalidatePath('/publications');
+}
+
+export async function incrementViewCount(id: number) {
+    await db.update(publications)
+        .set({ viewCount: sql`${publications.viewCount} + 1` })
+        .where(eq(publications.id, id));
+    revalidatePath('/publications');
+    revalidatePath('/');
+}
+
+export async function getTopPublications(limit: number = 5) {
+    return await db.select()
+        .from(publications)
+        .orderBy(desc(publications.viewCount))
+        .limit(limit);
 }

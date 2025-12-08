@@ -1,6 +1,7 @@
 import { db } from "../db";
 import { roles, users } from "../db/schema";
 import { eq } from "drizzle-orm";
+import bcrypt from "bcryptjs";
 
 async function main() {
     console.log("Seeding database...");
@@ -26,12 +27,14 @@ async function main() {
     const existingAdmin = await db.select().from(users).where(eq(users.email, adminEmail));
 
     if (existingAdmin.length === 0) {
+        const hashedPassword = await bcrypt.hash("admin", 10);
         await db.insert(users).values({
             roleId: adminRole.id,
             fullName: "Administrator Lab",
             identifier: "1",
             email: adminEmail,
-            passwordHash: "admin", // Plain text for demo, hash in production
+            passwordHash: hashedPassword,
+            status: 'Active',
         });
         console.log("Created admin user");
     }
@@ -41,12 +44,14 @@ async function main() {
     const existingStudent = await db.select().from(users).where(eq(users.email, studentEmail));
 
     if (existingStudent.length === 0) {
+        const hashedPassword = await bcrypt.hash("mahasiswa", 10);
         await db.insert(users).values({
             roleId: studentRole.id,
             fullName: "Mahasiswa Contoh",
             identifier: "2",
             email: studentEmail,
-            passwordHash: "mahasiswa",
+            passwordHash: hashedPassword,
+            status: 'Active',
         });
         console.log("Created student user");
     }
@@ -55,12 +60,14 @@ async function main() {
     const existingDosen = await db.select().from(users).where(eq(users.email, dosenEmail));
 
     if (existingDosen.length === 0) {
+        const hashedPassword = await bcrypt.hash("dosen", 10);
         await db.insert(users).values({
             roleId: lecturerRole.id,
             fullName: "Dosen Contoh",
             identifier: "3",
             email: dosenEmail,
-            passwordHash: "dosen", // Plain text for demo, hash in production
+            passwordHash: hashedPassword,
+            status: 'Active',
         });
         console.log("Created lecturer user");
     }

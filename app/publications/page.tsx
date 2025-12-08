@@ -1,6 +1,7 @@
 import { getPublications, createPublication, deletePublication } from '@/lib/actions/publications';
 import { getSession } from '@/lib/auth';
 import { BookOpen, Trash2, ExternalLink, Plus, User } from 'lucide-react';
+import PublicationLink from '@/components/publications/PublicationLink';
 
 export default async function PublicationsPage() {
     const session = await getSession();
@@ -111,15 +112,14 @@ export default async function PublicationsPage() {
                                 </div>
 
                                 {pub.link && (
-                                    <a
-                                        href={pub.link}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
+                                    <PublicationLink
+                                        id={pub.id}
+                                        url={pub.link}
                                         className="inline-flex items-center gap-1 text-primary hover:text-blue-700 text-sm font-medium"
                                     >
                                         <ExternalLink className="w-4 h-4" />
                                         Lihat Publikasi
-                                    </a>
+                                    </PublicationLink>
                                 )}
                             </div>
                         ))}

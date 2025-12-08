@@ -7,18 +7,20 @@ import PublicationSection from '@/components/home/PublicationSection';
 import Footer from '@/components/home/Footer';
 import { getAllRooms, getMonthBookings } from '@/lib/actions/bookings';
 import { getGovernanceDocs } from '@/lib/actions/governance';
+import { getTopPublications } from '@/lib/actions/publications';
 
 export default async function Home() {
   const today = new Date();
   const currentMonth = today.getMonth();
   const currentYear = today.getFullYear();
 
-  const [rooms, currentMonthBookings, nextMonthBookings, nextNextMonthBookings, sops] = await Promise.all([
+  const [rooms, currentMonthBookings, nextMonthBookings, nextNextMonthBookings, sops, topPublications] = await Promise.all([
     getAllRooms(),
     getMonthBookings(currentMonth, currentYear),
     getMonthBookings((currentMonth + 1) % 12, currentMonth + 1 > 11 ? currentYear + 1 : currentYear),
     getMonthBookings((currentMonth + 2) % 12, currentMonth + 2 > 11 ? currentYear + 1 : currentYear),
     getGovernanceDocs('SOP'),
+    getTopPublications(3),
   ]);
 
   const calendarBookings = [
@@ -49,7 +51,7 @@ export default async function Home() {
             </div>
           </div>
         </div>
-        <PublicationSection />
+        <PublicationSection topPublications={topPublications} />
       </div>
       <Footer />
     </main>

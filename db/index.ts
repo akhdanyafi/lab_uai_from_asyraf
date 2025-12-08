@@ -6,12 +6,15 @@ const globalForDb = globalThis as unknown as {
     conn: mysql.Pool | undefined;
 };
 
+import * as dotenv from 'dotenv';
+dotenv.config();
+
 const poolConnection = globalForDb.conn ?? mysql.createPool({
-    host: 'localhost',
-    user: 'root',
-    password: '',
-    database: 'be-labuai',
-    port: 3306,
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '',
+    database: process.env.DB_NAME || 'be-labuai',
+    port: parseInt(process.env.DB_PORT || '3306'),
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
