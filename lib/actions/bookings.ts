@@ -136,3 +136,8 @@ export async function getMonthBookings(month: number, year: number) {
         room: row.room!,
     }));
 }
+
+// Get rooms under maintenance
+export async function getMaintenanceRooms() {
+    return await db.select().from(rooms).where(eq(rooms.status, 'Maintenance'));
+}

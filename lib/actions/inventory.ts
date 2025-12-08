@@ -95,3 +95,21 @@ export async function deleteItem(id: number) {
     await db.delete(items).where(eq(items.id, id));
     revalidatePath('/admin/inventory');
 }
+
+// Get items under maintenance
+export async function getMaintenanceItems() {
+    const itemsRaw = await db
+        .select({
+            item: items,
+            room: rooms,
+        })
+        .from(items)
+        .leftJoin(rooms, eq(items.roomId, rooms.id))
+        .where(eq(items.status, 'Maintenance'))
+        .orderBy(desc(items.id));
+
+    return itemsRaw.map(row => ({
+        ...row.item,
+        room: row.room!,
+    }));
+}

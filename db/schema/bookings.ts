@@ -8,6 +8,7 @@ export const rooms = mysqlTable('rooms', {
     name: varchar('name', { length: 100 }).notNull(),
     location: varchar('location', { length: 255 }).notNull(),
     capacity: int('capacity').notNull(),
+    status: mysqlEnum('status', ['Tersedia', 'Maintenance']).default('Tersedia'),
 });
 
 // Room Bookings
