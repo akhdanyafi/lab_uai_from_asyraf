@@ -1,6 +1,6 @@
 import SidebarLink from './SidebarLink';
 import SidebarSubmenu from './SidebarSubmenu';
-import LogoutButton from './LogoutButton';
+import LogoutButton from '../auth/LogoutButton';
 
 interface MenuItem {
     name: string;

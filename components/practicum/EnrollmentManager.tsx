@@ -88,7 +88,13 @@ export default function EnrollmentManager({ classId }: EnrollmentManagerProps) {
 
                     // Filter out already enrolled students
                     const enrolledIds = new Set(students.map(s => s.studentId));
-                    const filteredResults = results.filter(r => !enrolledIds.has(r.id));
+                    const filteredResults = results
+                        .map(r => ({
+                            ...r,
+                            batch: r.batch ?? undefined,
+                            studyType: r.studyType ?? undefined
+                        }))
+                        .filter(r => !enrolledIds.has(r.id));
 
                     setSearchResults(filteredResults);
                     setSelectedStudentIds(new Set()); // Reset selection on search change

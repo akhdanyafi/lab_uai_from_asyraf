@@ -8,7 +8,7 @@ import {
     FileText,
     LogOut
 } from 'lucide-react';
-import Sidebar from '@/components/shared/Sidebar';
+import Sidebar from '@/components/layout/Sidebar';
 
 export default async function LecturerLayout({
     children,
