@@ -16,9 +16,13 @@ export const users = mysqlTable('users', {
     email: varchar('email', { length: 255 }).notNull().unique(),
     passwordHash: varchar('password_hash', { length: 255 }).notNull(),
     status: mysqlEnum('status', ['Active', 'Pending', 'Rejected']).default('Pending'),
+    // New fields for bulk enrollment
+    batch: int('batch'), // e.g. 2022
+    studyType: mysqlEnum('study_type', ['Reguler', 'Hybrid']).default('Reguler'),
     createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
 }, (table) => ({
     roleIdx: index('role_idx').on(table.roleId),
+    batchIdx: index('batch_idx').on(table.batch),
 }));
 
 export const usersRelations = relations(users, ({ one }) => ({

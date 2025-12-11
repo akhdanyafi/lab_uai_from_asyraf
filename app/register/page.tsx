@@ -57,6 +57,34 @@ export default function RegisterPage() {
                         />
                     </div>
 
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Angkatan</label>
+                            <select
+                                name="batch"
+                                required
+                                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#0F4C81] focus:border-transparent outline-none transition-all bg-white"
+                            >
+                                <option value="">Pilih Tahun</option>
+                                {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(year => (
+                                    <option key={year} value={year}>{year}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Tipe</label>
+                            <select
+                                name="studyType"
+                                required
+                                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#0F4C81] focus:border-transparent outline-none transition-all bg-white"
+                            >
+                                <option value="">Pilih Tipe</option>
+                                <option value="Reguler">Reguler</option>
+                                <option value="Hybrid">Hybrid</option>
+                            </select>
+                        </div>
+                    </div>
+
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                         <input

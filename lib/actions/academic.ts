@@ -400,3 +400,101 @@ export async function uploadDocument(formData: FormData) {
     revalidatePath('/lecturer/academic');
     revalidatePath('/student/academic');
 }
+// --- Class Enrollments ---
+export async function getClassMembers(classId: number) {
+    const rows = await db
+        .select({
+            enrollment: classEnrollments,
+            student: users,
+        })
+        .from(classEnrollments)
+        .leftJoin(users, eq(classEnrollments.studentId, users.id))
+        .where(eq(classEnrollments.classId, classId));
+
+    return rows.map(row => ({
+        id: row.enrollment.id,
+        studentId: row.student!.id, // Non-null assertion for safety
+        fullName: row.student!.fullName,
+        identifier: row.student!.identifier,
+        email: row.student!.email
+    }));
+}
+
+export async function enrollStudent(classId: number, studentId: number) {
+    // Check existing
+    const existing = await db.select().from(classEnrollments)
+        .where(and(eq(classEnrollments.classId, classId), eq(classEnrollments.studentId, studentId)))
+        .limit(1);
+
+    if (existing.length > 0) {
+        throw new Error("Student already enrolled");
+    }
+
+    await db.insert(classEnrollments).values({
+        classId,
+        studentId
+    });
+    revalidatePath(`/admin/practicum`);
+}
+
+export async function unenrollStudent(classId: number, studentId: number) {
+    await db.delete(classEnrollments)
+        .where(and(eq(classEnrollments.classId, classId), eq(classEnrollments.studentId, studentId)));
+    revalidatePath(`/admin/practicum`);
+}
+
+export async function searchStudents(query: string, filters?: { batch?: number, studyType?: 'Reguler' | 'Hybrid' }) {
+    // Find users with 'Mahasiswa' role and matching name/identifier
+    const studentRole = await db.select().from(roles).where(eq(roles.name, 'Mahasiswa')).limit(1);
+    if (studentRole.length === 0) return [];
+
+    const roleId = studentRole[0].id;
+
+    let conditions = and(
+        eq(users.roleId, roleId),
+        sql`(${users.fullName} LIKE ${`%${query}%`} OR ${users.identifier} LIKE ${`%${query}%`})`
+    );
+
+    if (filters?.batch) {
+        conditions = and(conditions, eq(users.batch, filters.batch));
+    }
+
+    if (filters?.studyType) {
+        conditions = and(conditions, eq(users.studyType, filters.studyType));
+    }
+
+    return await db.select({
+        id: users.id,
+        fullName: users.fullName,
+        identifier: users.identifier,
+        email: users.email,
+        batch: users.batch,
+        studyType: users.studyType
+    })
+        .from(users)
+        .where(conditions)
+        .limit(50);
+}
+
+export async function bulkEnrollStudents(classId: number, studentIds: number[]) {
+    if (studentIds.length === 0) return;
+
+    // Fetch existing enrollments to avoid duplicates
+    // We can't use simple 'NOT IN' efficiently without potentially large query string issues,
+    // but typically batch size is manageable.
+    // Better: Fetch all enrolled IDs for this class, filter locally.
+    const enrolled = await db.select({ studentId: classEnrollments.studentId })
+        .from(classEnrollments)
+        .where(eq(classEnrollments.classId, classId));
+
+    const enrolledSet = new Set(enrolled.map(e => e.studentId));
+    const toEnroll = studentIds.filter(id => !enrolledSet.has(id));
+
+    if (toEnroll.length > 0) {
+        await db.insert(classEnrollments).values(
+            toEnroll.map(studentId => ({ classId, studentId }))
+        );
+    }
+
+    revalidatePath(`/admin/practicum`);
+}

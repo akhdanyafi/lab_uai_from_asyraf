@@ -10,6 +10,7 @@ import SessionList from './SessionList';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import ModuleList from './ModuleList';
+import EnrollmentManager from '../EnrollmentManager';
 
 interface Course {
     code: string;
@@ -74,10 +75,9 @@ export default function ClassDashboard({ classes }: ClassDashboardProps) {
                             <Library className="h-4 w-4" />
                             Modul
                         </TabsTrigger>
-                        {/* Enrollments tab placeholder */}
-                        <TabsTrigger value="enrollments" className="flex items-center gap-2" disabled>
+                        <TabsTrigger value="enrollments" className="flex items-center gap-2">
                             <Users className="h-4 w-4" />
-                            Peserta (Coming Soon)
+                            Peserta
                         </TabsTrigger>
                     </TabsList>
 
@@ -108,15 +108,7 @@ export default function ClassDashboard({ classes }: ClassDashboardProps) {
                     </TabsContent>
 
                     <TabsContent value="enrollments">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Peserta Kelas</CardTitle>
-                                <CardDescription>Daftar mahasiswa yang mengambil kelas ini.</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-muted-foreground">Fitur ini akan segera tersedia.</p>
-                            </CardContent>
-                        </Card>
+                        <EnrollmentManager classId={selectedClass.id} />
                     </TabsContent>
                 </Tabs>
             ) : (

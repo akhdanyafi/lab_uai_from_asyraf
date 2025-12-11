@@ -17,6 +17,13 @@ export async function register(formData: FormData) {
         throw new Error('Password tidak cocok');
     }
 
+    const batch = formData.get('batch') ? parseInt(formData.get('batch') as string) : null;
+    const studyType = formData.get('studyType') as 'Reguler' | 'Hybrid' | null;
+
+    if (!batch || !studyType) {
+        throw new Error('Mohon lengkapi data angkatan dan tipe belajar');
+    }
+
     // Check if user exists
     const existingUser = await db.select().from(users).where(
         or(eq(users.email, email), eq(users.identifier, identifier))
@@ -44,6 +51,8 @@ export async function register(formData: FormData) {
         passwordHash: hashedPassword,
         roleId: studentRole[0].id,
         status: 'Pending',
+        batch,
+        studyType
     });
 
     redirect('/login?registered=true');

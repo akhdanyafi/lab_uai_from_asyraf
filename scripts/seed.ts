@@ -48,13 +48,44 @@ async function main() {
         await db.insert(users).values({
             roleId: studentRole.id,
             fullName: "Mahasiswa Contoh",
-            identifier: "2",
+            identifier: "0100001",
             email: studentEmail,
             passwordHash: hashedPassword,
             status: 'Active',
+            batch: 2022,
+            studyType: 'Reguler'
         });
         console.log("Created student user");
     }
+
+    // Seed Random Students for Filtering Demo
+    console.log("Seeding random students...");
+    const batches = [2021, 2022, 2023, 2024];
+    const types = ['Reguler', 'Hybrid'] as const;
+    const basePassword = await bcrypt.hash("password", 10);
+
+    for (let i = 1; i <= 20; i++) {
+        const batch = batches[Math.floor(Math.random() * batches.length)];
+        const type = types[Math.floor(Math.random() * types.length)];
+        const identifier = `0${batch}00${i.toString().padStart(2, '0')}`;
+        const email = `mhs${identifier}@uai.ac.id`;
+
+        const exists = await db.select().from(users).where(eq(users.identifier, identifier));
+        if (exists.length === 0) {
+            await db.insert(users).values({
+                roleId: studentRole.id,
+                fullName: `Mahasiswa ${identifier} (${type})`,
+                identifier: identifier,
+                email: email,
+                passwordHash: basePassword,
+                status: 'Active',
+                batch: batch,
+                studyType: type
+            });
+        }
+    }
+    console.log("Created 20 random students");
+
     // Seed Lecturer User
     const dosenEmail = "dosen@uai.ac.id";
     const existingDosen = await db.select().from(users).where(eq(users.email, dosenEmail));
@@ -64,7 +95,7 @@ async function main() {
         await db.insert(users).values({
             roleId: lecturerRole.id,
             fullName: "Dosen Contoh",
-            identifier: "3",
+            identifier: "D001",
             email: dosenEmail,
             passwordHash: hashedPassword,
             status: 'Active',
