@@ -8,10 +8,11 @@ interface Document {
     title: string;
     subject: string | null;
     description: string | null;
-    filePath: string;
+    filePath: string | null;
+    link?: string | null;
     type: string;
     createdAt: Date | null;
-    uploaderName: string;
+    uploaderName: string | null;
 }
 
 interface DocumentListProps {
@@ -67,14 +68,29 @@ export default function DocumentList({ documents, canDelete = false, onEdit, onD
                     </div>
 
                     <div className="flex items-center justify-between pt-4 border-t border-gray-50 mt-auto">
-                        <a
-                            href={doc.filePath}
-                            download
-                            className="flex items-center gap-2 text-sm text-primary hover:text-blue-700 font-medium"
-                        >
-                            <Download className="w-4 h-4" />
-                            Unduh
-                        </a>
+                        <div className="flex gap-2">
+                            {doc.filePath && (
+                                <a
+                                    href={doc.filePath}
+                                    download
+                                    className="flex items-center gap-2 text-sm text-primary hover:text-blue-700 font-medium"
+                                >
+                                    <Download className="w-4 h-4" />
+                                    Unduh
+                                </a>
+                            )}
+                            {doc.link && (
+                                <a
+                                    href={doc.link}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-2 text-sm text-primary hover:text-blue-700 font-medium"
+                                >
+                                    <FileText className="w-4 h-4" />
+                                    Link
+                                </a>
+                            )}
+                        </div>
 
                         {onEdit && (
                             <button

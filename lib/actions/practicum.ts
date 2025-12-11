@@ -127,17 +127,29 @@ export async function updateGrade(reportId: number, grade: number) {
 }
 
 export async function getClasses() {
-    return await db.query.classes.findMany({
-        with: {
-            course: true
-        }
-    });
+    return await db.select({
+        id: classes.id,
+        courseId: classes.courseId,
+        lecturerId: classes.lecturerId,
+        name: classes.name,
+        semester: classes.semester,
+        course: courses
+    })
+        .from(classes)
+        .leftJoin(courses, eq(classes.courseId, courses.id));
 }
 
 export async function getModules() {
-    return await db.query.modules.findMany({
-        with: {
-            course: true
-        }
-    });
+    return await db.select({
+        id: modules.id,
+        courseId: modules.courseId,
+        title: modules.title,
+        description: modules.description,
+        filePath: modules.filePath,
+        order: modules.order,
+        createdAt: modules.createdAt,
+        course: courses
+    })
+        .from(modules)
+        .leftJoin(courses, eq(modules.courseId, courses.id));
 }

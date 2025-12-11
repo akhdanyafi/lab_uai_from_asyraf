@@ -28,7 +28,8 @@ export default async function AdminLayout({
         { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
         { name: 'Validasi', href: '/admin/validations', icon: ClipboardList },
         { name: 'Manajemen Aset', href: '/admin/inventory', icon: Box },
-        { name: 'Manajemen Akademik', href: '/admin/academic', icon: FileText },
+        { name: 'Praktikum', href: '/admin/practicum', icon: ClipboardList },
+        { name: 'Jurnal Publikasi', href: '/admin/publications', icon: FileText },
         { name: 'Tata Kelola', href: '/admin/governance', icon: FileText },
     ];
 

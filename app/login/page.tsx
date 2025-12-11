@@ -145,11 +145,6 @@ export default function LoginPage() {
                     </Link>
                 </div>
             </div>
-
-            {/* Copyright Footer */}
-            <div className="absolute bottom-6 text-center text-xs text-[#6B7280]">
-                &copy; {new Date().getFullYear()} Lab Informatika Universitas Al Azhar Indonesia
-            </div>
         </div>
     );
 }

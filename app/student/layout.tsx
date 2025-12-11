@@ -29,7 +29,6 @@ export default async function StudentLayout({
         { name: 'Peminjaman Saya', href: '/student/loans', icon: ClipboardList },
         { name: 'Booking Ruangan', href: '/student/rooms', icon: CalendarDays },
         { name: 'Praktikum', href: '/student/sessions', icon: FileText },
-        { name: 'Akademik', href: '/student/academic', icon: FileText },
     ];
 
     return (

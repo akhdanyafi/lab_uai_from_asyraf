@@ -283,6 +283,7 @@ export async function getDocuments(type?: 'Modul Praktikum' | 'Jurnal Publikasi'
             subject: sql<string>`'Jurnal'`,
             description: publications.abstract,
             filePath: publications.filePath,
+            link: publications.link,
             type: sql<string>`'Jurnal Publikasi'`,
             createdAt: publications.createdAt,
             uploaderName: publications.authorName // Use manual author name
