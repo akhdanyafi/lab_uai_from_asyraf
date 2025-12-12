@@ -1,8 +1,9 @@
 'use server';
 
+import bcrypt from 'bcryptjs';
 import { db } from '@/db';
 import { users, roles } from '@/db/schema';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, ne, and, or } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 
 export async function getUsers() {
@@ -15,6 +16,8 @@ export async function getUsers() {
             roleId: users.roleId,
             roleName: roles.name,
             createdAt: users.createdAt,
+            batch: users.batch,
+            studyType: users.studyType
         })
         .from(users)
         .leftJoin(roles, eq(users.roleId, roles.id))
@@ -31,8 +34,10 @@ export async function createUser(data: {
     fullName: string;
     identifier: string;
     email: string;
-    passwordHash: string; // In a real app, hash this before sending or here
+    passwordHash: string;
     roleId: number;
+    batch?: number;
+    studyType?: 'Reguler' | 'Hybrid';
 }) {
     // Check if identifier or email exists
     const existing = await db.query.users.findFirst({
@@ -43,7 +48,10 @@ export async function createUser(data: {
         throw new Error('NIM/NIDN atau Email sudah terdaftar');
     }
 
-    await db.insert(users).values(data);
+    const hashedPassword = await bcrypt.hash(data.passwordHash, 10);
+    const userData = { ...data, passwordHash: hashedPassword };
+
+    await db.insert(users).values(userData);
     revalidatePath('/admin/governance');
 }
 
@@ -53,9 +61,26 @@ export async function updateUser(id: number, data: {
     email: string;
     roleId: number;
     passwordHash?: string;
+    batch?: number;
+    studyType?: 'Reguler' | 'Hybrid';
 }) {
+    // Check for conflicts excluding current user
+    const existing = await db.query.users.findFirst({
+        where: (users, { or, eq, and, ne }) => and(
+            ne(users.id, id),
+            or(eq(users.identifier, data.identifier), eq(users.email, data.email))
+        )
+    });
+
+    if (existing) {
+        throw new Error('NIM/NIDN atau Email sudah digunakan user lain');
+    }
+
     const updateData: any = { ...data };
-    if (!updateData.passwordHash) {
+
+    if (updateData.passwordHash) {
+        updateData.passwordHash = await bcrypt.hash(updateData.passwordHash, 10);
+    } else {
         delete updateData.passwordHash;
     }
 
