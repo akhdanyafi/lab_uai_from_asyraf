@@ -3,7 +3,7 @@
 import bcrypt from 'bcryptjs';
 import { db } from '@/db';
 import { users, roles } from '@/db/schema';
-import { eq, desc, ne, and, or } from 'drizzle-orm';
+import { eq, desc } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { getSession } from '@/lib/auth';
 

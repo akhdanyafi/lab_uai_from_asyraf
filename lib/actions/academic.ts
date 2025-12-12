@@ -2,7 +2,7 @@
 
 import { db } from '@/db';
 import { courses, classes, modules, practicalSessions, practicalReports, users, classEnrollments, publications, roles } from '@/db/schema';
-import { eq, desc, and, sql } from 'drizzle-orm';
+import { eq, desc, and, or, sql, inArray } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { writeFile } from 'fs/promises';
 import path from 'path';
@@ -139,7 +139,7 @@ export async function getStudentSessions(studentId: number) {
 
     if (classIds.length === 0) return [];
 
-    // 2. Get sessions for those classes
+    // 2. Get sessions for those classes using inArray for efficiency
     const rows = await db
         .select({
             session: practicalSessions,
@@ -149,17 +149,18 @@ export async function getStudentSessions(studentId: number) {
         .from(practicalSessions)
         .leftJoin(classes, eq(practicalSessions.classId, classes.id))
         .leftJoin(modules, eq(practicalSessions.moduleId, modules.id))
+        .where(inArray(practicalSessions.classId, classIds))
         .orderBy(desc(practicalSessions.startDate));
 
-    const filteredRows = rows.filter(r => classIds.includes(r.session.classId));
-
     // We also need reports for the student
+    // We can filter reports by session IDs as well to be more precise, but fetching by studentId is likely okay if they don't have thousands.
+    // However, strictly speaking, fetching all reports for a student is O(N_reports_of_student), which is fine.
     const reports = await db
         .select()
         .from(practicalReports)
         .where(eq(practicalReports.studentId, studentId));
 
-    return filteredRows.map(row => ({
+    return rows.map(row => ({
         ...row.session,
         class: row.class!,
         module: row.module!,
@@ -444,15 +445,13 @@ export async function unenrollStudent(classId: number, studentId: number) {
 }
 
 export async function searchStudents(query: string, filters?: { batch?: number, studyType?: 'Reguler' | 'Hybrid' }) {
-    // Find users with 'Mahasiswa' role and matching name/identifier
-    const studentRole = await db.select().from(roles).where(eq(roles.name, 'Mahasiswa')).limit(1);
-    if (studentRole.length === 0) return [];
-
-    const roleId = studentRole[0].id;
-
+    // Optimize: Join with roles table directly and filter in one query
     let conditions = and(
-        eq(users.roleId, roleId),
-        sql`(${users.fullName} LIKE ${`%${query}%`} OR ${users.identifier} LIKE ${`%${query}%`})`
+        eq(roles.name, 'Mahasiswa'),
+        or(
+            sql`${users.fullName} LIKE ${`%${query}%`}`,
+            sql`${users.identifier} LIKE ${`%${query}%`}`
+        )
     );
 
     if (filters?.batch) {
@@ -472,6 +471,7 @@ export async function searchStudents(query: string, filters?: { batch?: number, 
         studyType: users.studyType
     })
         .from(users)
+        .innerJoin(roles, eq(users.roleId, roles.id))
         .where(conditions)
         .limit(50);
 }
