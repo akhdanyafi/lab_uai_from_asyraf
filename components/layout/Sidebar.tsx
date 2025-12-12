@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import SidebarLink from './SidebarLink';
 import SidebarSubmenu from './SidebarSubmenu';
 import LogoutButton from '../auth/LogoutButton';
@@ -18,9 +19,10 @@ interface SidebarProps {
         initial: string;
     };
     currentPath?: string; // Deprecated but kept for compatibility
+    profileHref?: string;
 }
 
-export default function Sidebar({ subtitle, menuItems, user }: SidebarProps) {
+export default function Sidebar({ subtitle, menuItems, user, profileHref }: SidebarProps) {
     return (
         <aside className="w-64 bg-white border-r border-gray-200 fixed h-full z-30 flex flex-col font-sans">
 
@@ -67,22 +69,43 @@ export default function Sidebar({ subtitle, menuItems, user }: SidebarProps) {
             {/* --- FOOTER: USER & LOGOUT --- */}
             <div className="p-4 border-t border-gray-100 bg-[#F3F4F6]/50">
                 {/* User Profile */}
-                <div className="flex items-center gap-3 px-3 py-3 mb-2 rounded-lg bg-white border border-gray-100 shadow-sm">
-                    <div
-                        className="w-9 h-9 rounded-full bg-[#0F4C81]/10 flex items-center justify-center text-[#0F4C81] font-bold text-sm shrink-0"
-                        suppressHydrationWarning
-                    >
-                        {user.initial}
+                {profileHref ? (
+                    <Link href={profileHref} className="block group">
+                        <div className="flex items-center gap-3 px-3 py-3 mb-2 rounded-lg bg-white border border-gray-100 shadow-sm group-hover:border-[#0F4C81]/30 transition-colors cursor-pointer">
+                            <div
+                                className="w-9 h-9 rounded-full bg-[#0F4C81]/10 flex items-center justify-center text-[#0F4C81] font-bold text-sm shrink-0"
+                                suppressHydrationWarning
+                            >
+                                {user.initial}
+                            </div>
+                            <div className="overflow-hidden min-w-0">
+                                <p className="text-sm font-semibold text-[#1F2937] truncate">
+                                    {user.fullName}
+                                </p>
+                                <p className="text-xs text-[#6B7280] truncate">
+                                    {user.secondaryText}
+                                </p>
+                            </div>
+                        </div>
+                    </Link>
+                ) : (
+                    <div className="flex items-center gap-3 px-3 py-3 mb-2 rounded-lg bg-white border border-gray-100 shadow-sm">
+                        <div
+                            className="w-9 h-9 rounded-full bg-[#0F4C81]/10 flex items-center justify-center text-[#0F4C81] font-bold text-sm shrink-0"
+                            suppressHydrationWarning
+                        >
+                            {user.initial}
+                        </div>
+                        <div className="overflow-hidden min-w-0">
+                            <p className="text-sm font-semibold text-[#1F2937] truncate">
+                                {user.fullName}
+                            </p>
+                            <p className="text-xs text-[#6B7280] truncate">
+                                {user.secondaryText}
+                            </p>
+                        </div>
                     </div>
-                    <div className="overflow-hidden min-w-0">
-                        <p className="text-sm font-semibold text-[#1F2937] truncate">
-                            {user.fullName}
-                        </p>
-                        <p className="text-xs text-[#6B7280] truncate">
-                            {user.secondaryText}
-                        </p>
-                    </div>
-                </div>
+                )}
 
                 {/* Logout Action */}
                 <LogoutButton />

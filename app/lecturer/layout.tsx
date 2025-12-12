@@ -36,6 +36,7 @@ export default async function LecturerLayout({
             <Sidebar
                 subtitle="Lecturer Portal"
                 menuItems={menuItems}
+                profileHref="/lecturer/profile"
                 user={{
                     fullName: session.user.fullName,
                     secondaryText: session.user.identifier,

@@ -5,6 +5,7 @@ import { db } from '@/db';
 import { users, roles } from '@/db/schema';
 import { eq, desc, ne, and, or } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
+import { getSession } from '@/lib/auth';
 
 export async function getUsers() {
     const allUsers = await db
@@ -113,4 +114,109 @@ export async function updateUserStatus(userId: number, status: 'Active' | 'Rejec
         .where(eq(users.id, userId));
 
     revalidatePath('/admin/validations');
+}
+
+export async function updateUserProfile(data: {
+    fullName?: string;
+    identifier?: string;
+    currentPassword: string;
+    newEmail?: string;
+    newPassword?: string;
+    confirmNewPassword?: string;
+}) {
+    const session = await getSession();
+    if (!session?.user) {
+        throw new Error('Unauthorized');
+    }
+
+    const userId = session.user.id;
+
+    // Get current user and role
+    const usersWithRoles = await db
+        .select({
+            user: users,
+            roleName: roles.name,
+        })
+        .from(users)
+        .leftJoin(roles, eq(users.roleId, roles.id))
+        .where(eq(users.id, userId))
+        .limit(1);
+
+    const userRecord = usersWithRoles[0];
+
+    if (!userRecord) {
+        throw new Error('User not found');
+    }
+
+    const { user, roleName } = userRecord;
+
+    // Verify current password
+    const passwordMatch = await bcrypt.compare(data.currentPassword, user.passwordHash);
+    if (!passwordMatch) {
+        throw new Error('Password saat ini salah');
+    }
+
+    const updateData: any = {};
+    const isAdmin = roleName === 'Admin';
+
+    console.log('[updateUserProfile] Debug:', {
+        userId,
+        roleName,
+        isAdmin,
+        receivedData: data,
+        currentUser: user
+    });
+
+    // Handle Identity Update (Admin Only)
+    if (isAdmin) {
+        if (data.fullName && data.fullName !== user.fullName) {
+            updateData.fullName = data.fullName;
+        }
+
+        if (data.identifier && data.identifier !== user.identifier) {
+            // Check for uniqueness
+            const existing = await db.query.users.findFirst({
+                where: (users, { and, ne, eq }) => and(
+                    ne(users.id, userId),
+                    eq(users.identifier, data.identifier!)
+                )
+            });
+
+            if (existing) {
+                throw new Error('NIM/NIDN sudah digunakan user lain');
+            }
+            updateData.identifier = data.identifier;
+        }
+    }
+
+    // Handle Email Update
+    if (data.newEmail && data.newEmail !== user.email) {
+        // Check if email is already taken by ANOTHER user
+        const existing = await db.query.users.findFirst({
+            where: (users, { and, ne, eq }) => and(
+                ne(users.id, userId),
+                eq(users.email, data.newEmail!)
+            )
+        });
+
+        if (existing) {
+            throw new Error('Email sudah digunakan user lain');
+        }
+        updateData.email = data.newEmail;
+    }
+
+    // Handle Password Update
+    if (data.newPassword) {
+        if (data.newPassword !== data.confirmNewPassword) {
+            throw new Error('Konfirmasi password baru tidak sesuai');
+        }
+        updateData.passwordHash = await bcrypt.hash(data.newPassword, 10);
+    }
+
+    if (Object.keys(updateData).length > 0) {
+        await db.update(users).set(updateData).where(eq(users.id, userId));
+        revalidatePath('/admin/profile');
+        revalidatePath('/student/profile');
+        revalidatePath('/lecturer/profile');
+    }
 }

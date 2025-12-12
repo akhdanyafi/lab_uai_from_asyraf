@@ -38,6 +38,7 @@ export default async function StudentLayout({
             <Sidebar
                 subtitle="Student Portal"
                 menuItems={menuItems}
+                profileHref="/student/profile"
                 user={{
                     fullName: session.user.fullName,
                     secondaryText: session.user.identifier,

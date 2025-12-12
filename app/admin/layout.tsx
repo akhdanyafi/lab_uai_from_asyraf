@@ -39,6 +39,7 @@ export default async function AdminLayout({
             <Sidebar
                 subtitle="Admin Panel"
                 menuItems={menuItems}
+                profileHref="/admin/profile"
                 user={{
                     fullName: session.user.fullName,
                     secondaryText: session.user.email,
