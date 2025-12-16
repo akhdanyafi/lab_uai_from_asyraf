@@ -1,7 +1,8 @@
 'use server';
 
 import { db } from '@/db';
-import { practicalSessions, practicalReports, modules, classes, courses, users } from '@/db/schema';
+import { practicalSessions, practicalReports, modules, classes, courses } from '@/db/schema/academic';
+import { users } from '@/db/schema/users';
 import { eq, and, desc, lt, lte, gt } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 
@@ -24,6 +25,44 @@ export async function getSessions() {
         .orderBy(desc(practicalSessions.startDate));
 
     // Map to expected structure
+    return sessions.map(s => ({
+        id: s.id,
+        classId: s.classId,
+        moduleId: s.moduleId,
+        startDate: s.startDate,
+        deadline: s.deadline,
+        isOpen: s.isOpen,
+        module: {
+            title: s.moduleTitle!,
+            course: {
+                name: s.courseName!
+            }
+        },
+        class: {
+            name: s.className!
+        }
+    }));
+}
+
+export async function getLecturerSessions(lecturerId: number) {
+    const sessions = await db.select({
+        id: practicalSessions.id,
+        classId: practicalSessions.classId,
+        moduleId: practicalSessions.moduleId,
+        startDate: practicalSessions.startDate,
+        deadline: practicalSessions.deadline,
+        isOpen: practicalSessions.isOpen,
+        moduleTitle: modules.title,
+        courseName: courses.name,
+        className: classes.name,
+    })
+        .from(practicalSessions)
+        .leftJoin(modules, eq(practicalSessions.moduleId, modules.id))
+        .leftJoin(courses, eq(modules.courseId, courses.id))
+        .leftJoin(classes, eq(practicalSessions.classId, classes.id))
+        .where(eq(classes.lecturerId, lecturerId))
+        .orderBy(desc(practicalSessions.startDate));
+
     return sessions.map(s => ({
         id: s.id,
         classId: s.classId,

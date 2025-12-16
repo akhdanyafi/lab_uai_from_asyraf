@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { createClass, deleteClass } from '@/lib/actions/academic';
 import { useState } from 'react';
 import { Trash2, Plus } from 'lucide-react';
@@ -91,7 +92,11 @@ export default function ClassesView({ classes, courses, lecturers }: ClassesView
                     <tbody className="divide-y divide-gray-100">
                         {classes.map((cls) => (
                             <tr key={cls.id} className="hover:bg-gray-50 transition-colors">
-                                <td className="px-6 py-4 font-medium text-gray-900">{cls.name}</td>
+                                <td className="px-6 py-4 font-medium text-gray-900">
+                                    <Link href={`/lecturer/classes/${cls.id}`} className="hover:text-blue-600 hover:underline">
+                                        {cls.name}
+                                    </Link>
+                                </td>
                                 <td className="px-6 py-4 text-gray-600">{cls.course.name} ({cls.course.code})</td>
                                 <td className="px-6 py-4 text-gray-600">{cls.lecturer.fullName}</td>
                                 <td className="px-6 py-4 text-gray-500">{cls.semester}</td>

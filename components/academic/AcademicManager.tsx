@@ -149,7 +149,13 @@ export default function AcademicManager({
                 {activeTab === 'reports' && visibleTabs.includes('reports') && <DocumentList documents={reports} canDelete={canDeleteReports} />}
                 {activeTab === 'courses' && visibleTabs.includes('courses') && <CoursesView courses={courses} />}
                 {activeTab === 'classes' && visibleTabs.includes('classes') && <ClassesView classes={classes} courses={courses} lecturers={lecturers} />}
-                {activeTab === 'practicum' && visibleTabs.includes('practicum') && <PracticumView sessions={sessions} />}
+                {activeTab === 'practicum' && visibleTabs.includes('practicum') && (
+                    <PracticumView
+                        sessions={sessions}
+                        userRole={userRole}
+                        baseUrl={userRole === 'Dosen' ? '/lecturer/sessions' : '/admin/practicum'}
+                    />
+                )}
             </div>
         </div>
     );

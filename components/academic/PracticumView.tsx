@@ -7,9 +7,11 @@ import { id } from 'date-fns/locale';
 
 interface PracticumViewProps {
     sessions: any[];
+    baseUrl?: string;
+    userRole?: string;
 }
 
-export default function PracticumView({ sessions }: PracticumViewProps) {
+export default function PracticumView({ sessions, baseUrl = '/admin/practicum', userRole = 'Admin' }: PracticumViewProps) {
     const getStatus = (start: Date, end: Date, isOpen: boolean) => {
         const now = new Date();
         if (!isOpen) return { label: 'Ditutup', color: 'bg-red-100 text-red-700', icon: XCircle };
@@ -22,13 +24,15 @@ export default function PracticumView({ sessions }: PracticumViewProps) {
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <h2 className="text-lg font-semibold text-gray-900">Jadwal Praktikum</h2>
-                <Link
-                    href="/admin/practicum/create"
-                    className="flex items-center gap-2 bg-[#0F4C81] text-white px-4 py-2 rounded-lg hover:bg-[#0F4C81]/90 transition-colors text-sm font-medium"
-                >
-                    <Plus className="w-4 h-4" />
-                    <span>Buat Sesi Baru</span>
-                </Link>
+                {userRole === 'Admin' && (
+                    <Link
+                        href={`${baseUrl}/create`}
+                        className="flex items-center gap-2 bg-[#0F4C81] text-white px-4 py-2 rounded-lg hover:bg-[#0F4C81]/90 transition-colors text-sm font-medium"
+                    >
+                        <Plus className="w-4 h-4" />
+                        <span>Buat Sesi Baru</span>
+                    </Link>
+                )}
             </div>
 
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
@@ -74,7 +78,7 @@ export default function PracticumView({ sessions }: PracticumViewProps) {
                                     </td>
                                     <td className="p-4">
                                         <Link
-                                            href={`/admin/practicum/${session.id}`}
+                                            href={`${baseUrl}/${session.id}`}
                                             className="text-[#0F4C81] hover:underline text-sm font-medium"
                                         >
                                             Detail

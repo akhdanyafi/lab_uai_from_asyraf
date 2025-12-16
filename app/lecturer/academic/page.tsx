@@ -1,5 +1,5 @@
 import { getDocuments, getCourses, getClasses, getLecturers } from '@/lib/actions/academic';
-import { getSessions } from '@/lib/actions/practicum';
+import { getLecturerSessions } from '@/lib/actions/practicum';
 import AcademicManager from '@/components/academic/AcademicManager';
 import { getSession } from '@/lib/auth';
 
@@ -13,7 +13,7 @@ export default async function LecturerAcademicPage() {
         getCourses(),
         getClasses(),
         getLecturers(),
-        getSessions()
+        getLecturerSessions(session?.user.id || 0)
     ]);
 
     return (
@@ -27,7 +27,7 @@ export default async function LecturerAcademicPage() {
             sessions={sessions}
             userRole="Dosen"
             userId={session?.user.id || 0}
-            visibleTabs={['modules', 'journals']}
+            visibleTabs={['modules', 'journals', 'courses', 'classes', 'practicum']}
         />
     );
 }
