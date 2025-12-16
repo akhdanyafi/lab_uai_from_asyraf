@@ -1,36 +1,50 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Lab UAI Management System
 
-## Getting Started
+A comprehensive web application for managing laboratory resources, academic activities, and user administration at Universitas Al Azhar Indonesia.
 
-First, run the development server:
+## Key Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **User Roles**: Specialized dashboards for Admins, Lecturers, Students, and Assistants.
+- **Inventory Management**: Track lab equipment, manage loans, and handle returns.
+- **Room Booking**: Schedule and manage laboratory room usage.
+- **Academic Portal**: Manage practical modules, grades, and report submissions.
+- **Governance**: Centralized repository for SOPs and LPJs.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Tech Stack
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Framework**: Next.js 15 (App Router)
+- **Database**: MySQL with Drizzle ORM
+- **Styling**: Tailwind CSS
+- **Language**: TypeScript
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Quick Start
 
-## Learn More
+1.  **Install dependencies**:
+    ```bash
+    npm install
+    ```
+2.  **Setup Environment**:
+    Create `.env` with your `DATABASE_URL`.
+3.  **Initialize Database**:
+    ```bash
+    npm run db:generate
+    npm run db:push
+    npm run db:seed
+    ```
+4.  **Run Development Server**:
+    ```bash
+    npm run dev
+    ```
 
-To learn more about Next.js, take a look at the following resources:
+## Documentation
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+For more detailed information, please refer to the documentation:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- [**Setup Guide**](docs/SETUP.md): Detailed installation and configuration instructions.
+- [**Architecture**](docs/ARCHITECTURE.md): Overview of the codebase structure and database schema.
+- [**Features**](docs/FEATURES.md): Detailed breakdown of system capabilities by role.
+- [**Contributing**](docs/CONTRIBUTING.md): Guidelines for development and standard practices.
 
-## Deploy on Vercel
+## License
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+[Add License Here]
