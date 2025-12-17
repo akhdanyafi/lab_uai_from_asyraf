@@ -7,9 +7,10 @@ import { useRouter } from 'next/navigation';
 interface SessionFormProps {
     classes: any[];
     modules: any[];
+    redirectTo?: string;
 }
 
-export default function SessionForm({ classes, modules }: SessionFormProps) {
+export default function SessionForm({ classes, modules, redirectTo = '/admin/practicum' }: SessionFormProps) {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
 
@@ -22,7 +23,7 @@ export default function SessionForm({ classes, modules }: SessionFormProps) {
 
         await createSession({ classId, moduleId, startDate, deadline });
         setLoading(false);
-        router.push('/admin/practicum');
+        router.push(redirectTo);
     }
 
     return (

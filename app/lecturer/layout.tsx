@@ -24,7 +24,8 @@ export default async function LecturerLayout({
     const menuItems = [
         { name: 'Dashboard', href: '/lecturer/dashboard', icon: LayoutDashboard },
         { name: 'Booking Ruangan', href: '/lecturer/rooms', icon: CalendarDays },
-        { name: 'Akademik', href: '/lecturer/academic', icon: FileText },
+        { name: 'Praktikum', href: '/lecturer/practicum', icon: FileText },
+        { name: 'Jurnal Publikasi', href: '/lecturer/publications', icon: FileText },
     ];
 
     return (

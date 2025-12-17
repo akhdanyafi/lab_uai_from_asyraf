@@ -27,9 +27,10 @@ interface ClassData {
 
 interface ClassDashboardProps {
     classes: ClassData[];
+    basePath?: string;
 }
 
-export default function ClassDashboard({ classes }: ClassDashboardProps) {
+export default function ClassDashboard({ classes, basePath = '/admin/practicum' }: ClassDashboardProps) {
     const [selectedClassId, setSelectedClassId] = useState<number | undefined>(
         classes.length > 0 ? classes[0].id : undefined
     );
@@ -85,7 +86,7 @@ export default function ClassDashboard({ classes }: ClassDashboardProps) {
                         <div className="flex items-center justify-between">
                             <h2 className="text-lg font-semibold">Daftar Sesi Praktikum</h2>
                             <Button asChild size="sm">
-                                <Link href="/admin/practicum/create">
+                                <Link href={`${basePath}/create`}>
                                     <ClipboardList className="mr-2 h-4 w-4" />
                                     Buat Sesi Baru
                                 </Link>
@@ -98,7 +99,7 @@ export default function ClassDashboard({ classes }: ClassDashboardProps) {
                         <div className="flex items-center justify-between">
                             <h2 className="text-lg font-semibold">Daftar Modul - {selectedClass.course.name}</h2>
                             <Button size="sm" variant="outline" asChild>
-                                <Link href={`/admin/practicum/create-module?courseId=${selectedClass.courseId}`}>
+                                <Link href={`${basePath}/create-module?courseId=${selectedClass.courseId}`}>
                                     <Library className="mr-2 h-4 w-4" />
                                     Tambah Modul
                                 </Link>

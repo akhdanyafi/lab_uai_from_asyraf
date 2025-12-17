@@ -7,9 +7,10 @@ import { Button } from '@/components/ui/button';
 
 interface ModuleFormProps {
     courses: any[];
+    redirectTo?: string;
 }
 
-export default function ModuleForm({ courses }: ModuleFormProps) {
+export default function ModuleForm({ courses, redirectTo = '/admin/practicum' }: ModuleFormProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
     const defaultCourseId = searchParams.get('courseId');
@@ -25,7 +26,7 @@ export default function ModuleForm({ courses }: ModuleFormProps) {
 
         await createModule({ courseId, title, description, filePath, order });
         setLoading(false);
-        router.push('/admin/practicum');
+        router.push(redirectTo);
     }
 
     return (
