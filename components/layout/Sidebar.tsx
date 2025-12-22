@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import SidebarLink from './SidebarLink';
 import SidebarSubmenu from './SidebarSubmenu';
-import LogoutButton from '../auth/LogoutButton';
+import LogoutButton from './LogoutButton';
 
 interface MenuItem {
     name: string;
