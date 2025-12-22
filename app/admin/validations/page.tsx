@@ -5,9 +5,9 @@ import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { Box, User, CheckCircle, XCircle, MapPin } from 'lucide-react';
 import CalendarView from '@/components/shared/CalendarView';
-import ValidationTabs from '@/components/admin/ValidationTabs';
+import ValidationTabs from './_components/ValidationTabs';
 
-import LoanHistoryFilter from '@/components/admin/LoanHistoryFilter';
+import LoanHistoryFilter from './_components/LoanHistoryFilter';
 
 export default async function AdminValidationsPage({
     searchParams,

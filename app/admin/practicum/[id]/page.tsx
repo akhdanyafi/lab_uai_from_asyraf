@@ -1,5 +1,5 @@
 import { getSessionById } from '@/lib/actions/practicum';
-import GradingTable from '@/components/practicum/GradingTable';
+import GradingTable from './_components/GradingTable';
 import { notFound } from 'next/navigation';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';

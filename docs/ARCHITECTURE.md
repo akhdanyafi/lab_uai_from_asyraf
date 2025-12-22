@@ -17,16 +17,40 @@ This document provides a high-level overview of the LAB_UAI technical architectu
 ```
 LAB_UAI/
 ├── app/                    # Next.js App Router (Frontend)
+│   ├── (home)/             # Homepage route group
+│   │   ├── _components/    # Colocated homepage components
+│   │   └── page.tsx        # Homepage (URL: /)
+│   │
+│   ├── (auth)/             # Auth route group
+│   │   ├── login/          # Login page (URL: /login)
+│   │   └── register/       # Register page (URL: /register)
+│   │
 │   ├── admin/              # Admin dashboard routes
+│   │   ├── hero-photos/_components/
+│   │   ├── inventory/_components/
+│   │   ├── validations/_components/
+│   │   ├── practicum/[id]/_components/
+│   │   └── layout.tsx
+│   │
 │   ├── student/            # Student routes
+│   │   ├── items/_components/
+│   │   └── layout.tsx
+│   │
 │   ├── lecturer/           # Lecturer routes
-│   ├── login/              # Authentication
-│   └── page.tsx            # Homepage
+│   └── publications/       # Public publications page
 │
-├── components/             # Reusable UI components
+├── components/             # Shared UI components
+│   ├── home/               # Navbar, Footer (shared layout)
 │   ├── governance/         # SOP, LPJ components
+│   ├── practicum/          # Practicum management
+│   ├── academic/           # Academic documents
+│   ├── publications/       # Publication components
+│   ├── profile/            # Profile components
+│   ├── rooms/              # Room booking components
+│   ├── shared/             # Shared utilities (CalendarView, etc.)
+│   ├── layout/             # Layout components (Sidebar, Header)
 │   ├── ui/                 # Generic UI elements
-│   └── ...                 # Domain-specific components
+│   └── auth/               # Auth form components
 │
 ├── lib/                    # Backend logic
 │   ├── actions/            # Server Actions (thin entry points)
@@ -38,13 +62,7 @@ LAB_UAI/
 │
 ├── db/                     # Database layer
 │   ├── schema/             # Drizzle schema definitions
-│   │   ├── users.ts        # Users, roles
-│   │   ├── inventory.ts    # Items, loans
-│   │   ├── academic.ts     # Modules, reports, sessions
-│   │   ├── bookings.ts     # Room bookings
-│   │   └── others.ts       # Governance docs, hero photos
 │   ├── seeds/              # Database seeders
-│   │   └── initial.seed.ts # Initial data seed
 │   ├── index.ts            # Database connection
 │   └── schema.ts           # Schema exports
 │
@@ -53,6 +71,32 @@ LAB_UAI/
 └── middleware.ts           # Auth middleware
 ```
 
+## Component Organization
+
+### Route Groups
+
+Route groups (folders with parentheses) organize routes without affecting URLs:
+
+| Folder | Purpose | URL |
+|--------|---------|-----|
+| `(home)` | Homepage + components | `/` |
+| `(auth)` | Login & Register | `/login`, `/register` |
+
+### Colocation Strategy
+
+Single-use components are colocated with their routes using `_components/`:
+
+| Route | Colocated Components |
+|-------|---------------------|
+| `admin/hero-photos` | HeroPhotoManager |
+| `admin/validations` | ValidationTabs, LoanHistoryFilter |
+| `admin/inventory` | InventoryManager, RoomsView, ItemsView, CategoriesView |
+| `admin/practicum/[id]` | GradingTable |
+| `student/items` | ItemCard, ItemFilter |
+| `(home)` | HeroSection, HeroCarousel, HomeCalendar, SOPSection, PublicationSection, AnnouncementSection |
+
+Shared components remain in `components/` organized by feature.
+
 ## Architecture Pattern
 
 ### Service Layer Pattern
@@ -60,37 +104,15 @@ LAB_UAI/
 The backend follows a **Service Layer Pattern** for clean separation of concerns:
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                      Frontend                           │
-│                  (React Components)                     │
-└────────────────────────┬────────────────────────────────┘
-                         │ calls
-                         ▼
-┌─────────────────────────────────────────────────────────┐
-│                   Server Actions                        │
-│              (lib/actions/*.ts)                         │
-│    - Thin wrappers for services                         │
-│    - Handle revalidatePath()                            │
-│    - Next.js specific (cache invalidation)              │
-└────────────────────────┬────────────────────────────────┘
-                         │ delegates to
-                         ▼
-┌─────────────────────────────────────────────────────────┐
-│                    Services                             │
-│              (lib/services/*.ts)                        │
-│    - Business logic                                     │
-│    - Reusable & testable                                │
-│    - Framework agnostic                                 │
-└────────────────────────┬────────────────────────────────┘
-                         │ uses
-                         ▼
-┌─────────────────────────────────────────────────────────┐
-│                   Database Layer                        │
-│              (db/schema/*.ts)                           │
-│    - Drizzle ORM schemas                                │
-│    - Type-safe queries                                  │
-└─────────────────────────────────────────────────────────┘
+Frontend (React) → Server Actions → Services → Database
 ```
+
+| Layer | Location | Responsibility |
+|-------|----------|----------------|
+| Server Actions | `lib/actions/` | Thin wrappers, cache invalidation |
+| Services | `lib/services/` | Business logic, testable |
+| Validators | `lib/validators/` | Zod input validation |
+| Database | `db/schema/` | Drizzle ORM schemas |
 
 ### Services
 
@@ -104,14 +126,6 @@ The backend follows a **Service Layer Pattern** for clean separation of concerns
 | `PublicationService` | publication.service.ts | Publication management |
 | `HeroPhotoService` | hero-photo.service.ts | Hero carousel photos |
 
-### Validators
-
-Zod schemas in `lib/validators/` ensure type-safe input validation:
-- `loan.validator.ts` - Loan creation/status schemas
-- `user.validator.ts` - User CRUD schemas
-- `booking.validator.ts` - Booking schemas
-- `inventory.validator.ts` - Room, category, item schemas
-
 ## Key Concepts
 
 ### Authentication
@@ -123,9 +137,3 @@ The database uses foreign key relationships:
 - **Inventory**: Items can be borrowed with approval workflows
 - **Academic**: Students submit reports for practical sessions
 - **Bookings**: Room reservations with status tracking
-
-### Server Actions
-Server Actions in `lib/actions/` are thin wrappers that:
-1. Call the appropriate service method
-2. Handle cache invalidation via `revalidatePath()`
-3. Provide type-safe API for frontend components

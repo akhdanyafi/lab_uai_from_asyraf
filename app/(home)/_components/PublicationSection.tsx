@@ -1,5 +1,5 @@
 import { BookOpen, Eye, User } from 'lucide-react';
-import PublicationLink from '../publications/PublicationLink';
+import PublicationLink from '@/components/publications/PublicationLink';
 
 interface Publication {
     id: number;

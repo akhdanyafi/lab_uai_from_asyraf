@@ -1,5 +1,5 @@
 import { getHeroPhotos } from '@/lib/actions/hero-photos';
-import HeroPhotoManager from '@/components/admin/HeroPhotoManager';
+import HeroPhotoManager from './_components/HeroPhotoManager';
 
 export default async function HeroPhotosPage() {
     const photos = await getHeroPhotos();

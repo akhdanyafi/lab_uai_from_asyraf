@@ -4,8 +4,7 @@ import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Users, Library, ClipboardList } from 'lucide-react';
-import ClassSelector from '../args/ClassSelector';
+import { Users, Library, ClipboardList, ChevronDown } from 'lucide-react';
 import SessionList from './SessionList';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -54,11 +53,20 @@ export default function ClassDashboard({ classes, basePath = '/admin/practicum' 
                     </Button>
                     <div className="flex items-center gap-2 bg-white p-1 rounded-lg border border-gray-200">
                         <span className="text-sm font-medium text-gray-600 pl-2">Kelas:</span>
-                        <ClassSelector
-                            classes={classes}
-                            selectedClassId={selectedClassId}
-                            onSelectClass={setSelectedClassId}
-                        />
+                        <div className="relative">
+                            <select
+                                value={selectedClassId || ''}
+                                onChange={(e) => setSelectedClassId(Number(e.target.value))}
+                                className="appearance-none bg-gray-50 border border-gray-200 rounded-md px-3 py-1.5 pr-8 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20"
+                            >
+                                {classes.map((cls) => (
+                                    <option key={cls.id} value={cls.id}>
+                                        {cls.name} - {cls.course.name}
+                                    </option>
+                                ))}
+                            </select>
+                            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                        </div>
                     </div>
                 </div>
             </div>

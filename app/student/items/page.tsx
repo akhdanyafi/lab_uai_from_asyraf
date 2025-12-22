@@ -2,8 +2,8 @@ import { getAvailableItems } from '@/lib/actions/loans';
 import { getCategories } from '@/lib/actions/inventory';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
-import ItemCard from '@/components/items/ItemCard';
-import ItemFilter from '@/components/student/ItemFilter';
+import ItemCard from './_components/ItemCard';
+import ItemFilter from './_components/ItemFilter';
 import { Box } from 'lucide-react';
 
 export default async function BrowseItemsPage({ searchParams }: { searchParams: Promise<{ category?: string }> }) {

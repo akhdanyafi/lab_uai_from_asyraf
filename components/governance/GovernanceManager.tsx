@@ -1,25 +1,25 @@
 'use client';
 
 import { useState } from 'react';
-import { FileText, Users, FileCheck, Image as ImageIcon } from 'lucide-react';
-import DocumentList from '@/components/academic/DocumentList'; // Reusing DocumentList
+import { FileText, Users, FileCheck } from 'lucide-react';
+import DocumentList from '@/components/academic/DocumentList';
 import { deleteGovernanceDoc } from '@/lib/actions/governance';
 import GovernanceUploadForm from './GovernanceUploadForm';
 import UserList from './UserList';
 import UserForm from './UserForm';
-import HeroPhotoManager from '@/components/admin/HeroPhotoManager';
 
 interface GovernanceManagerProps {
     sops: any[];
     lpjs: any[];
     users: any[];
     roles: any[];
-    heroPhotos: any[];
     adminId: number;
 }
 
-export default function GovernanceManager({ sops, lpjs, users, roles, heroPhotos, adminId }: GovernanceManagerProps) {
-    const [activeTab, setActiveTab] = useState<'sop' | 'lpj' | 'users' | 'hero'>('sop');
+export default function GovernanceManager({ sops, lpjs, users, roles, adminId }: GovernanceManagerProps) {
+    const [activeTab, setActiveTab] = useState<'sop' | 'lpj' | 'users'>('sop');
+
+
     const [showUserForm, setShowUserForm] = useState(false);
     const [editingDoc, setEditingDoc] = useState<any>(null);
 
@@ -63,16 +63,6 @@ export default function GovernanceManager({ sops, lpjs, users, roles, heroPhotos
                 >
                     <FileText className="w-4 h-4" />
                     LPJ Bulanan
-                </button>
-                <button
-                    onClick={() => { setActiveTab('hero'); setEditingDoc(null); }}
-                    className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${activeTab === 'hero'
-                        ? 'bg-white text-[#0F4C81] shadow-sm'
-                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'
-                        }`}
-                >
-                    <ImageIcon className="w-4 h-4" />
-                    Foto Hero
                 </button>
                 <button
                     onClick={() => { setActiveTab('users'); setEditingDoc(null); }}
@@ -120,10 +110,6 @@ export default function GovernanceManager({ sops, lpjs, users, roles, heroPhotos
                             onDelete={deleteGovernanceDoc}
                         />
                     </>
-                )}
-
-                {activeTab === 'hero' && (
-                    <HeroPhotoManager initialPhotos={heroPhotos} />
                 )}
 
                 {activeTab === 'users' && (
