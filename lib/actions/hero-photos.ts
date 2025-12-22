@@ -1,13 +1,11 @@
 'use server';
 
-import { db } from '@/db';
-import { heroPhotos } from '@/db/schema';
-import { eq, desc } from 'drizzle-orm';
+import { HeroPhotoService } from '@/lib/services/hero-photo.service';
 import { revalidatePath } from 'next/cache';
 import { saveFile, deleteFile } from '@/lib/upload';
 
 export async function getHeroPhotos() {
-    return await db.select().from(heroPhotos).orderBy(desc(heroPhotos.createdAt));
+    return HeroPhotoService.getAll();
 }
 
 export async function addHeroPhoto(formData: FormData) {
@@ -22,7 +20,7 @@ export async function addHeroPhoto(formData: FormData) {
 
     const imageUrl = await saveFile(file);
 
-    await db.insert(heroPhotos).values({
+    await HeroPhotoService.create({
         title,
         description,
         imageUrl,
@@ -39,44 +37,38 @@ export async function updateHeroPhoto(id: number, formData: FormData) {
     const link = formData.get('link') as string;
     const file = formData.get('file') as File;
 
-    const updateData: any = {
-        title,
-        description,
-        link: link || null,
-    };
+    let imageUrl: string | undefined;
 
     if (file && file.size > 0) {
         // Get old photo to delete
-        const oldPhoto = await db.query.heroPhotos.findFirst({
-            where: eq(heroPhotos.id, id)
-        });
+        const oldPhoto = await HeroPhotoService.getById(id);
 
         if (oldPhoto?.imageUrl) {
             await deleteFile(oldPhoto.imageUrl);
         }
 
-        const imageUrl = await saveFile(file);
-        updateData.imageUrl = imageUrl;
+        imageUrl = await saveFile(file);
     }
 
-    await db.update(heroPhotos)
-        .set(updateData)
-        .where(eq(heroPhotos.id, id));
+    await HeroPhotoService.update(id, {
+        title,
+        description,
+        imageUrl,
+        link: link || null,
+    });
 
     revalidatePath('/');
     revalidatePath('/admin/hero-photos');
 }
 
 export async function deleteHeroPhoto(id: number) {
-    const photo = await db.query.heroPhotos.findFirst({
-        where: eq(heroPhotos.id, id)
-    });
+    const photo = await HeroPhotoService.getById(id);
 
     if (photo?.imageUrl) {
         await deleteFile(photo.imageUrl);
     }
 
-    await db.delete(heroPhotos).where(eq(heroPhotos.id, id));
+    await HeroPhotoService.delete(id);
     revalidatePath('/');
     revalidatePath('/admin/hero-photos');
 }

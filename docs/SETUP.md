@@ -45,11 +45,17 @@ This project uses Drizzle ORM.
     ```
     *Note: `db:push` is useful for rapid prototyping. For production, consider using `db:migrate` with migration files.*
 
-3.  **Seed initial data** (Optional but recommended for development):
+3.  **Seed initial data** (Recommended):
+    
+    The seed functions are located in `db/seeds/initial.seed.ts` and include:
+    - Default roles (Admin, Mahasiswa, Dosen)
+    - Admin user (admin@lab-uai.ac.id / admin123)
+    - Sample rooms, categories, and courses
+    
+    To run seeds, you can use ts-node or tsx:
     ```bash
-    npm run db:seed
+    npx tsx -e "import { runAllSeeds } from './db/seeds'; runAllSeeds();"
     ```
-    *This script creates default admin users and initial data.*
 
 ## Running the Application
 
@@ -60,9 +66,31 @@ This project uses Drizzle ORM.
 
 2.  Open [http://localhost:3000](http://localhost:3000) in your browser.
 
+## Project Structure
+
+```
+lib/
+├── actions/      # Server Actions (entry points)
+├── services/     # Business logic
+├── validators/   # Zod validation schemas
+└── ...
+
+db/
+├── schema/       # Database models
+├── seeds/        # Seed data
+└── ...
+```
+
+See [ARCHITECTURE.md](./ARCHITECTURE.md) for detailed structure.
+
 ## Additional Commands
 
-- `npm run lint`: Run ESLint checks.
-- `npm run build`: Build the application for production.
-- `npm run start`: Start the production server.
-- `npm run db:studio`: Launch Drizzle Studio to view database content in a browser.
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start development server |
+| `npm run build` | Build for production |
+| `npm run start` | Start production server |
+| `npm run lint` | Run ESLint checks |
+| `npm run db:generate` | Generate migration files |
+| `npm run db:push` | Push schema to database |
+| `npm run db:studio` | Launch Drizzle Studio |

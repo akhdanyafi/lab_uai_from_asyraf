@@ -1,8 +1,6 @@
 'use server';
 
-import { db } from '@/db';
-import { publications } from '@/db/schema';
-import { eq, desc, sql } from 'drizzle-orm';
+import { PublicationService } from '@/lib/services/publication.service';
 import { revalidatePath } from 'next/cache';
 
 export async function createPublication(data: {
@@ -14,32 +12,27 @@ export async function createPublication(data: {
     filePath?: string;
     publishDate?: Date;
 }) {
-    await db.insert(publications).values(data);
+    await PublicationService.create(data);
     revalidatePath('/student/publications');
     revalidatePath('/publications');
 }
 
 export async function getPublications() {
-    return await db.select().from(publications).orderBy(desc(publications.publishDate));
+    return PublicationService.getAll();
 }
 
 export async function deletePublication(id: number) {
-    await db.delete(publications).where(eq(publications.id, id));
+    await PublicationService.delete(id);
     revalidatePath('/student/publications');
     revalidatePath('/publications');
 }
 
 export async function incrementViewCount(id: number) {
-    await db.update(publications)
-        .set({ viewCount: sql`${publications.viewCount} + 1` })
-        .where(eq(publications.id, id));
+    await PublicationService.incrementViewCount(id);
     revalidatePath('/publications');
     revalidatePath('/');
 }
 
 export async function getTopPublications(limit: number = 5) {
-    return await db.select()
-        .from(publications)
-        .orderBy(desc(publications.viewCount))
-        .limit(limit);
+    return PublicationService.getTop(limit);
 }
