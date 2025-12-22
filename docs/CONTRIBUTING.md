@@ -80,8 +80,18 @@ export async function seedMyFeature() {
 
 | Type | Pattern | Example |
 |------|---------|---------|
-| Service | `{feature}.service.ts` | `loan.service.ts` |
-| Validator | `{feature}.validator.ts` | `loan.validator.ts` |
-| Action | `{feature}.ts` | `loans.ts` |
-| Schema | `{domain}.ts` | `users.ts` |
-| Seed | `{name}.seed.ts` | `initial.seed.ts` |
+| **Components** | `PascalCase.tsx` | `HeroCarousel.tsx`, `UserForm.tsx` |
+| **Actions** | `kebab-case.ts` (singular) | `loan.ts`, `booking.ts`, `hero-photo.ts` |
+| **Services** | `kebab-case.service.ts` | `loan.service.ts`, `user.service.ts` |
+| **Validators** | `kebab-case.validator.ts` | `loan.validator.ts`, `user.validator.ts` |
+| **Schema** | `kebab-case.ts` | `users.ts`, `inventory.ts` |
+| **Seeds** | `kebab-case.seed.ts` | `initial.seed.ts` |
+| **Pages** | `page.tsx` | Next.js convention |
+| **Layouts** | `layout.tsx` | Next.js convention |
+
+### Important Rules
+
+1. **Actions use singular form**: `loan.ts` not `loans.ts`
+2. **Components use PascalCase**: `UserForm.tsx` not `user-form.tsx`
+3. **All other backend files use kebab-case**: `hero-photo.service.ts`
+4. **Colocated components**: Place in `_components/` within route folder

@@ -1,6 +1,6 @@
-import { getLoanRequests, updateLoanStatus } from '@/lib/actions/loans';
-import { getBookingRequests, updateBookingStatus, getAllRooms, getMonthBookings } from '@/lib/actions/bookings';
-import { getPendingUsers, updateUserStatus } from '@/lib/actions/users';
+import { getLoanRequests, updateLoanStatus } from '@/lib/actions/loan';
+import { getBookingRequests, updateBookingStatus, getAllRooms, getMonthBookings } from '@/lib/actions/booking';
+import { getPendingUsers, updateUserStatus } from '@/lib/actions/user';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { Box, User, CheckCircle, XCircle, MapPin } from 'lucide-react';

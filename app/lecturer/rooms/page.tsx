@@ -1,4 +1,4 @@
-import { getAllRooms, getMyBookings, getMonthBookings } from '@/lib/actions/bookings';
+import { getAllRooms, getMyBookings, getMonthBookings } from '@/lib/actions/booking';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { MapPin, CheckCircle, XCircle, Clock } from 'lucide-react';

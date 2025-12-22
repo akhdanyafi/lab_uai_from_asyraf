@@ -1,4 +1,4 @@
-import { getAvailableItems } from '@/lib/actions/loans';
+import { getAvailableItems } from '@/lib/actions/loan';
 import { getCategories } from '@/lib/actions/inventory';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';

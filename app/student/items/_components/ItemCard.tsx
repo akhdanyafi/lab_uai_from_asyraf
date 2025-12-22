@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Box, MapPin, Tag, Calendar } from 'lucide-react';
-import { createLoanRequest } from '@/lib/actions/loans';
+import { createLoanRequest } from '@/lib/actions/loan';
 import { useRouter } from 'next/navigation';
 
 export default function ItemCard({ item, userId }: { item: any; userId: number }) {

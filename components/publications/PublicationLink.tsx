@@ -1,6 +1,6 @@
 'use client';
 
-import { incrementViewCount } from '@/lib/actions/publications';
+import { incrementViewCount } from '@/lib/actions/publication';
 import { ExternalLink } from 'lucide-react';
 
 interface PublicationLinkProps {

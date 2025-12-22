@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { updateUserProfile } from '@/lib/actions/users';
+import { updateUserProfile } from '@/lib/actions/user';
 
 interface ProfileFormProps {
     user: {

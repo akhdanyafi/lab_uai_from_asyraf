@@ -5,9 +5,9 @@ import AnnouncementSection from './_components/AnnouncementSection';
 import HomeCalendar from './_components/HomeCalendar';
 import PublicationSection from './_components/PublicationSection';
 import Footer from '@/components/home/Footer';
-import { getAllRooms, getMonthBookings, getMaintenanceRooms } from '@/lib/actions/bookings';
+import { getAllRooms, getMonthBookings, getMaintenanceRooms } from '@/lib/actions/booking';
 import { getGovernanceDocs } from '@/lib/actions/governance';
-import { getTopPublications } from '@/lib/actions/publications';
+import { getTopPublications } from '@/lib/actions/publication';
 import { getMaintenanceItems } from '@/lib/actions/inventory';
 
 export default async function Home() {

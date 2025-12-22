@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Clock } from 'lucide-react';
 import CalendarView from '@/components/shared/CalendarView';
-import { createRoomBooking } from '@/lib/actions/bookings';
+import { createRoomBooking } from '@/lib/actions/booking';
 
 interface Room {
     id: number;

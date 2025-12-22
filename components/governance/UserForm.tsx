@@ -1,6 +1,6 @@
 'use client';
 
-import { createUser, updateUser } from '@/lib/actions/users';
+import { createUser, updateUser } from '@/lib/actions/user';
 import { useState, useMemo } from 'react';
 import { UserPlus, Save, Loader2 } from 'lucide-react';
 

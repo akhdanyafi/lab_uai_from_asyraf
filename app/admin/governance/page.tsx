@@ -1,5 +1,5 @@
 import { getGovernanceDocs } from '@/lib/actions/governance';
-import { getUsers, getRoles } from '@/lib/actions/users';
+import { getUsers, getRoles } from '@/lib/actions/user';
 import GovernanceManager from '@/components/governance/GovernanceManager';
 import { getSession } from '@/lib/auth';
 

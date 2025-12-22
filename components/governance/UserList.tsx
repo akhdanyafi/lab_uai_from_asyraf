@@ -1,6 +1,6 @@
 'use client';
 
-import { deleteUser } from '@/lib/actions/users';
+import { deleteUser } from '@/lib/actions/user';
 import { Trash2, Edit, User } from 'lucide-react';
 import { useState } from 'react';
 import UserForm from './UserForm';
@@ -51,8 +51,8 @@ export default function UserList({ users, roles }: UserListProps) {
                             <td className="px-6 py-4 text-gray-600">{user.email}</td>
                             <td className="px-6 py-4">
                                 <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${user.roleName === 'Admin' ? 'bg-purple-50 text-purple-700' :
-                                        user.roleName === 'Dosen' ? 'bg-blue-50 text-blue-700' :
-                                            'bg-green-50 text-green-700'
+                                    user.roleName === 'Dosen' ? 'bg-blue-50 text-blue-700' :
+                                        'bg-green-50 text-green-700'
                                     }`}>
                                     {user.roleName}
                                 </span>

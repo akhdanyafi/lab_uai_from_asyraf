@@ -1,4 +1,4 @@
-import { getPublications, createPublication, deletePublication } from '@/lib/actions/publications';
+import { getPublications, createPublication, deletePublication } from '@/lib/actions/publication';
 import { getSession } from '@/lib/auth';
 import { BookOpen, Trash2, ExternalLink, Plus, User } from 'lucide-react';
 import PublicationLink from '@/components/publications/PublicationLink';

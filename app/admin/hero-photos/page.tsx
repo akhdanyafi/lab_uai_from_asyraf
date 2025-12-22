@@ -1,4 +1,4 @@
-import { getHeroPhotos } from '@/lib/actions/hero-photos';
+import { getHeroPhotos } from '@/lib/actions/hero-photo';
 import HeroPhotoManager from './_components/HeroPhotoManager';
 
 export default async function HeroPhotosPage() {
