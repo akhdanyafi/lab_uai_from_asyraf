@@ -1,5 +1,8 @@
+'use client';
+
 import Link from 'next/link';
 import { Search, LogIn } from 'lucide-react';
+import AttendanceButton from '@/features/attendance/components/AttendanceButton';
 
 export default function Navbar() {
     return (
@@ -26,6 +29,9 @@ export default function Navbar() {
                     </button>
 
                     <div className="h-6 w-px bg-gray-200 hidden sm:block"></div>
+
+                    <AttendanceButton />
+
                     <Link
                         href="/login"
                         className="flex items-center gap-2 bg-[#0F4C81] hover:bg-[#0F4C81]/90 text-white px-4 py-2 rounded-lg font-medium text-sm transition-all shadow-sm hover:shadow-md"
