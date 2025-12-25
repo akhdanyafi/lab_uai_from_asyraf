@@ -5,10 +5,10 @@ import AnnouncementSection from './_components/AnnouncementSection';
 import HomeCalendar from './_components/HomeCalendar';
 import PublicationSection from './_components/PublicationSection';
 import Footer from '@/components/layout/Footer';
-import { getAllRooms, getMonthBookings, getMaintenanceRooms } from '@/lib/actions/booking';
-import { getGovernanceDocs } from '@/lib/actions/governance';
-import { getTopPublications } from '@/lib/actions/publication';
-import { getMaintenanceItems } from '@/lib/actions/inventory';
+import { getAllRooms, getMonthBookings, getMaintenanceRooms } from '@/features/bookings/actions';
+import { getGovernanceDocs } from '@/features/governance/actions';
+import { getTopPublications } from '@/features/publications/actions';
+import { getMaintenanceItems } from '@/features/inventory/actions';
 
 export default async function Home() {
     const today = new Date();

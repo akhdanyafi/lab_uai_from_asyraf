@@ -1,8 +1,8 @@
-import { getAllRooms, getMyBookings, getMonthBookings } from '@/lib/actions/booking';
+import { getAllRooms, getMyBookings, getMonthBookings } from '@/features/bookings/actions';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { MapPin, CheckCircle, XCircle, Clock } from 'lucide-react';
-import RoomBookingClient from '@/components/rooms/RoomBookingClient';
+import RoomBookingClient from '@/features/bookings/components/RoomBookingClient';
 
 export default async function LecturerRoomsPage() {
     const session = await getSession();

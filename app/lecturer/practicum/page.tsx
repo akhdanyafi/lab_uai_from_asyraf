@@ -1,6 +1,6 @@
-import { getLecturerClasses } from '@/lib/actions/academic';
+import { getLecturerClasses } from '@/features/academic/actions';
 import { getSession } from '@/lib/auth';
-import ClassDashboard from '@/components/practicum/views/ClassDashboard';
+import ClassDashboard from '@/features/academic/components/practicum/views/ClassDashboard';
 import { redirect } from 'next/navigation';
 
 export default async function LecturerPracticumPage() {

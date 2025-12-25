@@ -1,4 +1,4 @@
-import { getMyLoans, returnItem } from '@/lib/actions/loan';
+import { getMyLoans, returnItem } from '@/features/loans/actions';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { Box, Calendar, CheckCircle, XCircle, Clock } from 'lucide-react';

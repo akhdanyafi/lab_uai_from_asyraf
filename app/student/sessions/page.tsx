@@ -1,4 +1,4 @@
-import { getStudentSessions } from '@/lib/actions/academic';
+import { getStudentSessions } from '@/features/academic/actions';
 import { getSession } from '@/lib/auth';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';

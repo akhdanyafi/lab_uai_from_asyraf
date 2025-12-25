@@ -1,5 +1,5 @@
-import { getCourses } from '@/lib/actions/academic';
-import ModuleForm from '@/components/practicum/ModuleForm';
+import { getCourses } from '@/features/academic/actions';
+import ModuleForm from '@/features/academic/components/practicum/ModuleForm';
 
 export default async function CreateModulePage() {
     const courses = await getCourses();

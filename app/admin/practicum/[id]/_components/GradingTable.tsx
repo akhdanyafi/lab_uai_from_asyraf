@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { updateGrade } from '@/lib/actions/practicum';
+import { updateGrade } from '@/features/academic/practicum';
 import { Download, Save } from 'lucide-react';
 
 interface GradingTableProps {

@@ -1,6 +1,6 @@
-import { getGovernanceDocs } from '@/lib/actions/governance';
-import { getUsers, getRoles } from '@/lib/actions/user';
-import GovernanceManager from '@/components/governance/GovernanceManager';
+import { getGovernanceDocs } from '@/features/governance/actions';
+import { getUsers, getRoles } from '@/features/users/actions';
+import GovernanceManager from '@/features/governance/components/GovernanceManager';
 import { getSession } from '@/lib/auth';
 
 export default async function GovernancePage() {

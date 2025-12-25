@@ -1,5 +1,5 @@
-import { getAvailableItems } from '@/lib/actions/loan';
-import { getCategories } from '@/lib/actions/inventory';
+import { getAvailableItems } from '@/features/loans/actions';
+import { getCategories } from '@/features/inventory/actions';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import ItemCard from './_components/ItemCard';

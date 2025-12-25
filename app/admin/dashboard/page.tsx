@@ -1,4 +1,4 @@
-import { getAdminStats } from '@/lib/actions/dashboard';
+import { getAdminStats } from '@/features/dashboard/actions';
 import { TrendingUp, Package, Clock, Calendar, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 

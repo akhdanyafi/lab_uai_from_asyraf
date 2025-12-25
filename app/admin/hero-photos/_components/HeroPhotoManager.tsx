@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Plus, Pencil, Trash2, Image as ImageIcon, X, Loader2, Upload } from 'lucide-react';
-import { addHeroPhoto, updateHeroPhoto, deleteHeroPhoto } from '@/lib/actions/hero-photo';
+import { addHeroPhoto, updateHeroPhoto, deleteHeroPhoto } from '@/features/hero-photos/actions';
 
 interface HeroPhoto {
     id: number;

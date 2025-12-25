@@ -1,6 +1,6 @@
 'use client';
 
-import { createItem, deleteItem } from '@/lib/actions/inventory';
+import { createItem, deleteItem } from '@/features/inventory/actions';
 import { Plus, Trash2, Box, Tag, MapPin, Settings } from 'lucide-react';
 import QRCodeDisplay from '@/components/shared/QRCodeDisplay';
 import { useState } from 'react';

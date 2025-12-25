@@ -1,6 +1,6 @@
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
-import ProfileForm from '@/components/profile/ProfileForm';
+import ProfileForm from '@/features/users/components/ProfileForm';
 
 export default async function LecturerProfilePage() {
     const session = await getSession();

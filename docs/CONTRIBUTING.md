@@ -10,28 +10,29 @@ Thank you for your interest in contributing to LAB_UAI.
     ```
 2.  **Coding Standards**:
     - Use **TypeScript** for all new files.
-    - Follow the existing folder structure.
+    - Follow the **feature-based** folder structure.
     - Use **Tailwind CSS** for styling. Avoid inline styles or CSS modules.
 3.  **Commits**: Write clear, descriptive commit messages.
 
 ## Code Organization
 
-### Adding Business Logic
+### Adding a New Feature
 
-1. **Create a Service** in `lib/services/`:
-   ```typescript
-   // lib/services/my-feature.service.ts
-   export class MyFeatureService {
-       static async create(data: CreateInput) { ... }
-       static async getAll() { ... }
-   }
+1. **Create a feature folder** in `features/`:
+   ```
+   features/my-feature/
+   ├── actions.ts       # Server actions
+   ├── service.ts       # Business logic (optional)
+   ├── validator.ts     # Zod schemas (optional)
+   ├── types.ts         # TypeScript types (optional)
+   └── components/      # Feature components (optional)
    ```
 
-2. **Create a Server Action** in `lib/actions/`:
+2. **Create the actions file**:
    ```typescript
-   // lib/actions/my-feature.ts
+   // features/my-feature/actions.ts
    'use server';
-   import { MyFeatureService } from '@/lib/services/my-feature.service';
+   import { MyFeatureService } from './service';
    import { revalidatePath } from 'next/cache';
    
    export async function createFeature(data: CreateInput) {
@@ -40,14 +41,24 @@ Thank you for your interest in contributing to LAB_UAI.
    }
    ```
 
-3. **Add Validation** in `lib/validators/`:
+3. **Create the service file** (business logic):
    ```typescript
-   // lib/validators/my-feature.validator.ts
+   // features/my-feature/service.ts
+   import { db } from '@/db';
+   
+   export class MyFeatureService {
+       static async create(data: CreateInput) { ... }
+       static async getAll() { ... }
+   }
+   ```
+
+4. **Add validation** (optional):
+   ```typescript
+   // features/my-feature/validator.ts
    import { z } from 'zod';
    
    export const CreateFeatureSchema = z.object({
        name: z.string().min(2),
-       // ...
    });
    ```
 
@@ -81,17 +92,25 @@ export async function seedMyFeature() {
 | Type | Pattern | Example |
 |------|---------|---------|
 | **Components** | `PascalCase.tsx` | `HeroCarousel.tsx`, `UserForm.tsx` |
-| **Actions** | `kebab-case.ts` (singular) | `loan.ts`, `booking.ts`, `hero-photo.ts` |
-| **Services** | `kebab-case.service.ts` | `loan.service.ts`, `user.service.ts` |
-| **Validators** | `kebab-case.validator.ts` | `loan.validator.ts`, `user.validator.ts` |
-| **Schema** | `kebab-case.ts` | `users.ts`, `inventory.ts` |
-| **Seeds** | `kebab-case.seed.ts` | `initial.seed.ts` |
+| **Actions** | `actions.ts` | `features/loans/actions.ts` |
+| **Services** | `service.ts` | `features/loans/service.ts` |
+| **Validators** | `validator.ts` | `features/loans/validator.ts` |
+| **Types** | `types.ts` | `features/loans/types.ts` |
+| **Schema** | `kebab-case.ts` | `db/schema/users.ts` |
 | **Pages** | `page.tsx` | Next.js convention |
 | **Layouts** | `layout.tsx` | Next.js convention |
 
+## Component Placement Rules
+
+| Condition | Location |
+|-----------|----------|
+| **1 page only** | `app/{route}/_components/` |
+| **2+ pages** in same feature | `features/{name}/components/` |
+| **Cross-feature** shared | `components/shared/` |
+
 ### Important Rules
 
-1. **Actions use singular form**: `loan.ts` not `loans.ts`
-2. **Components use PascalCase**: `UserForm.tsx` not `user-form.tsx`
-3. **All other backend files use kebab-case**: `hero-photo.service.ts`
-4. **Colocated components**: Place in `_components/` within route folder
+1. **Feature-first**: All feature code lives in `features/` folder
+2. **Actions use relative imports**: `import { Service } from './service'`
+3. **Components use PascalCase**: `UserForm.tsx` not `user-form.tsx`
+4. **Colocated page components**: Place in `_components/` within route folder

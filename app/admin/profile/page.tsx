@@ -1,6 +1,6 @@
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
-import ProfileForm from '@/components/profile/ProfileForm';
+import ProfileForm from '@/features/users/components/ProfileForm';
 import { db } from '@/db';
 import { users, roles } from '@/db/schema';
 import { eq } from 'drizzle-orm';

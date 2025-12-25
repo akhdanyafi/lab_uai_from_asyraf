@@ -1,6 +1,6 @@
 'use client';
 
-import { createCategory, deleteCategory } from '@/lib/actions/inventory';
+import { createCategory, deleteCategory } from '@/features/inventory/actions';
 import { Plus, Trash2, Tags } from 'lucide-react';
 import { useState } from 'react';
 

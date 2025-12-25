@@ -1,4 +1,4 @@
-import { getSessionById } from '@/lib/actions/practicum';
+import { getSessionById } from '@/features/academic/practicum';
 import GradingTable from './_components/GradingTable';
 import { notFound } from 'next/navigation';
 import { format } from 'date-fns';

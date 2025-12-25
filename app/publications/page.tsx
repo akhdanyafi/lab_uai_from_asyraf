@@ -1,7 +1,7 @@
-import { getPublications, createPublication, deletePublication } from '@/lib/actions/publication';
+import { getPublications, createPublication, deletePublication } from '@/features/publications/actions';
 import { getSession } from '@/lib/auth';
 import { BookOpen, Trash2, ExternalLink, Plus, User } from 'lucide-react';
-import PublicationLink from '@/components/publications/PublicationLink';
+import PublicationLink from '@/features/publications/components/PublicationLink';
 
 export default async function PublicationsPage() {
     const session = await getSession();

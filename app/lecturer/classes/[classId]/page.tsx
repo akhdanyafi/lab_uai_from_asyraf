@@ -1,4 +1,4 @@
-import { getClassById, getClassSessions, getCourseModules, createSession } from '@/lib/actions/academic';
+import { getClassById, getClassSessions, getCourseModules, createSession } from '@/features/academic/actions';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { notFound } from 'next/navigation';

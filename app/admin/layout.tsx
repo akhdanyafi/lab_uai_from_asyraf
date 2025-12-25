@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { getSession } from '@/lib/auth';
-import { logout } from '@/lib/actions/auth';
+import { logout } from '@/features/auth/actions';
 import { redirect } from 'next/navigation';
 import {
     LayoutDashboard,

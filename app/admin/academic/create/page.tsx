@@ -1,5 +1,5 @@
-import { getCourses, getLecturers } from '@/lib/actions/academic';
-import AcademicForm from '@/components/practicum/AcademicForm';
+import { getCourses, getLecturers } from '@/features/academic/actions';
+import AcademicForm from '@/features/academic/components/practicum/AcademicForm';
 
 export default async function CreateAcademicPage() {
     const [courses, lecturers] = await Promise.all([

@@ -1,4 +1,4 @@
-import { getHeroPhotos } from '@/lib/actions/hero-photo';
+import { getHeroPhotos } from '@/features/hero-photos/actions';
 import HeroCarousel from './HeroCarousel';
 
 export default async function HeroSection() {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { register } from '@/lib/actions/register';
+import { register } from '@/features/users/register';
 import Link from 'next/link';
 import { Loader2 } from 'lucide-react';
 

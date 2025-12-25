@@ -1,4 +1,4 @@
-import { getSessionById, submitReport } from '@/lib/actions/academic';
+import { getSessionById, submitReport } from '@/features/academic/actions';
 import { getSession } from '@/lib/auth';
 import { redirect, notFound } from 'next/navigation';
 

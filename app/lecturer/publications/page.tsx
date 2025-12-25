@@ -1,7 +1,7 @@
-import { getDocuments } from '@/lib/actions/academic';
+import { getDocuments } from '@/features/academic/actions';
 import { getSession } from '@/lib/auth';
-import DocumentList from '@/components/academic/DocumentList';
-import UploadForm from '@/components/academic/UploadForm';
+import DocumentList from '@/features/academic/components/DocumentList';
+import UploadForm from '@/features/academic/components/UploadForm';
 import { redirect } from 'next/navigation';
 
 export default async function PublicationsPage() {

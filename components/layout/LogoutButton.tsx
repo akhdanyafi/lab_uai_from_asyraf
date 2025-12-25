@@ -1,6 +1,6 @@
 'use client';
 
-import { logout } from '@/lib/actions/auth';
+import { logout } from '@/features/auth/actions';
 import { LogOut } from 'lucide-react';
 
 export default function LogoutButton() {

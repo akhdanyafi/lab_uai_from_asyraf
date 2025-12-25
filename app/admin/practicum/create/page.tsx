@@ -1,5 +1,5 @@
-import { getClasses, getModules } from '@/lib/actions/practicum';
-import SessionForm from '@/components/practicum/SessionForm';
+import { getClasses, getModules } from '@/features/academic/practicum';
+import SessionForm from '@/features/academic/components/practicum/SessionForm';
 
 export default async function CreateSessionPage() {
     const [classes, modules] = await Promise.all([

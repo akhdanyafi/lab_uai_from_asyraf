@@ -1,4 +1,4 @@
-import { getCategories, getItems, getRooms } from '@/lib/actions/inventory';
+import { getCategories, getItems, getRooms } from '@/features/inventory/actions';
 import InventoryManager from './_components/InventoryManager';
 
 export default async function InventoryPage() {

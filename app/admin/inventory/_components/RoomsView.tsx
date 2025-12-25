@@ -1,6 +1,6 @@
 'use client';
 
-import { createRoom, deleteRoom } from '@/lib/actions/inventory';
+import { createRoom, deleteRoom } from '@/features/inventory/actions';
 import { Plus, Trash2, MapPin } from 'lucide-react';
 import { useState } from 'react';
 

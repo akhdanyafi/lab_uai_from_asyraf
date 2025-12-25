@@ -1,4 +1,4 @@
-import { getSessionById, updateGrade } from '@/lib/actions/practicum';
+import { getSessionById, updateGrade } from '@/features/academic/practicum';
 import { getSession } from '@/lib/auth';
 import { redirect, notFound } from 'next/navigation';
 import { format } from 'date-fns';

@@ -1,6 +1,6 @@
-import { getDocuments, getCourses, getClasses, getLecturers } from '@/lib/actions/academic';
-import { getLecturerSessions } from '@/lib/actions/practicum';
-import AcademicManager from '@/components/academic/AcademicManager';
+import { getDocuments, getCourses, getClasses, getLecturers } from '@/features/academic/actions';
+import { getLecturerSessions } from '@/features/academic/practicum';
+import AcademicManager from '@/features/academic/components/AcademicManager';
 import { getSession } from '@/lib/auth';
 
 export default async function LecturerAcademicPage() {

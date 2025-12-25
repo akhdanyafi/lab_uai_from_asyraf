@@ -12,128 +12,125 @@ This document provides a high-level overview of the LAB_UAI technical architectu
 - **UI Components**: Custom components with [Lucide React](https://lucide.dev/) icons
 - **Validation**: [Zod](https://zod.dev/) for input validation
 
+## Architecture Pattern
+
+This project uses a **Feature-Based Architecture** where code is organized by domain/feature rather than technical layer.
+
 ## Folder Structure
 
 ```
 LAB_UAI/
-├── app/                    # Next.js App Router (Frontend)
-│   ├── (home)/             # Homepage route group
-│   │   ├── _components/    # Colocated homepage components
-│   │   └── page.tsx        # Homepage (URL: /)
+├── app/                        # Next.js App Router (Pages)
+│   ├── (home)/                 # Homepage route group
+│   │   ├── _components/        # Colocated homepage components
+│   │   └── page.tsx            # Homepage (URL: /)
 │   │
-│   ├── (auth)/             # Auth route group
-│   │   ├── login/          # Login page (URL: /login)
-│   │   └── register/       # Register page (URL: /register)
+│   ├── (auth)/                 # Auth route group
+│   │   ├── login/              # Login page
+│   │   └── register/           # Register page
 │   │
-│   ├── admin/              # Admin dashboard routes
+│   ├── admin/                  # Admin routes
 │   │   ├── hero-photos/_components/
 │   │   ├── inventory/_components/
 │   │   ├── validations/_components/
-│   │   ├── practicum/[id]/_components/
-│   │   └── layout.tsx
+│   │   └── practicum/[id]/_components/
 │   │
-│   ├── student/            # Student routes
-│   │   ├── items/_components/
-│   │   └── layout.tsx
+│   ├── student/                # Student routes
+│   └── lecturer/               # Lecturer routes
+│
+├── features/                   # Feature-based modules ⭐
+│   ├── academic/               # Academic & Practicum feature
+│   │   ├── actions.ts          # Server actions
+│   │   ├── practicum.ts        # Practicum-specific actions
+│   │   ├── types.ts            # TypeScript types
+│   │   └── components/         # Feature components
 │   │
-│   ├── lecturer/           # Lecturer routes
-│   └── publications/       # Public publications page
+│   ├── auth/                   # Authentication feature
+│   │   └── actions.ts
+│   │
+│   ├── bookings/               # Room booking feature
+│   │   ├── actions.ts
+│   │   ├── service.ts
+│   │   ├── validator.ts
+│   │   ├── types.ts
+│   │   └── components/
+│   │
+│   ├── dashboard/              # Dashboard feature
+│   ├── governance/             # SOP, LPJ, User management
+│   ├── hero-photos/            # Hero carousel feature
+│   ├── inventory/              # Item inventory feature
+│   ├── loans/                  # Item loan feature
+│   ├── publications/           # Publications feature
+│   └── users/                  # User management feature
 │
-├── components/             # Shared UI components
-│   ├── home/               # Navbar, Footer (shared layout)
-│   ├── governance/         # SOP, LPJ components
-│   ├── practicum/          # Practicum management
-│   ├── academic/           # Academic documents
-│   ├── publications/       # Publication components
-│   ├── profile/            # Profile components
-│   ├── rooms/              # Room booking components
-│   ├── shared/             # Shared utilities (CalendarView, etc.)
-│   ├── layout/             # Layout components (Sidebar, Header)
-│   ├── ui/                 # Generic UI elements
-│   └── auth/               # Auth form components
+├── components/                 # Shared components only
+│   ├── ui/                     # Generic UI primitives
+│   ├── layout/                 # Layout (Sidebar, Navbar, Footer)
+│   └── shared/                 # Cross-feature shared (CalendarView)
 │
-├── lib/                    # Backend logic
-│   ├── actions/            # Server Actions (thin entry points)
-│   ├── services/           # Business logic layer
-│   ├── validators/         # Zod validation schemas
-│   ├── auth.ts             # Authentication utilities
-│   ├── upload.ts           # File upload utilities
-│   └── utils.ts            # Common helpers
+├── lib/                        # Shared utilities
+│   ├── auth.ts                 # Auth utilities
+│   ├── upload.ts               # File upload utilities
+│   └── utils.ts                # General utilities
 │
-├── db/                     # Database layer
-│   ├── schema/             # Drizzle schema definitions
-│   ├── seeds/              # Database seeders
-│   ├── index.ts            # Database connection
-│   └── schema.ts           # Schema exports
+├── db/                         # Database layer
+│   ├── index.ts                # Database connection
+│   ├── schema.ts               # Drizzle schema exports
+│   ├── schema/                 # Table definitions
+│   └── seeds/                  # Database seeds
 │
-├── drizzle/                # Database migrations
-├── types/                  # TypeScript type definitions
-└── middleware.ts           # Auth middleware
+├── docs/                       # Project documentation
+│   ├── ARCHITECTURE.md
+│   ├── CONTRIBUTING.md
+│   ├── FEATURES.md
+│   └── features/               # Detailed feature docs
+│
+└── public/                     # Static assets
 ```
 
-## Component Organization
+## Feature Module Structure
 
-### Route Groups
-
-Route groups (folders with parentheses) organize routes without affecting URLs:
-
-| Folder | Purpose | URL |
-|--------|---------|-----|
-| `(home)` | Homepage + components | `/` |
-| `(auth)` | Login & Register | `/login`, `/register` |
-
-### Colocation Strategy
-
-Single-use components are colocated with their routes using `_components/`:
-
-| Route | Colocated Components |
-|-------|---------------------|
-| `admin/hero-photos` | HeroPhotoManager |
-| `admin/validations` | ValidationTabs, LoanHistoryFilter |
-| `admin/inventory` | InventoryManager, RoomsView, ItemsView, CategoriesView |
-| `admin/practicum/[id]` | GradingTable |
-| `student/items` | ItemCard, ItemFilter |
-| `(home)` | HeroSection, HeroCarousel, HomeCalendar, SOPSection, PublicationSection, AnnouncementSection |
-
-Shared components remain in `components/` organized by feature.
-
-## Architecture Pattern
-
-### Service Layer Pattern
-
-The backend follows a **Service Layer Pattern** for clean separation of concerns:
+Each feature folder follows a consistent pattern:
 
 ```
-Frontend (React) → Server Actions → Services → Database
+features/{feature-name}/
+├── actions.ts          # Server Actions (entry points)
+├── service.ts          # Business logic (optional)
+├── validator.ts        # Zod schemas (optional)
+├── types.ts            # TypeScript interfaces (optional)
+└── components/         # Feature-specific components
 ```
 
-| Layer | Location | Responsibility |
-|-------|----------|----------------|
-| Server Actions | `lib/actions/` | Thin wrappers, cache invalidation |
-| Services | `lib/services/` | Business logic, testable |
-| Validators | `lib/validators/` | Zod input validation |
-| Database | `db/schema/` | Drizzle ORM schemas |
+## Component Placement Rules
 
-### Services
+| Condition | Location |
+|-----------|----------|
+| Used by **1 page only** | `app/{route}/_components/` |
+| Used by **2+ pages** in same feature | `features/{name}/components/` |
+| Used **across features** | `components/shared/` |
 
-| Service | File | Description |
-|---------|------|-------------|
-| `LoanService` | loan.service.ts | Item loan CRUD, status updates |
-| `UserService` | user.service.ts | User management, auth helpers |
-| `BookingService` | booking.service.ts | Room booking logic |
-| `InventoryService` | inventory.service.ts | Rooms, categories, items |
-| `DashboardService` | dashboard.service.ts | Statistics aggregation |
-| `PublicationService` | publication.service.ts | Publication management |
-| `HeroPhotoService` | hero-photo.service.ts | Hero carousel photos |
+## Data Flow
 
-## Key Concepts
+```
+[Client Component] 
+       ↓
+[Server Action] (features/*/actions.ts)
+       ↓
+[Service Layer] (features/*/service.ts)
+       ↓
+[Database] (db/index.ts + Drizzle ORM)
+```
 
-### Authentication
-User authentication is handled via server-side sessions/cookies. Middleware (`middleware.ts`) protects routes based on user roles (Admin, Student, Lecturer).
+## Authentication
 
-### Database Schema
-The database uses foreign key relationships:
-- **Users**: Have Roles (Mahasiswa, Dosen, Admin)
-- **Inventory**: Items can be borrowed with approval workflows
-- **Academic**: Students submit reports for practical sessions
-- **Bookings**: Room reservations with status tracking
+- Cookie-based sessions via `lib/auth.ts`
+- Role-based access control (Admin, Dosen, Mahasiswa)
+- Middleware protection for routes
+
+## Key Design Decisions
+
+1. **Feature-based over layer-based**: Easier to navigate related code
+2. **Colocated components**: Page-specific components stay with their routes
+3. **Thin actions, thick services**: Actions only call services + revalidate
+4. **TypeScript strict mode**: Full type safety throughout
+5. **Server Components by default**: `'use client'` only when needed

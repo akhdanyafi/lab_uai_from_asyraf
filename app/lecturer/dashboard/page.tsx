@@ -1,4 +1,4 @@
-import { getLecturerDashboard } from '@/lib/actions/dashboard';
+import { getLecturerDashboard } from '@/features/dashboard/actions';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { Calendar, FileText, ArrowRight } from 'lucide-react';

@@ -1,7 +1,7 @@
-import { getLecturerClasses } from '@/lib/actions/academic';
-import { getModules } from '@/lib/actions/practicum';
+import { getLecturerClasses } from '@/features/academic/actions';
+import { getModules } from '@/features/academic/practicum';
 import { getSession } from '@/lib/auth';
-import SessionForm from '@/components/practicum/SessionForm';
+import SessionForm from '@/features/academic/components/practicum/SessionForm';
 import { redirect } from 'next/navigation';
 
 export default async function CreateSessionPage() {
