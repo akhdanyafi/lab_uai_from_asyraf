@@ -1,8 +1,16 @@
 'use client';
 
-import { uploadDocument, getCourses } from '@/features/academic/actions';
+import { uploadDocument, getClasses } from '@/features/academic/actions';
 import { Upload, FileText } from 'lucide-react';
 import { useState, useEffect } from 'react';
+
+/**
+ * Upload Form (Simplified)
+ * 
+ * UPDATED FOR SIMPLIFIED SCHEMA:
+ * - getCourses() replaced with getClasses()
+ * - Modul Praktikum now uploads to assignments via classId instead of courseId
+ */
 
 interface UploadFormProps {
     uploaderId: number;
@@ -12,11 +20,11 @@ interface UploadFormProps {
 export default function UploadForm({ uploaderId, allowedTypes }: UploadFormProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [selectedType, setSelectedType] = useState(allowedTypes[0]);
-    const [courses, setCourses] = useState<{ id: number; name: string; code: string }[]>([]);
+    const [classes, setClasses] = useState<any[]>([]);
 
     useEffect(() => {
         if (selectedType === 'Modul Praktikum') {
-            getCourses().then(setCourses);
+            getClasses().then(setClasses);
         }
     }, [selectedType]);
 
@@ -64,11 +72,13 @@ export default function UploadForm({ uploaderId, allowedTypes }: UploadFormProps
 
                 {selectedType === 'Modul Praktikum' && (
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Mata Kuliah</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Kelas</label>
                         <select name="subject" required className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20">
-                            <option value="">Pilih Mata Kuliah</option>
-                            {courses.map(c => (
-                                <option key={c.id} value={c.id}>{c.name} ({c.code})</option>
+                            <option value="">Pilih Kelas</option>
+                            {classes.map(c => (
+                                <option key={c.id} value={c.id}>
+                                    {c.courseName} - {c.name}
+                                </option>
                             ))}
                         </select>
                     </div>

@@ -1,7 +1,17 @@
-import { getClassById, getClassSessions, getCourseModules, createSession } from '@/features/academic/actions';
+import { getClassById, getClassAssignments, createAssignment } from '@/features/academic/actions';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { notFound } from 'next/navigation';
+
+/**
+ * Lecturer Session Details Page (Simplified)
+ * 
+ * UPDATED FOR SIMPLIFIED SCHEMA:
+ * - Removed getCourseModules() - modules now embedded in assignments
+ * - Uses getClassAssignments() instead of getClassSessions()
+ * - Create form now creates assignment directly (title, description, deadline)
+ * - No longer needs to select from "Bank Soal"
+ */
 
 export default async function LecturerSessionDetailsPage({ params }: { params: Promise<{ classId: string }> }) {
     const session = await getSession();
@@ -10,16 +20,6 @@ export default async function LecturerSessionDetailsPage({ params }: { params: P
     const { classId } = await params;
     const classIdInt = parseInt(classId);
 
-    const [cls, sessions] = await Promise.all([
-        getClassById(classIdInt),
-        getClassSessions(classIdInt),
-        // We need to fetch modules for the course, but we need the courseId first.
-        // However, we can't await cls before starting Promise.all if we want full parallelism.
-        // But here we depend on cls. So we'll fetch cls first or just chain it.
-        // Let's fetch cls first to be safe and simple.
-    ]);
-
-    // Re-fetching cls to be safe and simple
     const classData = await getClassById(classIdInt);
     if (!classData) notFound();
 
@@ -28,55 +28,72 @@ export default async function LecturerSessionDetailsPage({ params }: { params: P
         return <div className="p-8 text-red-600">Anda tidak memiliki akses ke kelas ini.</div>;
     }
 
-    const [classSessions, courseModules] = await Promise.all([
-        getClassSessions(classIdInt),
-        getCourseModules(classData.courseId)
-    ]);
+    const classAssignments = await getClassAssignments(classIdInt);
 
     async function handleCreate(formData: FormData) {
         'use server';
-        const moduleId = parseInt(formData.get('moduleId') as string);
+        const title = formData.get('title') as string;
+        const description = formData.get('description') as string;
         const startDate = new Date(formData.get('startDate') as string);
         const deadline = new Date(formData.get('deadline') as string);
 
-        await createSession({ classId: classIdInt, moduleId, startDate, deadline });
+        await createAssignment({
+            classId: classIdInt,
+            title,
+            description,
+            startDate,
+            deadline
+        });
     }
 
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-800">{classData.name} - Sesi Praktikum</h1>
-                    <p className="text-gray-600">{classData.course.name}</p>
+                    <h1 className="text-2xl font-bold text-gray-800">{classData.name} - Tugas Praktikum</h1>
+                    <p className="text-gray-600">{classData.courseName}</p>
                 </div>
                 <div className="text-sm text-gray-500">
-                    {classData.semester}
+                    <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded-md">
+                        Kode Enroll: {classData.enrollmentKey}
+                    </span>
                 </div>
             </div>
 
-            {/* Create Form */}
+            {/* Create Form - Now creates assignment directly */}
             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-                <h2 className="text-lg font-semibold mb-4">Buat Sesi Baru</h2>
-                <form action={handleCreate} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Modul</label>
-                        <select name="moduleId" required className="w-full p-2 border rounded-md bg-white">
-                            <option value="">Pilih Modul</option>
-                            {courseModules.map(m => (
-                                <option key={m.id} value={m.id}>{m.title}</option>
-                            ))}
-                        </select>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Waktu Mulai</label>
-                        <input name="startDate" type="datetime-local" required className="w-full p-2 border rounded-md" />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Deadline</label>
-                        <input name="deadline" type="datetime-local" required className="w-full p-2 border rounded-md" />
+                <h2 className="text-lg font-semibold mb-4">Buat Tugas Baru</h2>
+                <form action={handleCreate} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Judul Tugas</label>
+                            <input
+                                name="title"
+                                required
+                                placeholder="Contoh: Praktikum 1 - Pengenalan Jaringan"
+                                className="w-full p-2 border rounded-md"
+                            />
+                        </div>
+                        <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
+                            <textarea
+                                name="description"
+                                rows={2}
+                                placeholder="Petunjuk pengerjaan..."
+                                className="w-full p-2 border rounded-md"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Waktu Mulai</label>
+                            <input name="startDate" type="datetime-local" required className="w-full p-2 border rounded-md" />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Deadline</label>
+                            <input name="deadline" type="datetime-local" required className="w-full p-2 border rounded-md" />
+                        </div>
                     </div>
                     <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
-                        Buat Sesi
+                        Buat Tugas
                     </button>
                 </form>
             </div>
@@ -86,7 +103,7 @@ export default async function LecturerSessionDetailsPage({ params }: { params: P
                 <table className="w-full text-left">
                     <thead className="bg-gray-50 border-b">
                         <tr>
-                            <th className="p-4 font-medium text-gray-600">Modul</th>
+                            <th className="p-4 font-medium text-gray-600">Tugas</th>
                             <th className="p-4 font-medium text-gray-600">Mulai</th>
                             <th className="p-4 font-medium text-gray-600">Deadline</th>
                             <th className="p-4 font-medium text-gray-600">Status</th>
@@ -94,29 +111,27 @@ export default async function LecturerSessionDetailsPage({ params }: { params: P
                         </tr>
                     </thead>
                     <tbody className="divide-y">
-                        {classSessions.map((session) => {
-                            const now = new Date();
-                            const isOpen = now >= session.startDate && now <= session.deadline;
+                        {classAssignments.map((assignment) => {
                             return (
-                                <tr key={session.id} className="hover:bg-gray-50">
-                                    <td className="p-4 font-medium">{session.module.title}</td>
-                                    <td className="p-4 text-gray-600">{session.startDate.toLocaleString()}</td>
-                                    <td className="p-4 text-gray-600">{session.deadline.toLocaleString()}</td>
+                                <tr key={assignment.id} className="hover:bg-gray-50">
+                                    <td className="p-4 font-medium">{assignment.title}</td>
+                                    <td className="p-4 text-gray-600">{assignment.startDate.toLocaleString()}</td>
+                                    <td className="p-4 text-gray-600">{assignment.deadline.toLocaleString()}</td>
                                     <td className="p-4">
-                                        <span className={`px-2 py-1 rounded-full text-xs ${isOpen ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-                                            {isOpen ? 'Aktif' : 'Tutup'}
+                                        <span className={`px-2 py-1 rounded-full text-xs ${assignment.isOpen ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                                            {assignment.isOpen ? 'Aktif' : 'Tutup'}
                                         </span>
                                     </td>
                                     <td className="p-4">
-                                        {session.reports.length} Mahasiswa
+                                        {assignment.reports?.length || 0} Mahasiswa
                                     </td>
                                 </tr>
                             );
                         })}
-                        {classSessions.length === 0 && (
+                        {classAssignments.length === 0 && (
                             <tr>
                                 <td colSpan={5} className="p-8 text-center text-gray-500">
-                                    Belum ada sesi praktikum.
+                                    Belum ada tugas praktikum. Buat tugas baru di atas.
                                 </td>
                             </tr>
                         )}

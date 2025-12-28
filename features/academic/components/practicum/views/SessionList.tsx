@@ -13,19 +13,28 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import ReportList from './ReportList';
-import { getSessionById } from '@/features/academic/practicum';
-import { getClassSessions } from '@/features/academic/actions';
+import { getAssignmentById, getClassAssignments } from '@/features/academic/actions';
 
-interface Session {
+/**
+ * Session List (Simplified - Now Assignment List)
+ * 
+ * UPDATED FOR SIMPLIFIED SCHEMA:
+ * - Uses Assignment interface instead of Session
+ * - title is directly on assignment (no module.title)
+ * - Uses getClassAssignments and getAssignmentById
+ */
+
+interface Assignment {
     id: number;
     classId: number;
-    moduleId: number;
+    title: string;
+    description: string | null;
+    filePath: string | null;
+    order: number;
     startDate: Date;
     deadline: Date;
-    isOpen: boolean | null;
-    module: {
-        title: string;
-    };
+    isOpen: boolean;
+    reports?: any[];
 }
 
 interface SessionListProps {
@@ -33,43 +42,41 @@ interface SessionListProps {
 }
 
 export default function SessionList({ classId }: SessionListProps) {
-    const [sessions, setSessions] = useState<Session[]>([]);
+    const [assignments, setAssignments] = useState<Assignment[]>([]);
     const [loading, setLoading] = useState(true);
-    const [expandedSessionId, setExpandedSessionId] = useState<number | null>(null);
+    const [expandedAssignmentId, setExpandedAssignmentId] = useState<number | null>(null);
     const [reports, setReports] = useState<any[]>([]);
     const [loadingReports, setLoadingReports] = useState(false);
 
     useEffect(() => {
-        const fetchSessions = async () => {
+        const fetchAssignments = async () => {
             setLoading(true);
             try {
-                // We need to fetch sessions for this class.
-                // Assuming getClassSessions returns the list we need.
-                const data = await getClassSessions(classId);
-                setSessions(data);
+                const data = await getClassAssignments(classId);
+                setAssignments(data as unknown as Assignment[]);
             } catch (error) {
-                console.error("Failed to fetch sessions:", error);
+                console.error("Failed to fetch assignments:", error);
             } finally {
                 setLoading(false);
             }
         };
 
         if (classId) {
-            fetchSessions();
-            setExpandedSessionId(null); // Reset expansion on class change
+            fetchAssignments();
+            setExpandedAssignmentId(null);
         }
     }, [classId]);
 
-    const toggleSession = async (sessionId: number) => {
-        if (expandedSessionId === sessionId) {
-            setExpandedSessionId(null);
+    const toggleAssignment = async (assignmentId: number) => {
+        if (expandedAssignmentId === assignmentId) {
+            setExpandedAssignmentId(null);
             return;
         }
 
-        setExpandedSessionId(sessionId);
+        setExpandedAssignmentId(assignmentId);
         setLoadingReports(true);
         try {
-            const data = await getSessionById(sessionId);
+            const data = await getAssignmentById(assignmentId);
             if (data) {
                 setReports(data.reports);
             }
@@ -84,41 +91,41 @@ export default function SessionList({ classId }: SessionListProps) {
         return <div className="flex justify-center p-8"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>;
     }
 
-    if (sessions.length === 0) {
+    if (assignments.length === 0) {
         return (
             <div className="text-center p-8 border rounded-lg bg-muted/10">
-                <p className="text-muted-foreground">Belum ada sesi praktikum untuk kelas ini.</p>
+                <p className="text-muted-foreground">Belum ada tugas praktikum untuk kelas ini.</p>
             </div>
         );
     }
 
     return (
         <div className="space-y-4">
-            {sessions.map((session) => (
-                <Card key={session.id} className="overflow-hidden transition-all">
+            {assignments.map((assignment) => (
+                <Card key={assignment.id} className="overflow-hidden transition-all">
                     <div
                         className="p-4 cursor-pointer hover:bg-muted/50 flex items-center justify-between"
-                        onClick={() => toggleSession(session.id)}
+                        onClick={() => toggleAssignment(assignment.id)}
                     >
                         <div className="flex items-center gap-4">
-                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${session.isOpen ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-500'}`}>
+                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${assignment.isOpen ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-500'}`}>
                                 <Calendar className="h-5 w-5" />
                             </div>
                             <div>
-                                <h3 className="font-semibold text-lg text-gray-900">{session.module.title}</h3>
+                                <h3 className="font-semibold text-lg text-gray-900">{assignment.title}</h3>
                                 <div className="flex items-center gap-4 text-sm text-gray-500 mt-1">
                                     <span>
-                                        {format(new Date(session.startDate), 'dd MMM yyyy')} - {format(new Date(session.deadline), 'dd MMM yyyy')}
+                                        {format(new Date(assignment.startDate), 'dd MMM yyyy')} - {format(new Date(assignment.deadline), 'dd MMM yyyy')}
                                     </span>
                                 </div>
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
-                            <Badge variant={session.isOpen ? "default" : "secondary"}>
-                                {session.isOpen ? "Aktif" : "Selesai"}
+                            <Badge variant={assignment.isOpen ? "default" : "secondary"}>
+                                {assignment.isOpen ? "Aktif" : "Selesai"}
                             </Badge>
                             <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400">
-                                {expandedSessionId === session.id ? (
+                                {expandedAssignmentId === assignment.id ? (
                                     <ChevronDown className="h-4 w-4" />
                                 ) : (
                                     <ChevronRight className="h-4 w-4" />
@@ -126,7 +133,7 @@ export default function SessionList({ classId }: SessionListProps) {
                             </Button>
                         </div>
                     </div>
-                    {expandedSessionId === session.id && (
+                    {expandedAssignmentId === assignment.id && (
                         <div className="border-t bg-muted/5 p-4 animate-in slide-in-from-top-2 duration-200">
                             <div className="mb-4">
                                 <h4 className="text-sm font-medium mb-2">Laporan Mahasiswa</h4>

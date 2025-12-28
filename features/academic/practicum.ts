@@ -1,39 +1,47 @@
 'use server';
 
 import { db } from '@/db';
-import { practicalSessions, practicalReports, modules, classes, courses } from '@/db/schema/academic';
+import { assignments, practicalReports, classes } from '@/db/schema/academic';
 import { users } from '@/db/schema/users';
-import { eq, and, desc, lt, lte, gt } from 'drizzle-orm';
+import { eq, desc } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
+import { isAssignmentOpen } from '@/db/schema/academic';
+
+// ============================================================
+// PRACTICUM ACTIONS (Simplified)
+// ============================================================
+// This file now works with 'assignments' instead of 'practicalSessions'
+// Module info is embedded directly in assignments
+// isOpen is computed from deadline, not stored
+// ============================================================
 
 export async function getSessions() {
-    const sessions = await db.select({
-        id: practicalSessions.id,
-        classId: practicalSessions.classId,
-        moduleId: practicalSessions.moduleId,
-        startDate: practicalSessions.startDate,
-        deadline: practicalSessions.deadline,
-        isOpen: practicalSessions.isOpen,
-        moduleTitle: modules.title,
-        courseName: courses.name,
+    const rows = await db.select({
+        id: assignments.id,
+        classId: assignments.classId,
+        title: assignments.title,
+        description: assignments.description,
+        filePath: assignments.filePath,
+        order: assignments.order,
+        startDate: assignments.startDate,
+        deadline: assignments.deadline,
+        createdAt: assignments.createdAt,
+        courseName: classes.courseName,
         className: classes.name,
     })
-        .from(practicalSessions)
-        .leftJoin(modules, eq(practicalSessions.moduleId, modules.id))
-        .leftJoin(courses, eq(modules.courseId, courses.id))
-        .leftJoin(classes, eq(practicalSessions.classId, classes.id))
-        .orderBy(desc(practicalSessions.startDate));
+        .from(assignments)
+        .leftJoin(classes, eq(assignments.classId, classes.id))
+        .orderBy(desc(assignments.startDate));
 
-    // Map to expected structure
-    return sessions.map(s => ({
+    return rows.map(s => ({
         id: s.id,
         classId: s.classId,
-        moduleId: s.moduleId,
         startDate: s.startDate,
         deadline: s.deadline,
-        isOpen: s.isOpen,
+        isOpen: isAssignmentOpen(s.deadline), // Computed from deadline
+        // Maintain backward compatible structure
         module: {
-            title: s.moduleTitle!,
+            title: s.title!,
             course: {
                 name: s.courseName!
             }
@@ -45,33 +53,31 @@ export async function getSessions() {
 }
 
 export async function getLecturerSessions(lecturerId: number) {
-    const sessions = await db.select({
-        id: practicalSessions.id,
-        classId: practicalSessions.classId,
-        moduleId: practicalSessions.moduleId,
-        startDate: practicalSessions.startDate,
-        deadline: practicalSessions.deadline,
-        isOpen: practicalSessions.isOpen,
-        moduleTitle: modules.title,
-        courseName: courses.name,
+    const rows = await db.select({
+        id: assignments.id,
+        classId: assignments.classId,
+        title: assignments.title,
+        description: assignments.description,
+        filePath: assignments.filePath,
+        order: assignments.order,
+        startDate: assignments.startDate,
+        deadline: assignments.deadline,
+        courseName: classes.courseName,
         className: classes.name,
     })
-        .from(practicalSessions)
-        .leftJoin(modules, eq(practicalSessions.moduleId, modules.id))
-        .leftJoin(courses, eq(modules.courseId, courses.id))
-        .leftJoin(classes, eq(practicalSessions.classId, classes.id))
+        .from(assignments)
+        .leftJoin(classes, eq(assignments.classId, classes.id))
         .where(eq(classes.lecturerId, lecturerId))
-        .orderBy(desc(practicalSessions.startDate));
+        .orderBy(desc(assignments.startDate));
 
-    return sessions.map(s => ({
+    return rows.map(s => ({
         id: s.id,
         classId: s.classId,
-        moduleId: s.moduleId,
         startDate: s.startDate,
         deadline: s.deadline,
-        isOpen: s.isOpen,
+        isOpen: isAssignmentOpen(s.deadline), // Computed from deadline
         module: {
-            title: s.moduleTitle!,
+            title: s.title!,
             course: {
                 name: s.courseName!
             }
@@ -84,111 +90,145 @@ export async function getLecturerSessions(lecturerId: number) {
 
 export async function getSessionById(id: number) {
     const rows = await db.select({
-        session: practicalSessions,
-        module: modules,
-        course: courses,
+        assignment: assignments,
         class: classes,
     })
-        .from(practicalSessions)
-        .where(eq(practicalSessions.id, id))
-        .leftJoin(modules, eq(practicalSessions.moduleId, modules.id))
-        .leftJoin(courses, eq(modules.courseId, courses.id))
-        .leftJoin(classes, eq(practicalSessions.classId, classes.id));
+        .from(assignments)
+        .where(eq(assignments.id, id))
+        .leftJoin(classes, eq(assignments.classId, classes.id));
 
     if (rows.length === 0) return null;
 
     const row = rows[0];
 
-    // Fetch reports separately to avoid complex joins if needed, or join them too.
-    // For simplicity and avoiding LATERAL, we can fetch reports in a separate query
+    // Fetch reports
     const reports = await db.select({
         id: practicalReports.id,
         grade: practicalReports.grade,
         filePath: practicalReports.filePath,
         submissionDate: practicalReports.submissionDate,
-        student: {
-            fullName: users.fullName,
-            identifier: users.identifier
-        }
+        feedback: practicalReports.feedback,
+        studentId: practicalReports.studentId,
+        studentName: users.fullName,
+        studentIdentifier: users.identifier
     })
         .from(practicalReports)
-        .where(eq(practicalReports.sessionId, id))
+        .where(eq(practicalReports.assignmentId, id))
         .leftJoin(users, eq(practicalReports.studentId, users.id));
 
+    const assignment = row.assignment;
     return {
-        ...row.session,
+        ...assignment,
+        isOpen: isAssignmentOpen(assignment.deadline), // Computed from deadline
+        // Backward compatible structure
         module: {
-            ...row.module!,
-            course: row.course!
+            id: assignment.id,
+            title: assignment.title,
+            description: assignment.description,
+            filePath: assignment.filePath,
+            order: assignment.order,
+            course: {
+                id: row.class!.id,
+                code: row.class!.courseCode,
+                name: row.class!.courseName
+            }
         },
         class: row.class!,
         reports: reports.map(r => ({
-            ...r,
-            student: r.student!
+            id: r.id,
+            grade: r.grade,
+            filePath: r.filePath,
+            submissionDate: r.submissionDate,
+            feedback: r.feedback,
+            student: {
+                id: r.studentId,
+                fullName: r.studentName!,
+                identifier: r.studentIdentifier!
+            }
         }))
     };
 }
 
 export async function createSession(data: {
     classId: number;
-    moduleId: number;
+    title: string;
+    description?: string;
+    filePath?: string;
+    order?: number;
     startDate: Date;
     deadline: Date;
 }) {
-    await db.insert(practicalSessions).values({
+    await db.insert(assignments).values({
         classId: data.classId,
-        moduleId: data.moduleId,
+        title: data.title,
+        description: data.description,
+        filePath: data.filePath,
+        order: data.order ?? 1,
         startDate: data.startDate,
         deadline: data.deadline,
-        isOpen: true,
     });
     revalidatePath('/admin/practicum');
+    revalidatePath('/lecturer/practicum');
 }
 
 export async function updateSession(id: number, data: {
+    title?: string;
+    description?: string;
+    filePath?: string;
+    order?: number;
     startDate?: Date;
     deadline?: Date;
-    moduleId?: number;
-    isOpen?: boolean;
 }) {
-    await db.update(practicalSessions)
+    // Note: isOpen is no longer stored - computed from deadline
+    await db.update(assignments)
         .set(data)
-        .where(eq(practicalSessions.id, id));
+        .where(eq(assignments.id, id));
     revalidatePath(`/admin/practicum/${id}`);
     revalidatePath('/admin/practicum');
+    revalidatePath('/lecturer/practicum');
 }
 
-export async function updateGrade(reportId: number, grade: number) {
+export async function updateGrade(reportId: number, grade: number, feedback?: string) {
+    const updateData: { grade: number; feedback?: string } = { grade };
+    if (feedback !== undefined) {
+        updateData.feedback = feedback;
+    }
+
     await db.update(practicalReports)
-        .set({ grade })
+        .set(updateData)
         .where(eq(practicalReports.id, reportId));
-    revalidatePath('/admin/practicum'); // Revalidate broadly to ensure consistency
+    revalidatePath('/admin/practicum');
+    revalidatePath('/lecturer/practicum');
 }
 
 export async function getClasses() {
     return await db.select({
         id: classes.id,
-        courseId: classes.courseId,
         lecturerId: classes.lecturerId,
+        courseCode: classes.courseCode,
+        courseName: classes.courseName,
         name: classes.name,
         semester: classes.semester,
-        course: courses
+        enrollmentKey: classes.enrollmentKey,
     })
-        .from(classes)
-        .leftJoin(courses, eq(classes.courseId, courses.id));
+        .from(classes);
 }
 
 export async function getModules() {
+    // In new schema, "modules" are now embedded in assignments
+    // Return assignments as modules for backward compatibility
     return await db.select({
-        id: modules.id,
-        courseId: modules.courseId,
-        title: modules.title,
-        description: modules.description,
-        filePath: modules.filePath,
-        order: modules.order,
-        createdAt: modules.createdAt,
-        course: courses
+        id: assignments.id,
+        classId: assignments.classId,
+        title: assignments.title,
+        description: assignments.description,
+        filePath: assignments.filePath,
+        order: assignments.order,
+        createdAt: assignments.createdAt,
+        courseName: classes.courseName,
+        courseCode: classes.courseCode,
     })
-        .from(modules)
-        .leftJoin(courses, eq(modules.courseId, courses.id));
+        .from(assignments)
+        .leftJoin(classes, eq(assignments.classId, classes.id))
+        .orderBy(desc(assignments.order));
 }

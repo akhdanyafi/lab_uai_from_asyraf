@@ -1,27 +1,36 @@
-import { getSessionById, updateGrade } from '@/features/academic/practicum';
+import { getAssignmentById, updateGrade } from '@/features/academic/actions';
 import { getSession } from '@/lib/auth';
 import { redirect, notFound } from 'next/navigation';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { FileText, Download, Calendar, Clock, CheckCircle, XCircle, PlayCircle } from 'lucide-react';
 
-export default async function LecturerSessionDetailPage({ params }: { params: Promise<{ id: string }> }) {
+/**
+ * Lecturer Assignment Detail Page (Simplified)
+ * 
+ * UPDATED FOR SIMPLIFIED SCHEMA:
+ * - Uses getAssignmentById instead of getSessionById
+ * - Uses assignment.title directly instead of module.title
+ * - Uses class.courseName instead of class.course.name
+ * - Status based on real-time deadline logic
+ */
+
+export default async function LecturerAssignmentDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const session = await getSession();
     if (!session) redirect('/login');
 
-    const { id: sessionIdStr } = await params;
-    const sessionId = parseInt(sessionIdStr);
+    const { id: assignmentIdStr } = await params;
+    const assignmentId = parseInt(assignmentIdStr);
 
-    const sessionData = await getSessionById(sessionId);
-    if (!sessionData) notFound();
+    const assignmentData = await getAssignmentById(assignmentId);
+    if (!assignmentData) notFound();
 
     const now = new Date();
-    const isOpen = sessionData.isOpen && now >= sessionData.startDate && now <= sessionData.deadline;
+    const isOpen = now >= assignmentData.startDate && now <= assignmentData.deadline;
 
     const getStatus = () => {
-        if (!sessionData.isOpen) return { label: 'Ditutup', color: 'bg-red-100 text-red-700', icon: XCircle };
-        if (now > sessionData.deadline) return { label: 'Selesai', color: 'bg-gray-100 text-gray-700', icon: CheckCircle };
-        if (now < sessionData.startDate) return { label: 'Belum Mulai', color: 'bg-yellow-100 text-yellow-700', icon: Clock };
+        if (now > assignmentData.deadline) return { label: 'Selesai', color: 'bg-gray-100 text-gray-700', icon: CheckCircle };
+        if (now < assignmentData.startDate) return { label: 'Belum Mulai', color: 'bg-yellow-100 text-yellow-700', icon: Clock };
         return { label: 'Sedang Berjalan', color: 'bg-green-100 text-green-700', icon: PlayCircle };
     };
 
@@ -31,8 +40,8 @@ export default async function LecturerSessionDetailPage({ params }: { params: Pr
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-800">{sessionData.module.title}</h1>
-                    <p className="text-gray-600">{sessionData.module.course.name} - {sessionData.class.name}</p>
+                    <h1 className="text-2xl font-bold text-gray-800">{assignmentData.title}</h1>
+                    <p className="text-gray-600">{assignmentData.class.courseName} - {assignmentData.class.name}</p>
                 </div>
                 <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium ${status.color}`}>
                     <status.icon className="w-4 h-4" />
@@ -48,7 +57,7 @@ export default async function LecturerSessionDetailPage({ params }: { params: Pr
                     </div>
                     <div>
                         <p className="text-sm text-gray-500">Waktu Mulai</p>
-                        <p className="font-medium">{format(sessionData.startDate, 'dd MMMM yyyy HH:mm', { locale: id })}</p>
+                        <p className="font-medium">{format(assignmentData.startDate, 'dd MMMM yyyy HH:mm', { locale: id })}</p>
                     </div>
                 </div>
                 <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center gap-3">
@@ -57,7 +66,7 @@ export default async function LecturerSessionDetailPage({ params }: { params: Pr
                     </div>
                     <div>
                         <p className="text-sm text-gray-500">Deadline</p>
-                        <p className="font-medium">{format(sessionData.deadline, 'dd MMMM yyyy HH:mm', { locale: id })}</p>
+                        <p className="font-medium">{format(assignmentData.deadline, 'dd MMMM yyyy HH:mm', { locale: id })}</p>
                     </div>
                 </div>
             </div>
@@ -66,7 +75,7 @@ export default async function LecturerSessionDetailPage({ params }: { params: Pr
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                 <div className="border-b border-gray-100 p-6 flex justify-between items-center">
                     <h3 className="text-lg font-semibold text-gray-900">Laporan Mahasiswa</h3>
-                    <span className="text-sm text-gray-500">Total: {sessionData.reports.length}</span>
+                    <span className="text-sm text-gray-500">Total: {assignmentData.reports.length}</span>
                 </div>
                 <table className="w-full text-left">
                     <thead className="bg-gray-50 border-b border-gray-100">
@@ -78,7 +87,7 @@ export default async function LecturerSessionDetailPage({ params }: { params: Pr
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
-                        {sessionData.reports.map((report) => (
+                        {assignmentData.reports.map((report: any) => (
                             <tr key={report.id} className="hover:bg-gray-50 transition-colors">
                                 <td className="px-6 py-4">
                                     <div className="font-medium text-gray-900">{report.student.fullName}</div>
@@ -102,7 +111,7 @@ export default async function LecturerSessionDetailPage({ params }: { params: Pr
                                 </td>
                             </tr>
                         ))}
-                        {sessionData.reports.length === 0 && (
+                        {assignmentData.reports.length === 0 && (
                             <tr>
                                 <td colSpan={4} className="px-6 py-12 text-center text-gray-500">
                                     Belum ada mahasiswa yang mengumpulkan laporan.

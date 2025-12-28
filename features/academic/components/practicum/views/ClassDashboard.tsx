@@ -4,24 +4,29 @@ import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Users, Library, ClipboardList, ChevronDown } from 'lucide-react';
+import { Users, Library, ClipboardList, ChevronDown, Key } from 'lucide-react';
 import SessionList from './SessionList';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import ModuleList from './ModuleList';
 import EnrollmentManager from '../EnrollmentManager';
 
-interface Course {
-    code: string;
-    name: string;
-}
+/**
+ * Class Dashboard (Simplified)
+ * 
+ * UPDATED FOR SIMPLIFIED SCHEMA:
+ * - Removed courseId/course - now uses courseCode/courseName embedded in class
+ * - Shows enrollmentKey for easy sharing
+ * - ModuleList now uses classId instead of courseId
+ */
 
 interface ClassData {
     id: number;
     name: string;
     semester: string;
-    courseId: number;
-    course: Course;
+    courseCode: string;
+    courseName: string;
+    enrollmentKey: string;
 }
 
 interface ClassDashboardProps {
@@ -42,7 +47,7 @@ export default function ClassDashboard({ classes, basePath = '/admin/practicum' 
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">Manajemen Praktikum</h1>
                     <p className="text-gray-500 mt-1">
-                        Kelola modul, sesi, dan laporan praktikum dalam satu tempat.
+                        Kelola tugas, sesi, dan laporan praktikum dalam satu tempat.
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
@@ -61,7 +66,7 @@ export default function ClassDashboard({ classes, basePath = '/admin/practicum' 
                             >
                                 {classes.map((cls) => (
                                     <option key={cls.id} value={cls.id}>
-                                        {cls.name} - {cls.course.name}
+                                        {cls.name} - {cls.courseName}
                                     </option>
                                 ))}
                             </select>
@@ -74,52 +79,56 @@ export default function ClassDashboard({ classes, basePath = '/admin/practicum' 
             <Separator />
 
             {selectedClass ? (
-                <Tabs defaultValue="sessions" className="space-y-4">
-                    <TabsList>
-                        <TabsTrigger value="sessions" className="flex items-center gap-2">
-                            <ClipboardList className="h-4 w-4" />
-                            Sesi Praktikum
-                        </TabsTrigger>
-                        <TabsTrigger value="modules" className="flex items-center gap-2">
-                            <Library className="h-4 w-4" />
-                            Modul
-                        </TabsTrigger>
-                        <TabsTrigger value="enrollments" className="flex items-center gap-2">
-                            <Users className="h-4 w-4" />
-                            Peserta
-                        </TabsTrigger>
-                    </TabsList>
-
-                    <TabsContent value="sessions" className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-lg font-semibold">Daftar Sesi Praktikum</h2>
-                            <Button asChild size="sm">
-                                <Link href={`${basePath}/create`}>
-                                    <ClipboardList className="mr-2 h-4 w-4" />
-                                    Buat Sesi Baru
-                                </Link>
-                            </Button>
+                <>
+                    {/* Enrollment Key Display */}
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <Key className="h-5 w-5 text-blue-600" />
+                            <div>
+                                <p className="text-sm font-medium text-blue-800">Kode Enrollment</p>
+                                <p className="text-xs text-blue-600">Bagikan ke mahasiswa untuk self-enroll</p>
+                            </div>
                         </div>
-                        <SessionList classId={selectedClass.id} />
-                    </TabsContent>
+                        <code className="bg-blue-100 text-blue-800 px-4 py-2 rounded-lg font-mono text-lg font-bold">
+                            {selectedClass.enrollmentKey}
+                        </code>
+                    </div>
 
-                    <TabsContent value="modules" className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-lg font-semibold">Daftar Modul - {selectedClass.course.name}</h2>
-                            <Button size="sm" variant="outline" asChild>
-                                <Link href={`${basePath}/create-module?courseId=${selectedClass.courseId}`}>
-                                    <Library className="mr-2 h-4 w-4" />
-                                    Tambah Modul
-                                </Link>
-                            </Button>
-                        </div>
-                        <ModuleList courseId={selectedClass.courseId} />
-                    </TabsContent>
+                    <Tabs defaultValue="sessions" className="space-y-4">
+                        <TabsList>
+                            <TabsTrigger value="sessions" className="flex items-center gap-2">
+                                <ClipboardList className="h-4 w-4" />
+                                Tugas Praktikum
+                            </TabsTrigger>
+                            <TabsTrigger value="modules" className="flex items-center gap-2">
+                                <Library className="h-4 w-4" />
+                                Daftar Tugas
+                            </TabsTrigger>
+                            <TabsTrigger value="enrollments" className="flex items-center gap-2">
+                                <Users className="h-4 w-4" />
+                                Peserta
+                            </TabsTrigger>
+                        </TabsList>
 
-                    <TabsContent value="enrollments">
-                        <EnrollmentManager classId={selectedClass.id} />
-                    </TabsContent>
-                </Tabs>
+                        <TabsContent value="sessions" className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <h2 className="text-lg font-semibold">Daftar Tugas Praktikum</h2>
+                            </div>
+                            <SessionList classId={selectedClass.id} />
+                        </TabsContent>
+
+                        <TabsContent value="modules" className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <h2 className="text-lg font-semibold">Daftar Tugas - {selectedClass.courseName}</h2>
+                            </div>
+                            <ModuleList classId={selectedClass.id} />
+                        </TabsContent>
+
+                        <TabsContent value="enrollments">
+                            <EnrollmentManager classId={selectedClass.id} />
+                        </TabsContent>
+                    </Tabs>
+                </>
             ) : (
                 <div className="flex flex-col items-center justify-center p-12 text-center border-2 border-dashed rounded-lg bg-muted/5">
                     <Library className="h-12 w-12 text-muted-foreground mb-4" />

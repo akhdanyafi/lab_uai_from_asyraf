@@ -1,16 +1,23 @@
-import { getDocuments, getCourses, getClasses, getLecturers } from '@/features/academic/actions';
+import { getDocuments, getClasses, getLecturers } from '@/features/academic/actions';
 import { getLecturerSessions } from '@/features/academic/practicum';
 import AcademicManager from '@/features/academic/components/AcademicManager';
 import { getSession } from '@/lib/auth';
 
+/**
+ * Lecturer Academic Page (Simplified)
+ * 
+ * UPDATED FOR SIMPLIFIED SCHEMA:
+ * - Removed getCourses() - courses now embedded in classes
+ * - 'courses' prop no longer passed to AcademicManager
+ */
+
 export default async function LecturerAcademicPage() {
     const session = await getSession();
 
-    const [modules, journals, reports, courses, classes, lecturers, sessions] = await Promise.all([
+    const [modules, journals, reports, classes, lecturers, sessions] = await Promise.all([
         getDocuments('Modul Praktikum'),
         getDocuments('Jurnal Publikasi'),
         getDocuments('Laporan Praktikum'),
-        getCourses(),
         getClasses(),
         getLecturers(),
         getLecturerSessions(session?.user.id || 0)
@@ -21,13 +28,13 @@ export default async function LecturerAcademicPage() {
             modules={modules}
             journals={journals}
             reports={reports}
-            courses={courses}
+            courses={[]} // Deprecated - no longer used
             classes={classes}
             lecturers={lecturers}
             sessions={sessions}
             userRole="Dosen"
             userId={session?.user.id || 0}
-            visibleTabs={['modules', 'journals', 'courses', 'classes', 'practicum']}
+            visibleTabs={['modules', 'journals', 'classes', 'practicum']}
         />
     );
 }

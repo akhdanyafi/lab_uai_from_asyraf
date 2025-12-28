@@ -24,11 +24,11 @@ export interface CheckInResult {
 
 // Purpose templates for dropdown
 export const PURPOSE_TEMPLATES = [
-    'Praktikum',
-    'Mengerjakan Tugas',
-    'Belajar Mandiri',
-    'Rapat/Meeting',
     'Penelitian/Riset',
+    'Kegiatan belajar mandiri / kelompok',
+    'Rapat HIMA / organisasi',
+    'Praktikum atau persiapan tugas',
+    'Kehadiran di area laboratorium',
     'Lainnya',
 ] as const;
 

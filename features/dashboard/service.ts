@@ -1,10 +1,14 @@
 /**
  * Dashboard Service
  * Business logic for dashboard statistics and data
+ * 
+ * UPDATED FOR SIMPLIFIED SCHEMA:
+ * - modules, practicalSessions removed from schema
+ * - Now uses assignments instead
  */
 
 import { db } from '@/db';
-import { items, itemLoans, roomBookings, practicalReports, users, rooms, itemCategories, modules, practicalSessions } from '@/db/schema';
+import { items, itemLoans, roomBookings, practicalReports, users, rooms, itemCategories, assignments } from '@/db/schema';
 import { eq, and, gte, desc, sql } from 'drizzle-orm';
 
 export class DashboardService {
@@ -156,6 +160,7 @@ export class DashboardService {
 
     /**
      * Get lecturer dashboard data
+     * Updated to use assignments instead of practicalSessions/modules
      */
     static async getLecturerDashboard(userId: number) {
         const today = new Date();
@@ -179,25 +184,32 @@ export class DashboardService {
             room: row.room!,
         }));
 
+        // Updated: Now uses assignments instead of practicalSessions/modules
         const recentReportsRaw = await db
             .select({
                 report: practicalReports,
                 student: users,
-                session: practicalSessions,
-                module: modules,
+                assignment: assignments,
             })
             .from(practicalReports)
             .leftJoin(users, eq(practicalReports.studentId, users.id))
-            .leftJoin(practicalSessions, eq(practicalReports.sessionId, practicalSessions.id))
-            .leftJoin(modules, eq(practicalSessions.moduleId, modules.id))
+            .leftJoin(assignments, eq(practicalReports.assignmentId, assignments.id))
             .orderBy(desc(practicalReports.submissionDate))
             .limit(10);
 
         const recentReports = recentReportsRaw.map(row => ({
             ...row.report,
             student: row.student!,
-            session: row.session!,
-            module: row.module!,
+            // Provide backward-compatible structure
+            session: {
+                id: row.assignment?.id,
+                title: row.assignment?.title,
+            },
+            module: {
+                id: row.assignment?.id,
+                title: row.assignment?.title,
+            },
+            assignment: row.assignment!,
         }));
 
         return {

@@ -1,34 +1,35 @@
-# Portal Akademik & Praktikum
+# Portal Akademik & Praktikum (Simplified)
 
 ## Deskripsi
 
-Fitur akademik mengelola seluruh aktivitas praktikum laboratorium, mencakup pengelolaan mata kuliah, kelas, modul, sesi praktikum, hingga pengumpulan dan penilaian laporan mahasiswa.
+Fitur akademik mengelola aktivitas praktikum laboratorium dengan arsitektur yang **disederhanakan** untuk kemudahan penggunaan. Sistem ini menggunakan pendekatan "Lean Architecture" yang menghilangkan over-engineering dan memprioritaskan workflow yang efisien.
+
+### Perubahan Arsitektur (vs Versi Sebelumnya)
+
+| Sebelum | Sesudah | Alasan |
+|---------|---------|--------|
+| Tabel `courses` terpisah | Kolom `courseCode`, `courseName` di `classes` | Tidak perlu hierarki kompleks untuk lab kecil |
+| Tabel `modules` terpisah | Kolom `title`, `description`, `filePath` di `assignments` | Dosen ingin "one-stop" workflow |
+| Kolom `isOpen` (boolean) | Logic `NOW() <= deadline` | Menghindari cron job, status real-time |
+| Admin input NIM manual | `enrollmentKey` utk self-enrollment | Mengurangi beban administratif |
 
 ## User Access
 
 | Role | Akses |
 |------|-------|
-| **Admin** | Kelola courses, classes, modules, sessions, enrollment |
-| **Dosen** | Kelola sessions untuk kelas yang diampu, penilaian laporan |
-| **Mahasiswa** | Lihat sesi, download modul, upload laporan |
+| **Admin** | CRUD classes, assignments, class enrollments |
+| **Dosen** | Kelola assignments untuk kelas yang diampu, penilaian laporan |
+| **Mahasiswa** | Lihat assignments, download soal, upload laporan, self-enroll via kode |
 
-## Hierarki Data
+## Hierarki Data (Simplified)
 
 ```
-Course (Mata Kuliah)
-    ↓ 1:N
-Class (Kelas)
-    ├── 1:N → ClassEnrollment (Peserta)
-    │              ↓
-    │         Student (Mahasiswa)
-    │
-    └── 1:N → PracticalSession (Sesi Praktikum)
-                   ↓
-              Module (Modul)
-                   ↓ 1:N
-              PracticalReport (Laporan)
-                   ↓
-              Student (Mahasiswa)
+Class (courseCode, courseName, enrollmentKey)
+    ├── ClassEnrollment
+    │       └── Student
+    └── Assignment (title, description, filePath, deadline)
+            └── PracticalReport
+                    └── Student
 ```
 
 ## Alur Proses Praktikum
@@ -36,37 +37,46 @@ Class (Kelas)
 ### 1. Setup Praktikum (Admin/Dosen)
 
 ```
-[Admin] Buat Course (Mata Kuliah)
+[Admin/Dosen] Buat Class
+    - Input: courseCode, courseName, className, semester, dosen
+    - Output: enrollmentKey auto-generated (e.g., IF12-A-X9K2)
             ↓
-[Admin] Buat Class + Assign Dosen
+[Admin/Dosen] Share enrollmentKey ke grup WhatsApp
             ↓
-[Admin/Dosen] Upload Modul ke Course
-            ↓
-[Admin/Dosen] Buat Session (Sesi Praktikum)
-    - Pilih Class
-    - Pilih Modul
-    - Set tanggal mulai & deadline
-            ↓
-[Admin/Dosen] Enroll Mahasiswa ke Class
+[Admin/Dosen] Buat Assignment (One-Stop Workflow)
+    - Input: title, description, upload PDF soal, deadline
+    - Tidak perlu buat "Bank Soal" terlebih dahulu
 ```
 
-### 2. Aktivitas Mahasiswa
+### 2. Self-Enrollment Mahasiswa (NEW!)
 
 ```
-[Mahasiswa] Lihat Daftar Sesi Aktif
+[Dosen] Share enrollmentKey ke mahasiswa
             ↓
-[Mahasiswa] Download Modul PDF
+[Mahasiswa] Login → Masukkan enrollmentKey
+            ↓
+[Sistem] Validasi key → Mahasiswa tercatat di class_enrollments
+            ↓
+[Mahasiswa] Otomatis melihat assignments kelas tersebut
+```
+
+### 3. Aktivitas Mahasiswa
+
+```
+[Mahasiswa] Lihat Daftar Assignment Aktif
+            ↓
+[Mahasiswa] Download PDF Soal
             ↓
 [Mahasiswa] Kerjakan Praktikum
             ↓
-[Mahasiswa] Upload Laporan (sebelum deadline)
+[Mahasiswa] Upload Laporan
             ↓
-    Session: isOpen = true?
+    Validasi: NOW() <= deadline?
         ├── Yes → Upload berhasil
-        └── No  → Ditolak (sesi ditutup)
+        └── No  → Ditolak "Deadline sudah lewat"
 ```
 
-### 3. Penilaian (Dosen)
+### 4. Penilaian (Dosen)
 
 ```
 [Dosen] Lihat Laporan yang Masuk
@@ -78,26 +88,19 @@ Class (Kelas)
 [Mahasiswa] Lihat Nilai
 ```
 
-## Data Model
+## Data Model (Simplified)
 
-### Tabel `courses` (Mata Kuliah)
-
-| Kolom | Tipe | Deskripsi |
-|-------|------|-----------|
-| id | INT (PK) | ID mata kuliah |
-| code | VARCHAR(20) | Kode MK (IF123) |
-| name | VARCHAR(100) | Nama mata kuliah |
-| description | TEXT | Deskripsi |
-
-### Tabel `classes` (Kelas)
+### Tabel `classes` (Kelas + Info Mata Kuliah)
 
 | Kolom | Tipe | Deskripsi |
 |-------|------|-----------|
 | id | INT (PK) | ID kelas |
-| courseId | INT (FK) | Mata kuliah |
 | lecturerId | INT (FK) | Dosen pengampu |
+| courseCode | VARCHAR(20) | Kode MK (IF123) |
+| courseName | VARCHAR(100) | Nama mata kuliah |
 | name | VARCHAR(50) | Nama kelas (IF-22A) |
 | semester | VARCHAR(50) | Semester (Ganjil 2024/2025) |
+| enrollmentKey | VARCHAR(50) | Kode untuk self-enrollment (UNIQUE) |
 
 ### Tabel `class_enrollments` (Peserta Kelas)
 
@@ -106,57 +109,83 @@ Class (Kelas)
 | id | INT (PK) | ID enrollment |
 | classId | INT (FK) | Kelas |
 | studentId | INT (FK) | Mahasiswa peserta |
+| enrolledAt | DATETIME | Waktu enrollment |
 
-### Tabel `modules` (Modul)
-
-| Kolom | Tipe | Deskripsi |
-|-------|------|-----------|
-| id | INT (PK) | ID modul |
-| courseId | INT (FK) | Mata kuliah pemilik |
-| title | VARCHAR(255) | Judul modul |
-| description | TEXT | Deskripsi |
-| filePath | VARCHAR(255) | Path file PDF |
-| order | INT | Urutan modul |
-| createdAt | DATETIME | Tanggal dibuat |
-
-### Tabel `practical_sessions` (Sesi Praktikum)
+### Tabel `assignments` (Tugas Praktikum)
 
 | Kolom | Tipe | Deskripsi |
 |-------|------|-----------|
-| id | INT (PK) | ID sesi |
+| id | INT (PK) | ID assignment |
 | classId | INT (FK) | Kelas target |
-| moduleId | INT (FK) | Modul yang dikerjakan |
+| title | VARCHAR(255) | Judul tugas (Praktikum 1 - TCP/IP) |
+| description | TEXT | Deskripsi tugas |
+| filePath | VARCHAR(255) | Path file PDF soal |
+| order | INT | Urutan tugas |
 | startDate | DATETIME | Tanggal mulai |
 | deadline | DATETIME | Batas pengumpulan |
-| isOpen | BOOLEAN | Sesi masih terbuka |
+| createdAt | DATETIME | Tanggal dibuat |
+
+> **Note**: Kolom `isOpen` dihapus. Status buka/tutup dihitung real-time: `NOW() <= deadline`
 
 ### Tabel `practical_reports` (Laporan)
 
 | Kolom | Tipe | Deskripsi |
 |-------|------|-----------|
 | id | INT (PK) | ID laporan |
-| sessionId | INT (FK) | Sesi praktikum |
+| assignmentId | INT (FK) | Assignment terkait |
 | studentId | INT (FK) | Mahasiswa pengirim |
 | filePath | VARCHAR(255) | Path file laporan |
 | submissionDate | DATETIME | Tanggal kirim |
 | grade | INT | Nilai (0-100) |
-| feedback | TEXT | Komentar/feedback dosen |
+| feedback | TEXT | Komentar dosen |
 
 ## Server Actions
 
-| Action | File | Deskripsi |
-|--------|------|-----------|
-| `getCourses()` | `lib/actions/academic.ts` | Daftar mata kuliah |
-| `getClasses()` | `lib/actions/academic.ts` | Daftar kelas |
-| `getModulesByCourse()` | `lib/actions/academic.ts` | Modul per mata kuliah |
-| `createCourse()` | `lib/actions/academic.ts` | Buat mata kuliah |
-| `createClass()` | `lib/actions/academic.ts` | Buat kelas |
-| `createModule()` | `lib/actions/academic.ts` | Upload modul |
-| `createSession()` | `lib/actions/practicum.ts` | Buat sesi praktikum |
-| `getSessionById()` | `lib/actions/practicum.ts` | Detail sesi |
-| `submitReport()` | `lib/actions/practicum.ts` | Upload laporan |
-| `updateGrade()` | `lib/actions/practicum.ts` | Beri nilai |
-| `enrollStudents()` | `lib/actions/academic.ts` | Daftarkan peserta |
+### Class Management
+
+| Action | Deskripsi |
+|--------|-----------|
+| `getClasses()` | Daftar semua kelas |
+| `createClass()` | Buat kelas (auto-generate enrollmentKey) |
+| `updateClass()` | Update info kelas |
+| `deleteClass()` | Hapus kelas |
+| `getClassById()` | Detail kelas |
+
+### Enrollment Key System (NEW!)
+
+| Action | Deskripsi |
+|--------|-----------|
+| `regenerateEnrollmentKey()` | Generate ulang kode enrollment |
+| `validateEnrollmentKey()` | Validasi kode |
+| `enrollWithKey()` | Mahasiswa enroll sendiri dengan kode |
+
+### Assignment Management
+
+| Action | Deskripsi |
+|--------|-----------|
+| `getAssignments()` | Daftar semua assignment |
+| `createAssignment()` | Buat assignment (one-stop: title + desc + file + deadline) |
+| `updateAssignment()` | Update assignment |
+| `deleteAssignment()` | Hapus assignment |
+| `getAssignmentById()` | Detail assignment + reports |
+
+### Student & Grading
+
+| Action | Deskripsi |
+|--------|-----------|
+| `getStudentAssignments()` | Tugas untuk mahasiswa yang enrolled |
+| `submitReport()` | Upload laporan (validasi deadline) |
+| `updateGrade()` | Beri nilai + feedback |
+
+### Class Enrollments
+
+| Action | Deskripsi |
+|--------|-----------|
+| `getClassMembers()` | Daftar anggota kelas |
+| `enrollStudent()` | Admin enroll manual |
+| `unenrollStudent()` | Keluarkan mahasiswa |
+| `bulkEnrollStudents()` | Enroll banyak mahasiswa |
+| `searchStudents()` | Cari mahasiswa untuk enroll |
 
 ## Halaman Terkait
 
@@ -164,34 +193,34 @@ Class (Kelas)
 
 | Route | Deskripsi |
 |-------|-----------|
-| `/admin/academic/create` | Buat course, class, module |
 | `/admin/practicum` | Dashboard manajemen praktikum |
-| `/admin/practicum/create` | Buat sesi praktikum |
-| `/admin/practicum/[id]` | Detail sesi + penilaian |
+| `/admin/practicum/create` | Buat kelas baru |
+| `/admin/practicum/[id]` | Detail kelas + assignments |
 
 ### Dosen
 
 | Route | Deskripsi |
 |-------|-----------|
 | `/lecturer/practicum` | Dashboard praktikum dosen |
-| `/lecturer/practicum/create` | Buat sesi untuk kelas yang diampu |
-| `/lecturer/sessions/[id]` | Detail sesi + penilaian |
-| `/lecturer/classes/[classId]` | Detail kelas |
+| `/lecturer/practicum/create` | Buat assignment |
+| `/lecturer/sessions/[id]` | Detail assignment + penilaian |
 
 ### Mahasiswa
 
 | Route | Deskripsi |
 |-------|-----------|
-| `/student/sessions` | Daftar sesi praktikum saya |
-| `/student/sessions/[sessionId]` | Detail sesi + upload laporan |
+| `/student/enroll` | Input enrollment key (NEW!) |
+| `/student/assignments` | Daftar tugas saya |
+| `/student/assignments/[id]` | Detail tugas + upload laporan |
 
 ## Validasi & Business Rules
 
-1. **Satu laporan per mahasiswa per sesi** - Tidak bisa submit ulang
-2. **Upload hanya saat sesi terbuka (isOpen = true)**
+1. **Satu laporan per mahasiswa per assignment** - Tidak bisa submit ulang
+2. **Upload hanya jika `NOW() <= deadline`** - Logic real-time
 3. **Nilai 0-100**
-4. **Modul terikat ke Course, bukan Class** - Reusable antar kelas
-5. **Mahasiswa hanya lihat sesi untuk kelas yang di-enroll**
+4. **Enrollment key harus valid dan unik**
+5. **Mahasiswa tidak bisa enroll 2x ke kelas yang sama**
+6. **Mahasiswa hanya lihat assignments untuk kelas yang di-enroll**
 
 ## Relasi dengan Fitur Lain
 

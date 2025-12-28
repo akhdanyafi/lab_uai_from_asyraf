@@ -3,4 +3,6 @@
  * Export all seed functions
  */
 
-export * from './initial.seed';
+// Export comprehensive seed
+export * from './comprehensive.seed';
+export * from './create-upload-structure';
