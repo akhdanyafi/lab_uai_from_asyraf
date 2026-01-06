@@ -16,6 +16,11 @@ export interface Booking {
     startTime: Date;
     endTime: Date;
     purpose: string;
+    // New fields
+    organisasi: string | null;
+    jumlahPeserta: number | null;
+    suratPermohonan: string | null;
+    dosenPembimbing: string | null;
     status: 'Pending' | 'Disetujui' | 'Ditolak';
 }
 
@@ -37,6 +42,11 @@ export interface CreateBookingInput {
     startTime: Date;
     endTime: Date;
     purpose: string;
+    // New fields
+    organisasi?: string;
+    jumlahPeserta?: number;
+    suratPermohonan?: string;
+    dosenPembimbing?: string;
 }
 
 export interface CalendarEvent {

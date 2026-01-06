@@ -11,6 +11,27 @@ export async function getAllRooms() {
 }
 
 /**
+ * Get all lecturers for dosen pembimbing dropdown
+ */
+export async function getLecturers() {
+    const { db } = await import('@/db');
+    const { users, roles } = await import('@/db/schema');
+    const { eq } = await import('drizzle-orm');
+
+    const lecturers = await db
+        .select({
+            id: users.id,
+            fullName: users.fullName,
+        })
+        .from(users)
+        .innerJoin(roles, eq(users.roleId, roles.id))
+        .where(eq(roles.name, 'Dosen'))
+        .orderBy(users.fullName);
+
+    return lecturers;
+}
+
+/**
  * Check room availability
  */
 export async function getRoomAvailability(roomId: number, date: Date) {
@@ -19,6 +40,7 @@ export async function getRoomAvailability(roomId: number, date: Date) {
 
 /**
  * Create room booking request
+ * Auto-validates if suratPermohonan is provided
  */
 export async function createRoomBooking(data: {
     userId: number;
@@ -26,6 +48,10 @@ export async function createRoomBooking(data: {
     startTime: Date;
     endTime: Date;
     purpose: string;
+    organisasi?: string;
+    jumlahPeserta?: number;
+    suratPermohonan?: string;
+    dosenPembimbing?: string;
 }) {
     await BookingService.create(data);
     revalidatePath('/student/rooms');

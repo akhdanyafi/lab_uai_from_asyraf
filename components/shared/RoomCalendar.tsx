@@ -21,10 +21,9 @@ interface RoomCalendarProps {
     bookings: Booking[];
     onDateSelect?: (date: Date) => void;
     selectedRoomId?: number | null;
-    layoutMode?: 'default' | 'stacked';
 }
 
-export default function RoomCalendar({ bookings, onDateSelect, selectedRoomId, layoutMode = 'default' }: RoomCalendarProps) {
+export default function RoomCalendar({ bookings, onDateSelect, selectedRoomId }: RoomCalendarProps) {
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
 
     const handleDateSelect = (date: Date | undefined) => {
@@ -34,6 +33,7 @@ export default function RoomCalendar({ bookings, onDateSelect, selectedRoomId, l
         }
     };
 
+    // Filter logic
     const filteredBookings = useMemo(() => {
         return bookings.filter(b => {
             if (selectedRoomId) {
@@ -57,76 +57,71 @@ export default function RoomCalendar({ bookings, onDateSelect, selectedRoomId, l
     }, [filteredBookings]);
 
     return (
-        <div className={`bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col ${layoutMode === 'default' ? 'md:flex-row' : ''} h-full`}>
-            <div className={`p-6 border-b ${layoutMode === 'default' ? 'md:border-b-0 md:border-r' : ''} border-gray-100 flex-shrink-0 flex justify-center bg-white`}>
+        /* PERBAIKAN 1: Hapus bg-white, shadow, dan border. 
+           Gunakan h-full dan flex-col agar stack vertikal. */
+        <div className="flex flex-col h-full w-full">
+            
+            {/* Bagian Kalender (DatePicker) */}
+            <div className="flex justify-center border-b border-gray-100 pb-4 mb-4 bg-white">
                 <DayPicker
                     mode="single"
                     selected={selectedDate}
                     onSelect={handleDateSelect}
                     locale={id}
-                    modifiers={{
-                        booked: bookedDays
-                    }}
+                    modifiers={{ booked: bookedDays }}
                     modifiersStyles={{
                         booked: {
                             fontWeight: 'bold',
-                            color: 'var(--primary)',
+                            color: '#0F4C81', // Sesuaikan dengan warna brand Anda
                             textDecoration: 'underline'
                         }
                     }}
                     styles={{
                         caption: { color: '#1f2937' },
                         head_cell: { color: '#6b7280' },
+                        // PERBAIKAN 2: Kecilkan ukuran font agar muat di sidebar
+                        day: { fontSize: '0.875rem' } 
                     }}
-                    className="custom-day-picker"
                 />
             </div>
 
-            <div className="flex-1 bg-gray-50/30 p-6 overflow-y-auto max-h-[600px]">
+            {/* Bagian List Agenda (Detail) */}
+            <div className="flex-1 overflow-y-auto px-1 custom-scrollbar min-h-[300px]">
                 {selectedDate ? (
-                    <div className="animate-in fade-in duration-300">
-                        <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2 sticky top-0 bg-gray-50/30 backdrop-blur-sm py-2 z-10">
-                            <div className="w-1 h-4 bg-primary rounded-full" />
-                            Jadwal {selectedDate.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                    <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 sticky top-0 bg-white py-2 z-10 border-b border-gray-50">
+                            Agenda {selectedDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
                         </h3>
 
                         <div className="space-y-3">
                             {getBookingsForDay(selectedDate).length > 0 ? (
                                 getBookingsForDay(selectedDate).map(booking => (
-                                    <div key={booking.id} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-start justify-between group hover:border-primary/30 hover:shadow-md transition-all">
-                                        <div className="w-full">
-                                            <div className="flex items-center justify-between mb-2">
-                                                <div className="flex items-center gap-2 text-sm font-bold text-gray-900">
-                                                    <div className="p-1.5 bg-primary/10 rounded-md text-primary">
-                                                        <Clock className="w-3.5 h-3.5" />
-                                                    </div>
-                                                    {new Date(booking.startTime).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} -
-                                                    {new Date(booking.endTime).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
-                                                </div>
-                                                <div className="px-2.5 py-1 rounded-full bg-gray-100 text-xs font-medium text-gray-600 flex items-center gap-1.5">
-                                                    <MapPin className="w-3 h-3" />
-                                                    {booking.room.name}
-                                                </div>
+                                    /* Card Item Kecil */
+                                    <div key={booking.id} className="bg-gray-50 p-3 rounded-lg border border-gray-100 hover:border-primary/30 transition-all">
+                                        <div className="flex justify-between items-start mb-2">
+                                            <div className="flex items-center gap-1.5 text-xs font-bold text-[#0F4C81]">
+                                                <Clock className="w-3 h-3" />
+                                                {new Date(booking.startTime).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
                                             </div>
-                                            <div className="text-sm text-gray-600 pl-9 border-l-2 border-gray-100 ml-3">
-                                                {booking.purpose}
-                                            </div>
+                                            <span className="text-[10px] bg-white border px-1.5 py-0.5 rounded text-gray-500">
+                                                {booking.room.name}
+                                            </span>
                                         </div>
+                                        <p className="text-sm text-gray-800 line-clamp-2 leading-snug">
+                                            {booking.purpose}
+                                        </p>
                                     </div>
                                 ))
                             ) : (
-                                <div className="text-sm text-gray-500 italic text-center py-12 bg-white rounded-xl border border-dashed border-gray-200 flex flex-col items-center justify-center gap-2">
-                                    <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center text-gray-300">
-                                        <Clock className="w-6 h-6" />
-                                    </div>
-                                    Tidak ada booking pada tanggal ini
+                                <div className="text-center py-8 text-gray-400">
+                                    <p className="text-sm">Tidak ada jadwal</p>
                                 </div>
                             )}
                         </div>
                     </div>
                 ) : (
-                    <div className="h-full flex items-center justify-center text-gray-400 text-sm italic">
-                        Pilih tanggal untuk melihat jadwal
+                    <div className="text-center py-10 text-gray-400 italic text-sm">
+                        Pilih tanggal diatas
                     </div>
                 )}
             </div>

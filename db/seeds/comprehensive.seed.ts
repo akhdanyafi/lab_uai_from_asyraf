@@ -405,6 +405,8 @@ export async function seedRoomBookings() {
 
     const statuses: Array<'Pending' | 'Disetujui' | 'Ditolak'> = ['Pending', 'Disetujui', 'Ditolak'];
 
+    const organisasiOptions = ['Pribadi', 'HMIF', 'Panitia Fortex', 'Lab Informatika'];
+
     for (let i = 0; i < SEED_CONFIG.facilities.roomBookingsCount; i++) {
         const user = getRandomItem(allUsers);
         const room = getRandomItem(allRooms);
@@ -422,6 +424,9 @@ export async function seedRoomBookings() {
             startTime,
             endTime,
             purpose: getRandomItem(purposes),
+            organisasi: getRandomItem(organisasiOptions),
+            jumlahPeserta: 5 + Math.floor(Math.random() * 20),
+            dosenPembimbing: user.dosenPembimbing || null,
             status,
         });
     }

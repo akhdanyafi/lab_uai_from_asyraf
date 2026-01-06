@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Clock } from 'lucide-react';
+import { Clock, Upload, Users, Building2, GraduationCap } from 'lucide-react';
 import CalendarView from '@/components/shared/CalendarView';
-import { createRoomBooking } from '@/features/bookings/actions';
+import { createRoomBooking, getLecturers } from '@/features/bookings/actions';
 
 interface Room {
     id: number;
@@ -24,53 +24,149 @@ interface Booking {
     };
 }
 
+interface Lecturer {
+    id: number;
+    fullName: string;
+}
+
 interface RoomBookingClientProps {
     rooms: Room[];
     calendarBookings: Booking[];
     userId: number;
 }
 
+// Organization options
+const ORGANISASI_OPTIONS = [
+    'Pribadi',
+    'HMIF',
+    'Panitia Fortex',
+    'Ketua Kelompok MK',
+    'Lainnya',
+];
+
+// Purpose templates (same as attendance)
+const PURPOSE_TEMPLATES = [
+    'Penelitian/Riset',
+    'Kegiatan belajar mandiri / kelompok',
+    'Rapat HIMA / organisasi',
+    'Praktikum atau persiapan tugas',
+    'Kehadiran di area laboratorium',
+    'Lainnya',
+];
+
 export default function RoomBookingClient({ rooms, calendarBookings, userId }: RoomBookingClientProps) {
     const [selectedDate, setSelectedDate] = useState<string>('');
     const [selectedRoomId, setSelectedRoomId] = useState<string>('');
     const [startTime, setStartTime] = useState('');
     const [endTime, setEndTime] = useState('');
-    const [purpose, setPurpose] = useState('');
+    const [selectedPurpose, setSelectedPurpose] = useState('');
+    const [customPurpose, setCustomPurpose] = useState('');
+    // New state fields
+    const [organisasi, setOrganisasi] = useState('Pribadi');
+    const [customOrganisasi, setCustomOrganisasi] = useState('');
+    const [jumlahPeserta, setJumlahPeserta] = useState('1');
+    const [dosenPembimbing, setDosenPembimbing] = useState('');
+    const [suratFile, setSuratFile] = useState<File | null>(null);
+    const [lecturers, setLecturers] = useState<Lecturer[]>([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    // Fetch lecturers on mount
+    useEffect(() => {
+        fetchLecturers();
+    }, []);
+
+    const fetchLecturers = async () => {
+        try {
+            const data = await getLecturers();
+            setLecturers(data);
+        } catch (error) {
+            console.error('Failed to fetch lecturers:', error);
+        }
+    };
+
     const handleDateSelect = (date: Date) => {
-        // Format date as YYYY-MM-DD for input
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');
         setSelectedDate(`${year}-${month}-${day}`);
     };
 
-    const handleSubmit = async (formData: FormData) => {
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            setSuratFile(e.target.files[0]);
+        }
+    };
+
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
         setIsSubmitting(true);
+
         try {
+            const formData = new FormData(e.currentTarget);
             const roomId = parseInt(formData.get('roomId') as string);
             const date = formData.get('date') as string;
             const startTimeVal = formData.get('startTime') as string;
             const endTimeVal = formData.get('endTime') as string;
-            const purposeVal = formData.get('purpose') as string;
 
             const startDateTime = new Date(`${date}T${startTimeVal}`);
             const endDateTime = new Date(`${date}T${endTimeVal}`);
+
+            // Handle file upload if provided
+            let suratPermohonanPath: string | undefined;
+            if (suratFile) {
+                // Create FormData for file upload
+                const uploadFormData = new FormData();
+                uploadFormData.append('file', suratFile);
+                uploadFormData.append('folder', 'surat-permohonan');
+
+                const uploadRes = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: uploadFormData,
+                });
+
+                if (uploadRes.ok) {
+                    const uploadData = await uploadRes.json();
+                    suratPermohonanPath = uploadData.path;
+                }
+            }
+
+            // Get final organisasi
+            const finalOrganisasi = organisasi === 'Lainnya' ? customOrganisasi : organisasi;
+
+            // Get final purpose (custom or selected)
+            const finalPurpose = selectedPurpose === 'Lainnya' ? customPurpose : selectedPurpose;
 
             await createRoomBooking({
                 userId,
                 roomId,
                 startTime: startDateTime,
                 endTime: endDateTime,
-                purpose: purposeVal,
+                purpose: finalPurpose,
+                organisasi: finalOrganisasi,
+                jumlahPeserta: parseInt(jumlahPeserta) || 1,
+                suratPermohonan: suratPermohonanPath,
+                dosenPembimbing: dosenPembimbing || undefined,
             });
 
-            // Reset form or show success
-            alert('Booking berhasil diajukan!');
-            setPurpose('');
+            // Show success message
+            const statusMessage = suratPermohonanPath
+                ? 'Booking berhasil! Karena Anda melampirkan surat permohonan, pengajuan langsung disetujui.'
+                : 'Booking berhasil diajukan! Mohon tunggu validasi dari admin.';
+            alert(statusMessage);
+
+            // Reset form
+            setSelectedPurpose('');
+            setCustomPurpose('');
             setStartTime('');
             setEndTime('');
+            setOrganisasi('Pribadi');
+            setCustomOrganisasi('');
+            setJumlahPeserta('1');
+            setDosenPembimbing('');
+            setSuratFile(null);
+            // Reset file input
+            const fileInput = document.getElementById('suratPermohonan') as HTMLInputElement;
+            if (fileInput) fileInput.value = '';
         } catch (error) {
             console.error(error);
             alert('Gagal mengajukan booking.');
@@ -80,95 +176,197 @@ export default function RoomBookingClient({ rooms, calendarBookings, userId }: R
     };
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Left Column: Calendar */}
-            <div className="lg:col-span-2 space-y-6">
-                <CalendarView
-                    rooms={rooms}
-                    bookings={calendarBookings}
-                    title="Kalender Ketersediaan"
-                    onDateSelect={handleDateSelect}
-                />
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            {/* Left Column: Calendar (Sidebar - 5 cols) */}
+            <div className="lg:col-span-5 order-2 lg:order-1">
+                <div className="lg:sticky lg:top-6">
+                    <CalendarView
+                        rooms={rooms}
+                        bookings={calendarBookings}
+                        title="Cek Ketersediaan"
+                        onDateSelect={handleDateSelect}
+                        className="w-full min-h-[600px]"
+                    />
+                </div>
             </div>
 
-            {/* Right Column: Booking Form */}
-            <div className="lg:col-span-1">
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 sticky top-6">
-                    <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                        <Clock className="w-5 h-5 text-primary" />
-                        Form Booking
+            {/* Right Column: Booking Form (Main Content - 7 cols) */}
+            <div className="lg:col-span-7 order-1 lg:order-2">
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 min-h-[600px]">
+                    <h2 className="text-xl font-bold mb-6 flex items-center gap-2 border-b pb-4">
+                        <Clock className="w-6 h-6 text-primary" />
+                        Form Pengajuan Booking
                     </h2>
-                    <form action={handleSubmit} className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Ruangan</label>
-                            <select
-                                name="roomId"
-                                required
-                                value={selectedRoomId}
-                                onChange={(e) => setSelectedRoomId(e.target.value)}
-                                className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20"
+
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        {/* PERUBAHAN 2: Internal Grid pada Form
+                        Manfaatkan lebar baru dengan membagi input menjadi 2 kolom.
+                    */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                            {/* Kolom Kiri Form */}
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Ruangan</label>
+                                    <select
+                                        name="roomId"
+                                        required
+                                        value={selectedRoomId}
+                                        onChange={(e) => setSelectedRoomId(e.target.value)}
+                                        className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                    >
+                                        <option value="">Pilih Ruangan</option>
+                                        {rooms.map(room => (
+                                            <option key={room.id} value={room.id}>{room.name} - {room.location}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                                        <Building2 className="w-4 h-4" /> Organisasi/Unit
+                                    </label>
+                                    <select
+                                        value={organisasi}
+                                        onChange={(e) => setOrganisasi(e.target.value)}
+                                        className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                    >
+                                        {ORGANISASI_OPTIONS.map(org => (
+                                            <option key={org} value={org}>{org}</option>
+                                        ))}
+                                    </select>
+                                    {organisasi === 'Lainnya' && (
+                                        <input
+                                            type="text"
+                                            value={customOrganisasi}
+                                            onChange={(e) => setCustomOrganisasi(e.target.value)}
+                                            placeholder="Masukkan nama organisasi..."
+                                            className="w-full mt-2 px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                            required
+                                        />
+                                    )}
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                                        <Users className="w-4 h-4" /> Jumlah Peserta
+                                    </label>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        value={jumlahPeserta}
+                                        onChange={(e) => setJumlahPeserta(e.target.value)}
+                                        className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Kolom Kanan Form */}
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Tanggal & Waktu</label>
+                                    <div className="space-y-3 p-4 bg-gray-50 rounded-lg border border-gray-100">
+                                        <input
+                                            type="date"
+                                            required
+                                            value={selectedDate}
+                                            onChange={(e) => setSelectedDate(e.target.value)}
+                                            min={new Date().toISOString().split('T')[0]}
+                                            className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                        />
+                                        <div className="flex gap-2 items-center">
+                                            <input
+                                                type="time"
+                                                required
+                                                value={startTime}
+                                                onChange={(e) => setStartTime(e.target.value)}
+                                                className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                            />
+                                            <span className="text-gray-400">-</span>
+                                            <input
+                                                type="time"
+                                                required
+                                                value={endTime}
+                                                onChange={(e) => setEndTime(e.target.value)}
+                                                className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                                        <GraduationCap className="w-4 h-4" /> Dosen Pembimbing
+                                    </label>
+                                    <select
+                                        value={dosenPembimbing}
+                                        onChange={(e) => setDosenPembimbing(e.target.value)}
+                                        className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                    >
+                                        <option value="">Dosen Pembimbing Saya</option>
+                                        {lecturers.map(lecturer => (
+                                            <option key={lecturer.id} value={lecturer.fullName}>{lecturer.fullName}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Area Full Width (Bawah) */}
+                        <div className="space-y-4 border-t pt-4 mt-2">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Keperluan</label>
+                                <select
+                                    value={selectedPurpose}
+                                    onChange={(e) => setSelectedPurpose(e.target.value)}
+                                    className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                    required
+                                >
+                                    <option value="" disabled>-- Pilih Keperluan --</option>
+                                    {PURPOSE_TEMPLATES.map((purpose) => (
+                                        <option key={purpose} value={purpose}>{purpose}</option>
+                                    ))}
+                                </select>
+                                {selectedPurpose === 'Lainnya' && (
+                                    <textarea
+                                        value={customPurpose}
+                                        onChange={(e) => setCustomPurpose(e.target.value)}
+                                        rows={2}
+                                        placeholder="Jelaskan detail keperluan..."
+                                        className="w-full mt-2 px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                        required
+                                    />
+                                )}
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                                    <Upload className="w-4 h-4" /> Surat Permohonan (Opsional)
+                                </label>
+                                <div className="flex items-center gap-4 p-4 border-2 border-dashed border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                                    <input
+                                        id="suratPermohonan"
+                                        type="file"
+                                        accept=".pdf,.jpg,.jpeg,.png"
+                                        onChange={handleFileChange}
+                                        className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#0F4C81] file:text-white hover:file:bg-[#0F4C81]/90"
+                                    />
+                                </div>
+                                <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                                    <span className="text-lg">💡</span> Jika melampirkan surat, booking langsung disetujui otomatis
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="pt-4">
+                            <button
+                                type="submit"
+                                disabled={isSubmitting}
+                                className="w-full bg-[#0F4C81] text-white px-6 py-3 rounded-lg font-semibold shadow-lg shadow-[#0F4C81]/20 hover:bg-[#0F4C81]/90 transition-all disabled:opacity-50 hover:-translate-y-0.5"
                             >
-                                <option value="">Pilih Ruangan</option>
-                                {rooms.map(room => (
-                                    <option key={room.id} value={room.id}>{room.name} - {room.location}</option>
-                                ))}
-                            </select>
+                                {isSubmitting ? 'Sedang Memproses...' : 'Ajukan Booking Ruangan'}
+                            </button>
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Tanggal</label>
-                            <input
-                                type="date"
-                                name="date"
-                                required
-                                value={selectedDate}
-                                onChange={(e) => setSelectedDate(e.target.value)}
-                                min={new Date().toISOString().split('T')[0]}
-                                className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20"
-                            />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Mulai</label>
-                                <input
-                                    type="time"
-                                    name="startTime"
-                                    required
-                                    value={startTime}
-                                    onChange={(e) => setStartTime(e.target.value)}
-                                    className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Selesai</label>
-                                <input
-                                    type="time"
-                                    name="endTime"
-                                    required
-                                    value={endTime}
-                                    onChange={(e) => setEndTime(e.target.value)}
-                                    className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20"
-                                />
-                            </div>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Keperluan</label>
-                            <textarea
-                                name="purpose"
-                                required
-                                rows={3}
-                                value={purpose}
-                                onChange={(e) => setPurpose(e.target.value)}
-                                placeholder="Jelaskan keperluan booking..."
-                                className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20"
-                            />
-                        </div>
-                        <button
-                            type="submit"
-                            disabled={isSubmitting}
-                            className="w-full bg-[#0F4C81] text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-[#0F4C81]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {isSubmitting ? 'Mengirim...' : 'Ajukan Booking'}
-                        </button>
                     </form>
                 </div>
             </div>

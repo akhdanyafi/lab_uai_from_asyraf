@@ -13,6 +13,11 @@ export interface CreateBookingInput {
     startTime: Date;
     endTime: Date;
     purpose: string;
+    // New fields
+    organisasi?: string;
+    jumlahPeserta?: number;
+    suratPermohonan?: string;
+    dosenPembimbing?: string;
 }
 
 export class BookingService {
@@ -47,15 +52,35 @@ export class BookingService {
 
     /**
      * Create a new room booking request
+     * Auto-validates if suratPermohonan is provided
+     * Uses user's dosenPembimbing as fallback if not provided
      */
     static async create(data: CreateBookingInput) {
+        // Auto-validate if surat permohonan is provided
+        const status = data.suratPermohonan ? 'Disetujui' : 'Pending';
+
+        // Get user's dosenPembimbing as fallback
+        let finalDosenPembimbing: string | undefined = data.dosenPembimbing;
+        if (!finalDosenPembimbing) {
+            const user = await db
+                .select({ dosenPembimbing: users.dosenPembimbing })
+                .from(users)
+                .where(eq(users.id, data.userId))
+                .limit(1);
+            finalDosenPembimbing = user[0]?.dosenPembimbing || undefined;
+        }
+
         await db.insert(roomBookings).values({
             userId: data.userId,
             roomId: data.roomId,
             startTime: data.startTime,
             endTime: data.endTime,
             purpose: data.purpose,
-            status: 'Pending',
+            organisasi: data.organisasi || 'Pribadi',
+            jumlahPeserta: data.jumlahPeserta || 1,
+            suratPermohonan: data.suratPermohonan || null,
+            dosenPembimbing: finalDosenPembimbing,
+            status,
         });
     }
 

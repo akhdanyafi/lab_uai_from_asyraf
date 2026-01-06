@@ -20,6 +20,11 @@ export const roomBookings = mysqlTable('room_bookings', {
     startTime: datetime('start_time').notNull(),
     endTime: datetime('end_time').notNull(),
     purpose: text('purpose').notNull(),
+    // New fields
+    organisasi: varchar('organisasi', { length: 255 }).default('Pribadi'), // e.g. Pribadi, HMIF, Panitia Fortex
+    jumlahPeserta: int('jumlah_peserta').default(1), // Number of attendees
+    suratPermohonan: varchar('surat_permohonan', { length: 255 }), // File path for permission letter (optional)
+    dosenPembimbing: varchar('dosen_pembimbing', { length: 255 }), // Supervising lecturer name
     status: mysqlEnum('status', ['Pending', 'Disetujui', 'Ditolak']).default('Pending'),
 }, (table) => ({
     userIdx: index('user_idx').on(table.userId),
