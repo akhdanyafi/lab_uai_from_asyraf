@@ -79,6 +79,26 @@ export async function deleteItem(id: number) {
     revalidatePath('/admin/inventory');
 }
 
+/**
+ * Update item status only (for quick status change)
+ */
+export async function updateItemStatus(
+    id: number,
+    status: 'Tersedia' | 'Dipinjam' | 'Maintenance'
+) {
+    const { db } = await import('@/db');
+    const { items } = await import('@/db/schema');
+    const { eq } = await import('drizzle-orm');
+
+    await db.update(items)
+        .set({ status })
+        .where(eq(items.id, id));
+
+    revalidatePath('/admin/inventory');
+    revalidatePath('/student/items');
+}
+
 export async function getMaintenanceItems() {
     return InventoryService.getMaintenanceItems();
 }
+

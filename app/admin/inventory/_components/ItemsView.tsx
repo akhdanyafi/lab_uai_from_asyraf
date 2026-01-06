@@ -156,12 +156,30 @@ export default function ItemsView({ items, rooms, categories }: ItemsViewProps) 
                                     </span>
                                 </td>
                                 <td className="px-6 py-4">
-                                    <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${item.status === 'Tersedia' ? 'bg-green-50 text-green-700' :
-                                        item.status === 'Dipinjam' ? 'bg-orange-50 text-orange-700' :
-                                            'bg-gray-50 text-gray-700'
-                                        }`}>
-                                        {item.status}
-                                    </span>
+                                    {item.status === 'Dipinjam' ? (
+                                        // Dipinjam is read-only (controlled by loan process)
+                                        <span className="inline-flex px-2 py-1 rounded text-xs font-medium bg-orange-50 text-orange-700">
+                                            Dipinjam
+                                        </span>
+                                    ) : (
+                                        // Admin can only toggle between Tersedia and Maintenance
+                                        <select
+                                            defaultValue={item.status || 'Tersedia'}
+                                            onChange={async (e) => {
+                                                const { updateItemStatus } = await import('@/features/inventory/actions');
+                                                await updateItemStatus(
+                                                    item.id,
+                                                    e.target.value as 'Tersedia' | 'Maintenance'
+                                                );
+                                            }}
+                                            className={`text-xs font-medium px-2 py-1 rounded border-0 cursor-pointer ${item.status === 'Tersedia' ? 'bg-green-50 text-green-700' :
+                                                    'bg-gray-50 text-gray-700'
+                                                }`}
+                                        >
+                                            <option value="Tersedia">Tersedia</option>
+                                            <option value="Maintenance">Maintenance</option>
+                                        </select>
+                                    )}
                                 </td>
                                 <td className="px-6 py-4">
                                     <QRCodeDisplay value={item.qrCode} />
