@@ -19,6 +19,9 @@ export const users = mysqlTable('users', {
     // New fields for bulk enrollment
     batch: int('batch'), // e.g. 2022
     studyType: mysqlEnum('study_type', ['Reguler', 'Hybrid']).default('Reguler'),
+    // New fields for student data
+    programStudi: varchar('program_studi', { length: 100 }).default('Informatika'), // e.g. 'Informatika', 'Sistem Informasi'
+    dosenPembimbing: varchar('dosen_pembimbing', { length: 255 }), // Stores dosen name directly (no FK relation)
     createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
 }, (table) => ({
     roleIdx: index('role_idx').on(table.roleId),

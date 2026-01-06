@@ -11,12 +11,34 @@ export async function getRooms() {
 }
 
 /**
- * Check in a user by their NIM with room and purpose
+ * Get all lecturers for the dosen penanggung jawab dropdown
+ */
+export async function getLecturers() {
+    const { db } = await import('@/db');
+    const { users, roles } = await import('@/db/schema');
+    const { eq } = await import('drizzle-orm');
+
+    const lecturers = await db
+        .select({
+            id: users.id,
+            fullName: users.fullName,
+        })
+        .from(users)
+        .innerJoin(roles, eq(users.roleId, roles.id))
+        .where(eq(roles.name, 'Dosen'))
+        .orderBy(users.fullName);
+
+    return lecturers;
+}
+
+/**
+ * Check in a user by their NIM with room, purpose, and optional dosen penanggung jawab
  */
 export async function checkIn(
     nim: string,
     roomId: number,
-    purpose: string
+    purpose: string,
+    dosenPenanggungJawab?: string
 ): Promise<CheckInResult> {
     try {
         // Validate NIM
@@ -53,8 +75,11 @@ export async function checkIn(
             };
         }
 
+        // Use provided dosen or fallback to user's dosenPembimbing
+        const finalDosenPenanggungJawab = dosenPenanggungJawab?.trim() || user.dosenPembimbing || '-';
+
         // Create attendance record
-        await createAttendance(user.id, roomId, purpose.trim());
+        await createAttendance(user.id, roomId, purpose.trim(), finalDosenPenanggungJawab);
 
         // Get the latest attendance for this user with details
         const attendance = await getLatestAttendanceForUser(user.id);
@@ -85,6 +110,7 @@ async function getLatestAttendanceForUser(userId: number) {
         userId: labAttendance.userId,
         roomId: labAttendance.roomId,
         purpose: labAttendance.purpose,
+        dosenPenanggungJawab: labAttendance.dosenPenanggungJawab,
         checkInTime: labAttendance.checkInTime,
         user: {
             id: users.id,

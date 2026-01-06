@@ -3,6 +3,7 @@ export interface AttendanceRecord {
     userId: number;
     roomId: number;
     purpose: string;
+    dosenPenanggungJawab?: string | null;
     checkInTime: Date | null;
     user?: {
         id: number;

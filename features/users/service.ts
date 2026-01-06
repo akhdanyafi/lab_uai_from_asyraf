@@ -16,6 +16,8 @@ export interface CreateUserInput {
     roleId: number;
     batch?: number;
     studyType?: 'Reguler' | 'Hybrid';
+    programStudi?: string;
+    dosenPembimbing?: string;
 }
 
 export interface UpdateUserInput {
@@ -26,6 +28,8 @@ export interface UpdateUserInput {
     passwordHash?: string;
     batch?: number;
     studyType?: 'Reguler' | 'Hybrid';
+    programStudi?: string;
+    dosenPembimbing?: string;
 }
 
 export class UserService {
@@ -43,7 +47,9 @@ export class UserService {
                 roleName: roles.name,
                 createdAt: users.createdAt,
                 batch: users.batch,
-                studyType: users.studyType
+                studyType: users.studyType,
+                programStudi: users.programStudi,
+                dosenPembimbing: users.dosenPembimbing
             })
             .from(users)
             .leftJoin(roles, eq(users.roleId, roles.id))
@@ -57,6 +63,24 @@ export class UserService {
      */
     static async getRoles() {
         return await db.select().from(roles);
+    }
+
+    /**
+     * Get all lecturers (users with role "Dosen")
+     */
+    static async getLecturers() {
+        const lecturers = await db
+            .select({
+                id: users.id,
+                fullName: users.fullName,
+                identifier: users.identifier,
+            })
+            .from(users)
+            .innerJoin(roles, eq(users.roleId, roles.id))
+            .where(eq(roles.name, 'Dosen'))
+            .orderBy(users.fullName);
+
+        return lecturers;
     }
 
     /**

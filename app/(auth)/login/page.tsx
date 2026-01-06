@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { User, Lock, Loader2, ArrowLeft } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { User, Lock, Loader2, ArrowLeft, CheckCircle, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 import { login } from '@/features/auth/actions';
 
@@ -12,6 +12,11 @@ export default function LoginPage() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const [showPassword, setShowPassword] = useState(false);
+
+    // Check if user just registered
+    const justRegistered = searchParams.get('registered') === 'true';
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -53,6 +58,17 @@ export default function LoginPage() {
                 </div>
 
                 <div className="p-8 pt-6">
+                    {/* Success Registration Notice */}
+                    {justRegistered && (
+                        <div className="mb-6 flex items-start gap-3 bg-green-50 border border-green-200 p-4 rounded-lg">
+                            <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                            <div className="text-green-800 text-sm">
+                                <p className="font-semibold">Pendaftaran Berhasil!</p>
+                                <p className="mt-1">Akun Anda sedang menunggu validasi dari Admin. Silakan coba login kembali setelah akun diverifikasi.</p>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Error State: Danger Red #EF4444 */}
                     {error && (
                         <div className="mb-6 flex items-start gap-3 bg-red-50 border border-red-100 p-4 rounded-lg">
@@ -102,13 +118,20 @@ export default function LoginPage() {
                                     <Lock className="w-5 h-5" />
                                 </div>
                                 <input
-                                    type="password"
+                                    type={showPassword ? "text" : "password"}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-200 text-[#1F2937] placeholder-gray-400 focus:border-[#0F4C81] focus:ring-2 focus:ring-[#0F4C81]/20 outline-none transition-all"
+                                    className="w-full pl-10 pr-12 py-3 rounded-lg border border-gray-200 text-[#1F2937] placeholder-gray-400 focus:border-[#0F4C81] focus:ring-2 focus:ring-[#0F4C81]/20 outline-none transition-all"
                                     placeholder="••••••••"
                                     required
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#0F4C81] transition-colors"
+                                >
+                                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                </button>
                             </div>
                         </div>
 

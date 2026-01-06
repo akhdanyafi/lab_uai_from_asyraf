@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, CheckCircle, AlertCircle, Loader2, UserCheck, MapPin, Target } from 'lucide-react';
-import { checkIn, getRooms } from '../actions';
+import { X, CheckCircle, AlertCircle, Loader2, UserCheck, MapPin, Target, GraduationCap } from 'lucide-react';
+import { checkIn, getRooms, getLecturers } from '../actions';
 import { getCurrentDateTime } from '@/lib/formatters';
 import { PURPOSE_TEMPLATES } from '../types';
 import type { AttendanceRecord } from '../types';
@@ -18,6 +18,11 @@ interface Room {
     location: string;
 }
 
+interface Lecturer {
+    id: number;
+    fullName: string;
+}
+
 type ModalState = 'form' | 'loading' | 'success' | 'error';
 
 export default function AttendanceModal({ isOpen, onClose }: AttendanceModalProps) {
@@ -25,16 +30,19 @@ export default function AttendanceModal({ isOpen, onClose }: AttendanceModalProp
     const [roomId, setRoomId] = useState<number>(0);
     const [selectedPurpose, setSelectedPurpose] = useState('');
     const [customPurpose, setCustomPurpose] = useState('');
+    const [dosenPenanggungJawab, setDosenPenanggungJawab] = useState('');
     const [rooms, setRooms] = useState<Room[]>([]);
+    const [lecturers, setLecturers] = useState<Lecturer[]>([]);
     const [modalState, setModalState] = useState<ModalState>('form');
     const [attendance, setAttendance] = useState<AttendanceRecord | null>(null);
     const [checkInTime, setCheckInTime] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
 
-    // Fetch rooms when modal opens
+    // Fetch rooms and lecturers when modal opens
     useEffect(() => {
         if (isOpen) {
             fetchRooms();
+            fetchLecturers();
         }
     }, [isOpen]);
 
@@ -47,6 +55,15 @@ export default function AttendanceModal({ isOpen, onClose }: AttendanceModalProp
         }
     };
 
+    const fetchLecturers = async () => {
+        try {
+            const lecturerList = await getLecturers();
+            setLecturers(lecturerList);
+        } catch (error) {
+            console.error('Failed to fetch lecturers:', error);
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setModalState('loading');
@@ -55,7 +72,8 @@ export default function AttendanceModal({ isOpen, onClose }: AttendanceModalProp
         // Determine final purpose (custom or selected)
         const finalPurpose = selectedPurpose === 'Lainnya' ? customPurpose : selectedPurpose;
 
-        const result = await checkIn(nim, roomId, finalPurpose);
+        // Pass dosenPenanggungJawab (empty string if not selected, will use user's dosenPembimbing)
+        const result = await checkIn(nim, roomId, finalPurpose, dosenPenanggungJawab || undefined);
 
         if (result.success && result.data) {
             setAttendance(result.data);
@@ -72,6 +90,7 @@ export default function AttendanceModal({ isOpen, onClose }: AttendanceModalProp
         setRoomId(0);
         setSelectedPurpose('');
         setCustomPurpose('');
+        setDosenPenanggungJawab('');
         setModalState('form');
         setAttendance(null);
         setCheckInTime('');
@@ -181,6 +200,28 @@ export default function AttendanceModal({ isOpen, onClose }: AttendanceModalProp
                                 </div>
                             )}
 
+                            {/* Dosen Penanggung Jawab Selection (Optional) */}
+                            <div>
+                                <label htmlFor="dosenPenanggungJawab" className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                                    <GraduationCap className="w-4 h-4" />
+                                    Dosen Penanggung Jawab
+                                </label>
+                                <select
+                                    id="dosenPenanggungJawab"
+                                    value={dosenPenanggungJawab}
+                                    onChange={(e) => setDosenPenanggungJawab(e.target.value)}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0F4C81] focus:border-transparent transition-all text-gray-700 bg-white"
+                                >
+                                    <option value="">Dosen Pembimbing Saya</option>
+                                    {lecturers.map((lecturer) => (
+                                        <option key={lecturer.id} value={lecturer.fullName}>
+                                            {lecturer.fullName}
+                                        </option>
+                                    ))}
+                                </select>
+                                <p className="text-xs text-gray-500 mt-1">Kosongkan untuk menggunakan dosen pembimbing Anda</p>
+                            </div>
+
                             <button
                                 type="submit"
                                 className="w-full bg-[#0F4C81] hover:bg-[#0F4C81]/90 text-white py-3 rounded-lg font-semibold text-lg transition-all shadow-md hover:shadow-lg"
@@ -224,6 +265,10 @@ export default function AttendanceModal({ isOpen, onClose }: AttendanceModalProp
                                 <div className="flex justify-between items-center py-2 border-b border-gray-200">
                                     <span className="text-gray-500 text-sm">Tujuan</span>
                                     <span className="font-semibold text-gray-800">{attendance.purpose}</span>
+                                </div>
+                                <div className="flex justify-between items-center py-2 border-b border-gray-200">
+                                    <span className="text-gray-500 text-sm">Dosen Penanggung Jawab</span>
+                                    <span className="font-semibold text-gray-800">{attendance.dosenPenanggungJawab}</span>
                                 </div>
                                 <div className="flex justify-between items-center py-2">
                                     <span className="text-gray-500 text-sm">Waktu Check-in</span>

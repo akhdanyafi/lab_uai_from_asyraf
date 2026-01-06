@@ -9,14 +9,21 @@ interface Role {
     name: string;
 }
 
+interface Lecturer {
+    id: number;
+    fullName: string;
+    identifier: string;
+}
+
 interface UserFormProps {
     roles: Role[];
+    lecturers: Lecturer[];
     initialData?: any;
     onSuccess?: () => void;
     onCancel?: () => void;
 }
 
-export default function UserForm({ roles, initialData, onSuccess, onCancel }: UserFormProps) {
+export default function UserForm({ roles, lecturers, initialData, onSuccess, onCancel }: UserFormProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [selectedRoleId, setSelectedRoleId] = useState<number | undefined>(initialData?.roleId);
 
@@ -50,6 +57,8 @@ export default function UserForm({ roles, initialData, onSuccess, onCancel }: Us
                     if (isStudent) {
                         const batch = formData.get('batch');
                         const studyType = formData.get('studyType');
+                        const programStudi = formData.get('programStudi');
+                        const dosenPembimbing = formData.get('dosenPembimbing');
 
                         // We enforce validation here as well
                         if (!batch || !studyType) {
@@ -58,6 +67,8 @@ export default function UserForm({ roles, initialData, onSuccess, onCancel }: Us
 
                         data.batch = parseInt(batch as string);
                         data.studyType = studyType as 'Reguler' | 'Hybrid';
+                        data.programStudi = (programStudi as string) || 'Informatika';
+                        data.dosenPembimbing = dosenPembimbing as string || undefined;
                     }
 
                     if (isEdit) {
@@ -157,6 +168,31 @@ export default function UserForm({ roles, initialData, onSuccess, onCancel }: Us
                                 <option value="">Pilih Tipe</option>
                                 <option value="Reguler">Reguler</option>
                                 <option value="Hybrid">Hybrid</option>
+                            </select>
+                        </div>
+                        <div className="animate-in fade-in duration-300">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Program Studi</label>
+                            <input
+                                name="programStudi"
+                                defaultValue={initialData?.programStudi || 'Informatika'}
+                                className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                placeholder="Contoh: Informatika"
+                            />
+                        </div>
+                        <div className="animate-in fade-in duration-300">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Dosen Pembimbing <span className="text-red-500">*</span></label>
+                            <select
+                                name="dosenPembimbing"
+                                defaultValue={initialData?.dosenPembimbing || ''}
+                                required
+                                className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 bg-white"
+                            >
+                                <option value="">Pilih Dosen Pembimbing</option>
+                                {lecturers.map(lecturer => (
+                                    <option key={lecturer.id} value={lecturer.fullName}>
+                                        {lecturer.fullName} ({lecturer.identifier})
+                                    </option>
+                                ))}
                             </select>
                         </div>
                     </>

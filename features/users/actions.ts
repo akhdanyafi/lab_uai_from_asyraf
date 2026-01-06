@@ -12,6 +12,10 @@ export async function getRoles() {
     return UserService.getRoles();
 }
 
+export async function getLecturers() {
+    return UserService.getLecturers();
+}
+
 export async function createUser(data: {
     fullName: string;
     identifier: string;
@@ -20,6 +24,8 @@ export async function createUser(data: {
     roleId: number;
     batch?: number;
     studyType?: 'Reguler' | 'Hybrid';
+    programStudi?: string;
+    dosenPembimbing?: string;
 }) {
     await UserService.create(data);
     revalidatePath('/admin/governance');
@@ -33,6 +39,8 @@ export async function updateUser(id: number, data: {
     passwordHash?: string;
     batch?: number;
     studyType?: 'Reguler' | 'Hybrid';
+    programStudi?: string;
+    dosenPembimbing?: string;
 }) {
     await UserService.update(id, data);
     revalidatePath('/admin/governance');

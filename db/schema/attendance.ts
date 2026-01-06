@@ -9,6 +9,7 @@ export const labAttendance = mysqlTable('lab_attendance', {
     userId: int('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
     roomId: int('room_id').notNull().references(() => rooms.id, { onDelete: 'cascade' }),
     purpose: varchar('purpose', { length: 255 }).notNull(),
+    dosenPenanggungJawab: varchar('dosen_penanggung_jawab', { length: 255 }), // Optional, defaults to user's dosenPembimbing
     checkInTime: datetime('check_in_time').default(sql`CURRENT_TIMESTAMP`),
 }, (table) => ({
     userIdx: index('user_idx').on(table.userId),

@@ -3,13 +3,14 @@ import { labAttendance, users, rooms } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 
 /**
- * Find user by NIM (identifier)
+ * Find user by NIM (identifier) with dosenPembimbing for fallback
  */
 export async function findUserByNim(nim: string) {
     const result = await db.select({
         id: users.id,
         fullName: users.fullName,
         identifier: users.identifier,
+        dosenPembimbing: users.dosenPembimbing,
     })
         .from(users)
         .where(eq(users.identifier, nim))
@@ -34,13 +35,19 @@ export async function getAvailableRooms() {
 }
 
 /**
- * Create attendance record with room and purpose
+ * Create attendance record with room, purpose, and dosen penanggung jawab
  */
-export async function createAttendance(userId: number, roomId: number, purpose: string) {
+export async function createAttendance(
+    userId: number,
+    roomId: number,
+    purpose: string,
+    dosenPenanggungJawab: string
+) {
     const result = await db.insert(labAttendance).values({
         userId,
         roomId,
         purpose,
+        dosenPenanggungJawab,
     });
 
     return result[0];

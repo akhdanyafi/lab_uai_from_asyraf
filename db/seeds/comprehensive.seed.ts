@@ -81,7 +81,10 @@ export async function seedUsers() {
     const dosenRole = allRoles.find(r => r.name === 'Dosen')!;
     const mahasiswaRole = allRoles.find(r => r.name === 'Mahasiswa')!;
 
-    const hashedPassword = await bcrypt.hash(SEED_CONFIG.users.defaultPassword, 10);
+    // Create different passwords for each role
+    const adminPassword = await bcrypt.hash('admin', 10);
+    const dosenPassword = await bcrypt.hash('dosen', 10);
+    const mahasiswaPassword = await bcrypt.hash('mahasiswa', 10);
 
     // Check if admin already exists
     const existingAdmin = await db.query.users.findFirst({
@@ -93,11 +96,11 @@ export async function seedUsers() {
             fullName: 'Administrator',
             identifier: 'admin1',
             email: 'admin@lab.ac.id',
-            passwordHash: hashedPassword,
+            passwordHash: adminPassword,
             roleId: adminRole.id,
             status: 'Active',
         });
-        console.log('   ✅ Created admin user');
+        console.log('   ✅ Created admin user (password: admin)');
     } else {
         console.log('   ⏭️  Admin already exists');
     }
@@ -109,7 +112,7 @@ export async function seedUsers() {
             fullName: lecturer.fullName,
             identifier: lecturer.identifier,
             email: lecturer.email,
-            passwordHash: hashedPassword,
+            passwordHash: dosenPassword,
             roleId: dosenRole.id,
             status: 'Active' as const,
         }));
@@ -122,7 +125,12 @@ export async function seedUsers() {
             await db.insert(users).values(lecturer);
         }
     }
-    console.log(`   ✅ Created/verified ${lecturerData.length} lecturers`);
+    console.log(`   ✅ Created/verified ${lecturerData.length} lecturers (password: dosen)`);
+
+    // Get all lecturers for assigning as dosen pembimbing
+    const allLecturers = await db.query.users.findMany({
+        where: (users, { eq }) => eq(users.roleId, dosenRole.id)
+    });
 
     // Seed Students
     const studentData = SAMPLE_DATA.students
@@ -131,11 +139,13 @@ export async function seedUsers() {
             fullName: student.fullName,
             identifier: student.identifier,
             email: student.email,
-            passwordHash: hashedPassword,
+            passwordHash: mahasiswaPassword,
             roleId: mahasiswaRole.id,
             status: 'Active' as const,
             batch: student.batch,
             studyType: student.studyType as 'Reguler' | 'Hybrid',
+            programStudi: 'Informatika',
+            dosenPembimbing: getRandomItem(allLecturers).fullName,
         }));
 
     for (const student of studentData) {
@@ -146,7 +156,7 @@ export async function seedUsers() {
             await db.insert(users).values(student);
         }
     }
-    console.log(`   ✅ Created/verified ${studentData.length} students`);
+    console.log(`   ✅ Created/verified ${studentData.length} students (password: mahasiswa)`);
 
     return await db.select().from(users);
 }
@@ -326,7 +336,7 @@ export async function seedPracticalReports() {
             reportData.push({
                 assignmentId: assignment.id,
                 studentId: enrollment.studentId,
-                filePath: `/uploads/reports/report-${assignment.id}-${enrollment.studentId}.pdf`,
+                filePath: `/uploads/reports/session1.pdf`,
                 submissionDate,
                 grade,
                 feedback,
@@ -552,10 +562,14 @@ export async function seedLabAttendance() {
         const checkInTime = dateOffset(-15 + Math.floor(i / 2));
         checkInTime.setHours(8 + Math.floor(Math.random() * 10));
 
+        // Use user's dosenPembimbing or a default name
+        const dosenPenanggungJawab = user.dosenPembimbing || 'Dr. Budi Santoso, M.Kom';
+
         attendanceData.push({
             userId: user.id,
             roomId: room.id,
             purpose: getRandomItem(purposes),
+            dosenPenanggungJawab,
             checkInTime,
         });
     }
@@ -698,9 +712,9 @@ export async function runComprehensiveSeeds() {
         console.log('   - Facilities: ✅');
         console.log('   - Content: ✅');
         console.log('\n🔐 Test Credentials:');
-        console.log('   Admin: admin@lab.ac.id / tes');
-        console.log('   Lecturer: budi.santoso@lab.ac.id / tes');
-        console.log('   Student: andi.wijaya@student.ac.id / tes');
+        console.log('   Admin: admin@lab.ac.id / admin');
+        console.log('   Lecturer: budi.santoso@lab.ac.id / dosen');
+        console.log('   Student: andi.wijaya@student.ac.id / mahasiswa');
         console.log('\n🔑 Enrollment Keys:');
         console.log('   Classes have auto-generated enrollment keys.');
         console.log('   Students can self-enroll by entering the key.');

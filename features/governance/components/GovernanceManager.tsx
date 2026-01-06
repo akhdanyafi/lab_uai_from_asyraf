@@ -13,10 +13,11 @@ interface GovernanceManagerProps {
     lpjs: any[];
     users: any[];
     roles: any[];
+    lecturers: { id: number; fullName: string; identifier: string }[];
     adminId: number;
 }
 
-export default function GovernanceManager({ sops, lpjs, users, roles, adminId }: GovernanceManagerProps) {
+export default function GovernanceManager({ sops, lpjs, users, roles, lecturers, adminId }: GovernanceManagerProps) {
     const [activeTab, setActiveTab] = useState<'sop' | 'lpj' | 'users'>('sop');
 
 
@@ -125,11 +126,12 @@ export default function GovernanceManager({ sops, lpjs, users, roles, adminId }:
                                         Tambah User Baru
                                     </button>
                                 </div>
-                                <UserList users={users} roles={roles} />
+                                <UserList users={users} roles={roles} lecturers={lecturers} />
                             </>
                         ) : (
                             <UserForm
                                 roles={roles}
+                                lecturers={lecturers}
                                 onSuccess={() => setShowUserForm(false)}
                                 onCancel={() => setShowUserForm(false)}
                             />

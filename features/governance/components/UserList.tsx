@@ -8,15 +8,17 @@ import UserForm from './UserForm';
 interface UserListProps {
     users: any[];
     roles: any[];
+    lecturers: { id: number; fullName: string; identifier: string }[];
 }
 
-export default function UserList({ users, roles }: UserListProps) {
+export default function UserList({ users, roles, lecturers }: UserListProps) {
     const [editingUser, setEditingUser] = useState<any>(null);
 
     if (editingUser) {
         return (
             <UserForm
                 roles={roles}
+                lecturers={lecturers}
                 initialData={editingUser}
                 onSuccess={() => setEditingUser(null)}
                 onCancel={() => setEditingUser(null)}
