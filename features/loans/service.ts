@@ -11,6 +11,14 @@ export interface CreateLoanInput {
     studentId: number;
     itemId: number;
     returnPlanDate: Date;
+    // New fields
+    organisasi?: string;
+    startTime?: Date;
+    endTime?: Date;
+    purpose?: string;
+    suratIzin?: string;
+    dosenPembimbing?: string;
+    software?: string[]; // Array of selected software
 }
 
 export interface LoanFilters {
@@ -50,15 +58,32 @@ export class LoanService {
     }
 
     /**
-     * Create a new loan request
+     * Create a new loan request with auto-validation if surat izin provided
      */
     static async create(data: CreateLoanInput) {
+        // Auto-validation: if surat izin provided, set status to Disetujui
+        const status = data.suratIzin ? 'Disetujui' : 'Pending';
+
         await db.insert(itemLoans).values({
             studentId: data.studentId,
             itemId: data.itemId,
             returnPlanDate: data.returnPlanDate,
-            status: 'Pending',
+            status,
+            organisasi: data.organisasi || null,
+            startTime: data.startTime || null,
+            endTime: data.endTime || null,
+            purpose: data.purpose || null,
+            suratIzin: data.suratIzin || null,
+            dosenPembimbing: data.dosenPembimbing || null,
+            software: data.software ? JSON.stringify(data.software) : null,
         });
+
+        // If auto-approved, also update item status to Dipinjam
+        if (status === 'Disetujui') {
+            await db.update(items)
+                .set({ status: 'Dipinjam' })
+                .where(eq(items.id, data.itemId));
+        }
     }
 
     /**

@@ -9,6 +9,14 @@ export interface Loan {
     returnPlanDate: Date;
     actualReturnDate: Date | null;
     status: 'Pending' | 'Disetujui' | 'Ditolak' | 'Selesai' | 'Terlambat';
+    // New fields
+    organisasi?: string | null;
+    startTime?: Date | null;
+    endTime?: Date | null;
+    purpose?: string | null;
+    suratIzin?: string | null;
+    dosenPembimbing?: string | null;
+    software?: string | null; // JSON string of selected software
 }
 
 export interface LoanWithDetails extends Loan {
@@ -33,6 +41,14 @@ export interface CreateLoanInput {
     studentId: number;
     itemId: number;
     returnPlanDate: Date;
+    // New fields
+    organisasi?: string;
+    startTime?: Date;
+    endTime?: Date;
+    purpose?: string;
+    suratIzin?: string;
+    dosenPembimbing?: string;
+    software?: string[]; // Array of selected software
 }
 
 export interface UpdateLoanStatusInput {

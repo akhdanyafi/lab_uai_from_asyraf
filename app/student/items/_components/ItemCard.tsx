@@ -1,41 +1,199 @@
 'use client';
 
-import { useState } from 'react';
-import { Box, MapPin, Tag, Calendar } from 'lucide-react';
-import { createLoanRequest } from '@/features/loans/actions';
+import { useState, useEffect } from 'react';
+import { Box, MapPin, Tag, Calendar, Clock, Building2, GraduationCap, Upload, Check } from 'lucide-react';
+import { createLoanRequest, getLecturersForLoan } from '@/features/loans/actions';
 import { useRouter } from 'next/navigation';
+
+// Organization options
+const ORGANISASI_OPTIONS = [
+    'Pribadi',
+    'HMIF',
+    'Panitia Fortex',
+    'Ketua Kelompok MK',
+    'Lainnya',
+];
+
+// Purpose templates
+const PURPOSE_TEMPLATES = [
+    'Penelitian/Riset',
+    'Kegiatan belajar mandiri / kelompok',
+    'Rapat HIMA / organisasi',
+    'Praktikum atau persiapan tugas',
+    'Kehadiran di area laboratorium',
+    'Lainnya',
+];
+
+// Software options for PC/Server
+const SOFTWARE_OPTIONS = [
+    'Web Server',
+    'Database Server',
+    'GPU Server',
+    'Lego',
+    'Visual Studio Code',
+    'Python',
+    'Ollama',
+    'Virtual Box',
+    'Anydesk',
+];
+
+// Categories that require software selection
+const PC_SERVER_CATEGORIES = ['PC', 'Server', 'Komputer', 'Laptop'];
+
+interface Lecturer {
+    id: number;
+    fullName: string;
+}
 
 export default function ItemCard({ item, userId }: { item: any; userId: number }) {
     const [showModal, setShowModal] = useState(false);
-    const [returnDate, setReturnDate] = useState('');
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+
+    // Form state
+    const [returnDate, setReturnDate] = useState('');
+    const [loanDate, setLoanDate] = useState('');
+    const [startTime, setStartTime] = useState('');
+    const [endTime, setEndTime] = useState('');
+    const [organisasi, setOrganisasi] = useState('Pribadi');
+    const [customOrganisasi, setCustomOrganisasi] = useState('');
+    const [selectedPurpose, setSelectedPurpose] = useState('');
+    const [customPurpose, setCustomPurpose] = useState('');
+    const [dosenPembimbing, setDosenPembimbing] = useState('');
+    const [suratFile, setSuratFile] = useState<File | null>(null);
+    const [selectedSoftware, setSelectedSoftware] = useState<string[]>([]);
+    const [customSoftware, setCustomSoftware] = useState('');
+    const [hasCustomSoftware, setHasCustomSoftware] = useState(false);
+    const [lecturers, setLecturers] = useState<Lecturer[]>([]);
+
+    // Check if item is PC/Server category
+    const isPCServerCategory = PC_SERVER_CATEGORIES.some(
+        cat => item.category.name.toLowerCase().includes(cat.toLowerCase())
+    );
+
+    // Fetch lecturers
+    useEffect(() => {
+        getLecturersForLoan().then(setLecturers);
+    }, []);
+
+    const handleSoftwareToggle = (software: string) => {
+        setSelectedSoftware(prev =>
+            prev.includes(software)
+                ? prev.filter(s => s !== software)
+                : [...prev, software]
+        );
+    };
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            // Validate file type
+            const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+            if (!allowedTypes.includes(file.type)) {
+                alert('Hanya file PDF atau gambar (JPG, PNG) yang diperbolehkan');
+                return;
+            }
+            // Validate file size (10MB max)
+            if (file.size > 10 * 1024 * 1024) {
+                alert('Ukuran file maksimal 10MB');
+                return;
+            }
+            setSuratFile(file);
+        }
+    };
 
     const handleRequest = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
 
         try {
+            // Handle file upload if provided
+            let suratIzinPath: string | undefined;
+            if (suratFile) {
+                const uploadFormData = new FormData();
+                uploadFormData.append('file', suratFile);
+                uploadFormData.append('folder', 'surat-izin-peminjaman');
+
+                const uploadRes = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: uploadFormData,
+                });
+
+                if (uploadRes.ok) {
+                    const uploadData = await uploadRes.json();
+                    suratIzinPath = uploadData.path;
+                }
+            }
+
+            // Get final values
+            const finalOrganisasi = organisasi === 'Lainnya' ? customOrganisasi : organisasi;
+            const finalPurpose = selectedPurpose === 'Lainnya' ? customPurpose : selectedPurpose;
+
+            // Combine software selections
+            const finalSoftware = [...selectedSoftware];
+            if (hasCustomSoftware && customSoftware.trim()) {
+                finalSoftware.push(customSoftware.trim());
+            }
+
+            // Build start/end datetime
+            const startDateTime = loanDate && startTime
+                ? new Date(`${loanDate}T${startTime}`)
+                : undefined;
+            const endDateTime = loanDate && endTime
+                ? new Date(`${loanDate}T${endTime}`)
+                : undefined;
+
             await createLoanRequest({
                 studentId: userId,
                 itemId: item.id,
                 returnPlanDate: new Date(returnDate),
+                organisasi: finalOrganisasi,
+                startTime: startDateTime,
+                endTime: endDateTime,
+                purpose: finalPurpose,
+                suratIzin: suratIzinPath,
+                dosenPembimbing: dosenPembimbing || undefined,
+                software: isPCServerCategory && finalSoftware.length > 0 ? finalSoftware : undefined,
             });
 
+            // Show success message
+            const statusMessage = suratIzinPath
+                ? 'Permintaan peminjaman berhasil! Karena Anda melampirkan surat izin, peminjaman langsung disetujui.'
+                : 'Permintaan peminjaman berhasil dikirim! Mohon tunggu validasi dari admin.';
+            alert(statusMessage);
+
             setShowModal(false);
+            resetForm();
             router.refresh();
-            alert('Permintaan peminjaman berhasil dikirim!');
         } catch (error) {
+            console.error(error);
             alert('Gagal mengirim permintaan');
         } finally {
             setLoading(false);
         }
     };
 
-    // Get minimum date (tomorrow)
+    const resetForm = () => {
+        setReturnDate('');
+        setLoanDate('');
+        setStartTime('');
+        setEndTime('');
+        setOrganisasi('Pribadi');
+        setCustomOrganisasi('');
+        setSelectedPurpose('');
+        setCustomPurpose('');
+        setDosenPembimbing('');
+        setSuratFile(null);
+        setSelectedSoftware([]);
+        setCustomSoftware('');
+        setHasCustomSoftware(false);
+    };
+
+    // Get minimum date (today)
+    const today = new Date().toISOString().split('T')[0];
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
-    const minDate = tomorrow.toISOString().split('T')[0];
+    const minReturnDate = tomorrow.toISOString().split('T')[0];
 
     return (
         <>
@@ -73,45 +231,246 @@ export default function ItemCard({ item, userId }: { item: any; userId: number }
                 </div>
             </div>
 
-            {/* Loan Request Modal */}
+            {/* Enhanced Loan Request Modal */}
             {showModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowModal(false)}>
-                    <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6" onClick={(e) => e.stopPropagation()}>
-                        <h3 className="text-lg font-semibold mb-4">Ajukan Peminjaman</h3>
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto" onClick={() => setShowModal(false)}>
+                    <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full p-6 my-8 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+                        <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                            <Box className="w-6 h-6 text-[#0F4C81]" />
+                            Ajukan Peminjaman
+                        </h3>
 
-                        <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+                        {/* Item Info */}
+                        <div className="mb-6 p-4 bg-gray-50 rounded-lg">
                             <p className="text-sm font-medium text-gray-900">{item.name}</p>
                             <p className="text-xs text-gray-500 mt-1">{item.category.name} • {item.room.name}</p>
                         </div>
 
-                        <form onSubmit={handleRequest}>
-                            <div className="mb-4">
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    <Calendar className="w-4 h-4 inline mr-1" />
-                                    Tanggal Rencana Pengembalian
-                                </label>
-                                <input
-                                    type="date"
-                                    value={returnDate}
-                                    onChange={(e) => setReturnDate(e.target.value)}
-                                    min={minDate}
-                                    required
-                                    className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20"
-                                />
+                        <form onSubmit={handleRequest} className="space-y-4">
+                            {/* Two Column Layout */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {/* Organisasi */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                                        <Building2 className="w-4 h-4" /> Organisasi/Unit
+                                    </label>
+                                    <select
+                                        value={organisasi}
+                                        onChange={(e) => setOrganisasi(e.target.value)}
+                                        className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm"
+                                    >
+                                        {ORGANISASI_OPTIONS.map(org => (
+                                            <option key={org} value={org}>{org}</option>
+                                        ))}
+                                    </select>
+                                    {organisasi === 'Lainnya' && (
+                                        <input
+                                            type="text"
+                                            value={customOrganisasi}
+                                            onChange={(e) => setCustomOrganisasi(e.target.value)}
+                                            placeholder="Nama organisasi..."
+                                            className="w-full mt-2 px-3 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm"
+                                            required
+                                        />
+                                    )}
+                                </div>
+
+                                {/* Dosen Pembimbing */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                                        <GraduationCap className="w-4 h-4" /> Dosen Pembimbing
+                                    </label>
+                                    <select
+                                        value={dosenPembimbing}
+                                        onChange={(e) => setDosenPembimbing(e.target.value)}
+                                        className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm"
+                                    >
+                                        <option value="">-- Pilih Dosen --</option>
+                                        {lecturers.map(lecturer => (
+                                            <option key={lecturer.id} value={lecturer.fullName}>
+                                                {lecturer.fullName}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                {/* Tanggal Peminjaman */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                                        <Calendar className="w-4 h-4" /> Tanggal Peminjaman
+                                    </label>
+                                    <input
+                                        type="date"
+                                        value={loanDate}
+                                        onChange={(e) => setLoanDate(e.target.value)}
+                                        min={today}
+                                        required
+                                        className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm"
+                                    />
+                                </div>
+
+                                {/* Tanggal Pengembalian */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                                        <Calendar className="w-4 h-4" /> Tanggal Pengembalian
+                                    </label>
+                                    <input
+                                        type="date"
+                                        value={returnDate}
+                                        onChange={(e) => setReturnDate(e.target.value)}
+                                        min={loanDate || minReturnDate}
+                                        required
+                                        className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm"
+                                    />
+                                </div>
+
+                                {/* Waktu Mulai */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                                        <Clock className="w-4 h-4" /> Waktu Mulai
+                                    </label>
+                                    <input
+                                        type="time"
+                                        value={startTime}
+                                        onChange={(e) => setStartTime(e.target.value)}
+                                        required
+                                        className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm"
+                                    />
+                                </div>
+
+                                {/* Waktu Selesai */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                                        <Clock className="w-4 h-4" /> Waktu Selesai
+                                    </label>
+                                    <input
+                                        type="time"
+                                        value={endTime}
+                                        onChange={(e) => setEndTime(e.target.value)}
+                                        required
+                                        className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm"
+                                    />
+                                </div>
                             </div>
 
-                            <div className="flex gap-2">
+                            {/* Keperluan (Full Width) */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Keperluan/Tujuan</label>
+                                <select
+                                    value={selectedPurpose}
+                                    onChange={(e) => setSelectedPurpose(e.target.value)}
+                                    className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm"
+                                    required
+                                >
+                                    <option value="" disabled>-- Pilih Keperluan --</option>
+                                    {PURPOSE_TEMPLATES.map(purpose => (
+                                        <option key={purpose} value={purpose}>{purpose}</option>
+                                    ))}
+                                </select>
+                                {selectedPurpose === 'Lainnya' && (
+                                    <textarea
+                                        value={customPurpose}
+                                        onChange={(e) => setCustomPurpose(e.target.value)}
+                                        rows={2}
+                                        placeholder="Jelaskan keperluan Anda..."
+                                        className="w-full mt-2 px-3 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm"
+                                        required
+                                    />
+                                )}
+                            </div>
+
+                            {/* Software Selection (Only for PC/Server) */}
+                            {isPCServerCategory && (
+                                <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
+                                    <label className="block text-sm font-medium text-blue-800 mb-3">
+                                        🖥️ Software yang Diperlukan
+                                    </label>
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                        {SOFTWARE_OPTIONS.map(software => (
+                                            <label
+                                                key={software}
+                                                className={`flex items-center gap-2 p-2 rounded-lg border cursor-pointer transition-all ${selectedSoftware.includes(software)
+                                                        ? 'bg-[#0F4C81] text-white border-[#0F4C81]'
+                                                        : 'bg-white border-gray-200 hover:border-[#0F4C81]'
+                                                    }`}
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedSoftware.includes(software)}
+                                                    onChange={() => handleSoftwareToggle(software)}
+                                                    className="sr-only"
+                                                />
+                                                {selectedSoftware.includes(software) && (
+                                                    <Check className="w-4 h-4 flex-shrink-0" />
+                                                )}
+                                                <span className="text-xs font-medium">{software}</span>
+                                            </label>
+                                        ))}
+
+                                        {/* Lainnya checkbox */}
+                                        <label
+                                            className={`flex items-center gap-2 p-2 rounded-lg border cursor-pointer transition-all ${hasCustomSoftware
+                                                    ? 'bg-[#0F4C81] text-white border-[#0F4C81]'
+                                                    : 'bg-white border-gray-200 hover:border-[#0F4C81]'
+                                                }`}
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                checked={hasCustomSoftware}
+                                                onChange={() => setHasCustomSoftware(!hasCustomSoftware)}
+                                                className="sr-only"
+                                            />
+                                            {hasCustomSoftware && (
+                                                <Check className="w-4 h-4 flex-shrink-0" />
+                                            )}
+                                            <span className="text-xs font-medium">Lainnya</span>
+                                        </label>
+                                    </div>
+
+                                    {hasCustomSoftware && (
+                                        <input
+                                            type="text"
+                                            value={customSoftware}
+                                            onChange={(e) => setCustomSoftware(e.target.value)}
+                                            placeholder="Nama software lainnya..."
+                                            className="w-full mt-3 px-3 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm"
+                                        />
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Surat Izin */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                                    <Upload className="w-4 h-4" /> Surat Izin/Permohonan
+                                    <span className="text-xs text-gray-400 font-normal ml-1">(Opsional)</span>
+                                </label>
+                                <div className="flex items-center gap-4 p-3 border-2 border-dashed border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                                    <input
+                                        type="file"
+                                        accept=".pdf,.jpg,.jpeg,.png"
+                                        onChange={handleFileChange}
+                                        className="w-full text-sm file:mr-3 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-[#0F4C81] file:text-white hover:file:bg-[#0F4C81]/90"
+                                    />
+                                </div>
+                                <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                                    💡 Jika melampirkan surat, peminjaman langsung disetujui otomatis
+                                </p>
+                            </div>
+
+                            {/* Action Buttons */}
+                            <div className="flex gap-2 pt-4 border-t">
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className="flex-1 bg-[#0F4C81] text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-[#0F4C81]/90 transition-colors disabled:opacity-50"
+                                    className="flex-1 bg-[#0F4C81] text-white px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-[#0F4C81]/90 transition-colors disabled:opacity-50"
                                 >
                                     {loading ? 'Mengirim...' : 'Kirim Permintaan'}
                                 </button>
                                 <button
                                     type="button"
-                                    onClick={() => setShowModal(false)}
-                                    className="flex-1 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors"
+                                    onClick={() => { setShowModal(false); resetForm(); }}
+                                    className="flex-1 bg-gray-100 text-gray-700 px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
                                 >
                                     Batal
                                 </button>

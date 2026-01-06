@@ -491,7 +491,7 @@ export async function seedItems() {
 }
 
 /**
- * 11. Seed Item Loans
+ * 11. Seed Item Loans (Enhanced)
  */
 export async function seedItemLoans() {
     console.log('\n🔄 Seeding item loans...');
@@ -505,6 +505,21 @@ export async function seedItemLoans() {
     const allItems = await db.select().from(items);
     const students = await db.query.users.findMany();
     const admins = students.filter(u => u.email.includes('admin'));
+    const lecturers = students.filter(u => u.email.includes('dosen'));
+
+    // New options for enhanced fields
+    const organisasiOptions = ['Pribadi', 'HMIF', 'Panitia Fortex', 'Ketua Kelompok MK'];
+    const purposeOptions = [
+        'Penelitian/Riset',
+        'Kegiatan belajar mandiri / kelompok',
+        'Rapat HIMA / organisasi',
+        'Praktikum atau persiapan tugas',
+        'Kehadiran di area laboratorium',
+    ];
+    const softwareOptions = [
+        'Web Server', 'Database Server', 'GPU Server', 'Visual Studio Code',
+        'Python', 'Ollama', 'Virtual Box', 'Anydesk'
+    ];
 
     const loanData = [];
     const statuses: Array<'Pending' | 'Disetujui' | 'Ditolak' | 'Selesai' | 'Terlambat'> =
@@ -515,11 +530,30 @@ export async function seedItemLoans() {
         const item = getRandomItem(allItems);
         const status = getRandomItem(statuses);
         const validator = status !== 'Pending' ? getRandomItem(admins).id : null;
+        const dosen = lecturers.length > 0 ? getRandomItem(lecturers) : null;
 
         const requestDate = dateOffset(-20 + i);
         const returnPlanDate = dateOffset(-20 + i + 7);
         const actualReturnDate = status === 'Selesai' ? dateOffset(-20 + i + 6) :
             status === 'Terlambat' ? dateOffset(-20 + i + 10) : null;
+
+        // Generate start/end time for the loan
+        const startHour = 8 + Math.floor(Math.random() * 6);
+        const endHour = startHour + 2 + Math.floor(Math.random() * 4);
+        const startTime = new Date(requestDate);
+        startTime.setHours(startHour, 0, 0, 0);
+        const endTime = new Date(requestDate);
+        endTime.setHours(endHour, 0, 0, 0);
+
+        // Check if item is PC/Server category (simple check by name)
+        const isPCServer = item.name?.toLowerCase().includes('pc') ||
+            item.name?.toLowerCase().includes('server') ||
+            item.name?.toLowerCase().includes('komputer');
+
+        // Random software selection for PC/Server
+        const selectedSoftware = isPCServer
+            ? softwareOptions.slice(0, 2 + Math.floor(Math.random() * 4))
+            : null;
 
         loanData.push({
             studentId: student.id,
@@ -529,11 +563,21 @@ export async function seedItemLoans() {
             returnPlanDate,
             actualReturnDate,
             status,
+            // New fields
+            organisasi: getRandomItem(organisasiOptions),
+            startTime,
+            endTime,
+            purpose: getRandomItem(purposeOptions),
+            suratIzin: status === 'Disetujui' && Math.random() > 0.5
+                ? '/uploads/surat-izin-peminjaman/sample-surat.pdf'
+                : null,
+            dosenPembimbing: dosen ? dosen.fullName : null,
+            software: selectedSoftware ? JSON.stringify(selectedSoftware) : null,
         });
     }
 
     await db.insert(itemLoans).values(loanData);
-    console.log(`   ✅ Created ${loanData.length} loans`);
+    console.log(`   ✅ Created ${loanData.length} loans with enhanced fields`);
     return loanData;
 }
 

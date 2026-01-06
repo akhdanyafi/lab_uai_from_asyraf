@@ -2,6 +2,9 @@
 
 import { LoanService } from './service';
 import { revalidatePath } from 'next/cache';
+import { db } from '@/db';
+import { users } from '@/db/schema';
+import { eq } from 'drizzle-orm';
 
 /**
  * Get available items for borrowing
@@ -11,16 +14,25 @@ export async function getAvailableItems(categoryId?: number) {
 }
 
 /**
- * Create loan request
+ * Create loan request with new fields
  */
 export async function createLoanRequest(data: {
     studentId: number;
     itemId: number;
     returnPlanDate: Date;
+    organisasi?: string;
+    startTime?: Date;
+    endTime?: Date;
+    purpose?: string;
+    suratIzin?: string;
+    dosenPembimbing?: string;
+    software?: string[];
 }) {
     await LoanService.create(data);
     revalidatePath('/student/loans');
+    revalidatePath('/student/items');
     revalidatePath('/admin/loans');
+    revalidatePath('/admin/inventory');
 }
 
 /**
@@ -59,4 +71,23 @@ export async function returnItem(loanId: number) {
     revalidatePath('/student/loans');
     revalidatePath('/admin/loans');
     revalidatePath('/admin/inventory');
+}
+
+/**
+ * Get all lecturers for dropdown
+ */
+export async function getLecturersForLoan() {
+    const { roles } = await import('@/db/schema');
+
+    const lecturers = await db
+        .select({
+            id: users.id,
+            fullName: users.fullName,
+        })
+        .from(users)
+        .innerJoin(roles, eq(users.roleId, roles.id))
+        .where(eq(roles.name, 'Dosen'))
+        .orderBy(users.fullName);
+
+    return lecturers;
 }

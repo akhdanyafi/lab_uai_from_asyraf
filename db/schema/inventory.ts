@@ -44,6 +44,14 @@ export const itemLoans = mysqlTable('item_loans', {
     returnPlanDate: datetime('return_plan_date').notNull(),
     actualReturnDate: datetime('actual_return_date'),
     status: mysqlEnum('status', ['Pending', 'Disetujui', 'Ditolak', 'Selesai', 'Terlambat']).default('Pending'),
+    // New fields for enhanced loan form
+    organisasi: varchar('organisasi', { length: 255 }),
+    startTime: datetime('start_time'),
+    endTime: datetime('end_time'),
+    purpose: varchar('purpose', { length: 255 }),
+    suratIzin: varchar('surat_izin', { length: 255 }),
+    dosenPembimbing: varchar('dosen_pembimbing', { length: 255 }),
+    software: text('software'), // JSON array of selected software for PC/Server
 }, (table) => ({
     studentIdx: index('student_idx').on(table.studentId),
     itemIdx: index('item_idx').on(table.itemId),
