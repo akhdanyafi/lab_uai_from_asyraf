@@ -715,24 +715,42 @@ export async function seedPublications() {
 
     const allUsers = await db.select().from(users);
     const uploaders = allUsers.filter(u => u.email?.includes('lab.ac.id'));
+    const students = allUsers.filter(u => u.email?.includes('@student'));
+
+    // Sample keywords
+    const keywordOptions = [
+        ['Machine Learning', 'AI', 'Data Science'],
+        ['Web Development', 'React', 'Next.js'],
+        ['Database', 'SQL', 'Optimization'],
+        ['IoT', 'Embedded Systems', 'Arduino'],
+        ['Computer Vision', 'Image Processing', 'Deep Learning'],
+        ['Mobile App', 'Android', 'Kotlin'],
+        ['Cybersecurity', 'Network Security', 'Encryption'],
+        ['Cloud Computing', 'AWS', 'Microservices'],
+    ];
 
     const pubData = SAMPLE_DATA.publications.slice(0, SEED_CONFIG.content.publicationsCount).map((pub, i) => {
         const hasFile = Math.random() > 0.3; // 70% have files, 30% external links
+        const uploader = getRandomItem(uploaders);
+        const submitter = students.length > 0 ? getRandomItem(students) : null;
 
         return {
-            uploaderId: getRandomItem(uploaders).id,
+            uploaderId: uploader.id,
+            submitterId: submitter?.id || null,
             authorName: pub.authorName,
             title: pub.title,
             abstract: pub.abstract,
+            keywords: JSON.stringify(keywordOptions[i % keywordOptions.length]),
             filePath: hasFile ? `/uploads/publications/publication-${i + 1}.pdf` : null,
             link: hasFile ? null : 'https://example.com/external-publication',
             viewCount: Math.floor(Math.random() * 500),
+            status: 'Published' as const,
             publishDate: dateOffset(-365 + (i * 30)),
         };
     });
 
     await db.insert(publications).values(pubData);
-    console.log(`   ✅ Created ${pubData.length} publications`);
+    console.log(`   ✅ Created ${pubData.length} publications with keywords`);
     console.log('   📌 Note: Add PDF files to public/uploads/publications/');
     return pubData;
 }

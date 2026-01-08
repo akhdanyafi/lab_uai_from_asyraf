@@ -57,6 +57,15 @@ export async function updateLoanStatus(
 }
 
 /**
+ * Delete loan
+ */
+export async function deleteLoan(id: number) {
+    await LoanService.delete(id);
+    revalidatePath('/admin/loans');
+    revalidatePath('/admin/inventory');
+}
+
+/**
  * Get user's loans
  */
 export async function getMyLoans(userId: number) {

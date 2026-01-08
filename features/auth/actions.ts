@@ -20,6 +20,9 @@ export async function login(formData: any) {
     const foundUser = user[0];
 
     // Verify password
+    if (!foundUser.passwordHash) {
+        throw new Error('User tidak memiliki password');
+    }
     const passwordMatch = await bcrypt.compare(password, foundUser.passwordHash);
     if (!passwordMatch) {
         throw new Error('Password salah');

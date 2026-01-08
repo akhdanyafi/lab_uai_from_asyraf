@@ -1,9 +1,9 @@
-import { getLoanRequests, updateLoanStatus } from '@/features/loans/actions';
-import { getBookingRequests, updateBookingStatus, getAllRooms, getMonthBookings } from '@/features/bookings/actions';
+import { getLoanRequests, updateLoanStatus, deleteLoan } from '@/features/loans/actions';
+import { getBookingRequests, updateBookingStatus, getAllRooms, getMonthBookings, deleteBooking } from '@/features/bookings/actions';
 import { getPendingUsers, updateUserStatus } from '@/features/users/actions';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
-import { Box, User, CheckCircle, XCircle, MapPin } from 'lucide-react';
+import { Box, User, CheckCircle, XCircle, MapPin, Trash2 } from 'lucide-react';
 import CalendarView from '@/components/shared/CalendarView';
 import ValidationTabs from './_components/ValidationTabs';
 
@@ -274,76 +274,173 @@ export default async function AdminValidationsPage({
     // --- Data Fetching for History ---
     const startDate = params?.startDate ? new Date(params.startDate as string) : undefined;
     const endDate = params?.endDate ? new Date(params.endDate as string) : undefined;
-    const historyLoans = await getLoanRequests(undefined, startDate, endDate);
+
+    // Fetch both loan and booking history
+    const [historyLoans, historyBookings] = await Promise.all([
+        getLoanRequests(undefined, startDate, endDate),
+        getBookingRequests(undefined, startDate, endDate)
+    ]);
 
     // --- History Content ---
     const historyContent = (
-        <div>
+        <div className="space-y-8">
             <LoanHistoryFilter />
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <table className="w-full text-left">
-                    <thead className="bg-gray-50 border-b border-gray-100">
-                        <tr>
-                            <th className="px-6 py-4 font-semibold text-gray-700">Mahasiswa</th>
-                            <th className="px-6 py-4 font-semibold text-gray-700">Alat</th>
-                            <th className="px-6 py-4 font-semibold text-gray-700">Tanggal Pinjam</th>
-                            <th className="px-6 py-4 font-semibold text-gray-700">Rencana Kembali</th>
-                            <th className="px-6 py-4 font-semibold text-gray-700">Status</th>
-                            <th className="px-6 py-4 font-semibold text-gray-700">Validator</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                        {historyLoans.map((loan) => (
-                            <tr key={loan.id} className="hover:bg-gray-50 transition-colors">
-                                <td className="px-6 py-4">
-                                    <div className="flex items-center gap-2">
-                                        <User className="w-4 h-4 text-gray-400" />
-                                        <div>
-                                            <p className="font-medium text-gray-900">{loan.student.fullName}</p>
-                                            <p className="text-xs text-gray-500">{loan.student.identifier}</p>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4">
-                                    <div className="flex items-center gap-2">
-                                        <Box className="w-4 h-4 text-primary" />
-                                        <div>
-                                            <p className="font-medium text-gray-900">{loan.item.name}</p>
-                                            <p className="text-xs text-gray-500">{loan.item.category.name}</p>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4 text-gray-600 text-sm">
-                                    {new Date(loan.requestDate!).toLocaleDateString('id-ID')}
-                                </td>
-                                <td className="px-6 py-4 text-gray-600 text-sm">
-                                    {new Date(loan.returnPlanDate).toLocaleDateString('id-ID')}
-                                </td>
-                                <td className="px-6 py-4">
-                                    <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${loan.status === 'Pending' ? 'bg-yellow-50 text-yellow-700' :
-                                        loan.status === 'Disetujui' ? 'bg-green-50 text-green-700' :
-                                            loan.status === 'Ditolak' ? 'bg-red-50 text-red-700' :
-                                                loan.status === 'Selesai' ? 'bg-blue-50 text-blue-700' :
-                                                    'bg-gray-50 text-gray-700'
-                                        }`}>
-                                        {loan.status}
-                                    </span>
-                                </td>
-                                <td className="px-6 py-4 text-gray-600 text-sm">
-                                    {loan.validatorId ? 'Admin' : '-'}
-                                </td>
-                            </tr>
-                        ))}
-                        {historyLoans.length === 0 && (
+            {/* Loan History */}
+            <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Riwayat Peminjaman Alat ({historyLoans.length})</h3>
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                    <table className="w-full text-left">
+                        <thead className="bg-gray-50 border-b border-gray-100">
                             <tr>
-                                <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
-                                    Tidak ada riwayat peminjaman.
-                                </td>
+                                <th className="px-6 py-4 font-semibold text-gray-700">Mahasiswa</th>
+                                <th className="px-6 py-4 font-semibold text-gray-700">Alat</th>
+                                <th className="px-6 py-4 font-semibold text-gray-700">Tanggal Pinjam</th>
+                                <th className="px-6 py-4 font-semibold text-gray-700">Rencana Kembali</th>
+                                <th className="px-6 py-4 font-semibold text-gray-700">Status</th>
+                                <th className="px-6 py-4 font-semibold text-gray-700">Validator</th>
+                                <th className="px-6 py-4 font-semibold text-gray-700 text-right">Aksi</th>
                             </tr>
-                        )}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                            {historyLoans.map((loan) => (
+                                <tr key={loan.id} className="hover:bg-gray-50 transition-colors">
+                                    <td className="px-6 py-4">
+                                        <div className="flex items-center gap-2">
+                                            <User className="w-4 h-4 text-gray-400" />
+                                            <div>
+                                                <p className="font-medium text-gray-900">{loan.student.fullName}</p>
+                                                <p className="text-xs text-gray-500">{loan.student.identifier}</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <div className="flex items-center gap-2">
+                                            <Box className="w-4 h-4 text-primary" />
+                                            <div>
+                                                <p className="font-medium text-gray-900">{loan.item.name}</p>
+                                                <p className="text-xs text-gray-500">{loan.item.category.name}</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 text-gray-600 text-sm">
+                                        {new Date(loan.requestDate!).toLocaleDateString('id-ID')}
+                                    </td>
+                                    <td className="px-6 py-4 text-gray-600 text-sm">
+                                        {new Date(loan.returnPlanDate).toLocaleDateString('id-ID')}
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${loan.status === 'Pending' ? 'bg-yellow-50 text-yellow-700' :
+                                            loan.status === 'Disetujui' ? 'bg-green-50 text-green-700' :
+                                                loan.status === 'Ditolak' ? 'bg-red-50 text-red-700' :
+                                                    loan.status === 'Selesai' ? 'bg-blue-50 text-blue-700' :
+                                                        'bg-gray-50 text-gray-700'
+                                            }`}>
+                                            {loan.status}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4 text-gray-600 text-sm">
+                                        {loan.validatorId ? 'Admin' : '-'}
+                                    </td>
+                                    <td className="px-6 py-4 text-right">
+                                        <form action={async () => {
+                                            'use server';
+                                            await deleteLoan(loan.id);
+                                        }}>
+                                            <button
+                                                className="text-red-500 hover:text-red-700 p-2 hover:bg-red-50 rounded-lg transition-colors"
+                                                title="Hapus Riwayat"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            ))}
+                            {historyLoans.length === 0 && (
+                                <tr>
+                                    <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                                        Tidak ada riwayat peminjaman.
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {/* Booking History */}
+            <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Riwayat Booking Ruangan ({historyBookings.length})</h3>
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                    <table className="w-full text-left">
+                        <thead className="bg-gray-50 border-b border-gray-100">
+                            <tr>
+                                <th className="px-6 py-4 font-semibold text-gray-700">Pemohon</th>
+                                <th className="px-6 py-4 font-semibold text-gray-700">Ruangan</th>
+                                <th className="px-6 py-4 font-semibold text-gray-700">Waktu</th>
+                                <th className="px-6 py-4 font-semibold text-gray-700">Status</th>
+                                <th className="px-6 py-4 font-semibold text-gray-700">Validator</th>
+                                <th className="px-6 py-4 font-semibold text-gray-700 text-right">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                            {historyBookings.map((booking) => (
+                                <tr key={booking.id} className="hover:bg-gray-50 transition-colors">
+                                    <td className="px-6 py-4">
+                                        <div className="flex items-center gap-2">
+                                            <User className="w-4 h-4 text-gray-400" />
+                                            <div>
+                                                <p className="font-medium text-gray-900">{booking.user.fullName}</p>
+                                                <p className="text-xs text-gray-500">{booking.user.identifier}</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 font-medium text-gray-900">{booking.room.name}</td>
+                                    <td className="px-6 py-4 text-gray-600 text-sm">
+                                        <div>{new Date(booking.startTime).toLocaleDateString('id-ID')}</div>
+                                        <div className="text-xs text-gray-500">
+                                            {new Date(booking.startTime).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} -
+                                            {new Date(booking.endTime).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${booking.status === 'Pending' ? 'bg-yellow-50 text-yellow-700' :
+                                            booking.status === 'Disetujui' ? 'bg-green-50 text-green-700' :
+                                                booking.status === 'Ditolak' ? 'bg-red-50 text-red-700' :
+                                                    'bg-gray-50 text-gray-700'
+                                            }`}>
+                                            {booking.status}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4 text-gray-600 text-sm">
+                                        {booking.validatorId ? 'Admin' : '-'}
+                                    </td>
+                                    <td className="px-6 py-4 text-right">
+                                        <form action={async () => {
+                                            'use server';
+                                            await deleteBooking(booking.id);
+                                        }}>
+                                            <button
+                                                className="text-red-500 hover:text-red-700 p-2 hover:bg-red-50 rounded-lg transition-colors"
+                                                title="Hapus Riwayat"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            ))}
+                            {historyBookings.length === 0 && (
+                                <tr>
+                                    <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                                        Tidak ada riwayat booking.
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     );

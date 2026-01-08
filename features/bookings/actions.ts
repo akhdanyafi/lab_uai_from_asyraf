@@ -62,8 +62,16 @@ export async function createRoomBooking(data: {
 /**
  * Get booking requests (for admin)
  */
-export async function getBookingRequests(status?: string) {
-    return BookingService.getAll(status);
+export async function getBookingRequests(status?: string, startDate?: Date, endDate?: Date) {
+    return BookingService.getAll({ status, startDate, endDate });
+}
+
+/**
+ * Delete booking
+ */
+export async function deleteBooking(id: number) {
+    await BookingService.delete(id);
+    revalidatePath('/admin/bookings');
 }
 
 /**

@@ -9,6 +9,7 @@ import {
     CalendarDays,
     FileText,
     Key,
+    BookOpen,
     LogOut
 } from 'lucide-react';
 import Sidebar from '@/components/layout/Sidebar';
@@ -31,6 +32,7 @@ export default async function StudentLayout({
         { name: 'Booking Ruangan', href: '/student/rooms', icon: CalendarDays },
         { name: 'Enroll Kelas', href: '/student/enroll', icon: Key },
         { name: 'Praktikum', href: '/student/assignments', icon: FileText },
+        { name: 'Publikasi', href: '/student/publications', icon: BookOpen },
     ];
 
     return (

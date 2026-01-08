@@ -6,6 +6,7 @@ import {
     LayoutDashboard,
     CalendarDays,
     FileText,
+    BookOpen,
     LogOut
 } from 'lucide-react';
 import Sidebar from '@/components/layout/Sidebar';
@@ -25,7 +26,7 @@ export default async function LecturerLayout({
         { name: 'Dashboard', href: '/lecturer/dashboard', icon: LayoutDashboard },
         { name: 'Booking Ruangan', href: '/lecturer/rooms', icon: CalendarDays },
         { name: 'Praktikum', href: '/lecturer/practicum', icon: FileText },
-        { name: 'Jurnal Publikasi', href: '/lecturer/publications', icon: FileText },
+        { name: 'Publikasi', href: '/lecturer/publications', icon: BookOpen },
     ];
 
     return (

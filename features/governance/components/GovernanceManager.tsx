@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { FileText, Users, FileCheck } from 'lucide-react';
+import { FileText, Users, FileCheck, Image as ImageIcon } from 'lucide-react';
 import DocumentList from '@/features/academic/components/DocumentList';
 import { deleteGovernanceDoc } from '@/features/governance/actions';
 import GovernanceUploadForm from './GovernanceUploadForm';
@@ -9,6 +9,15 @@ import UserList from './UserList';
 import UserForm from './UserForm';
 import BulkEnrollment from './BulkEnrollment';
 import DataExport from './DataExport';
+import HeroPhotoManager from '@/app/admin/hero-photos/_components/HeroPhotoManager';
+
+interface HeroPhoto {
+    id: number;
+    title: string;
+    description: string | null;
+    imageUrl: string;
+    link: string | null;
+}
 
 interface GovernanceManagerProps {
     sops: any[];
@@ -16,11 +25,12 @@ interface GovernanceManagerProps {
     users: any[];
     roles: any[];
     lecturers: { id: number; fullName: string; identifier: string }[];
+    heroPhotos: HeroPhoto[];
     adminId: number;
 }
 
-export default function GovernanceManager({ sops, lpjs, users, roles, lecturers, adminId }: GovernanceManagerProps) {
-    const [activeTab, setActiveTab] = useState<'sop' | 'lpj' | 'users'>('sop');
+export default function GovernanceManager({ sops, lpjs, users, roles, lecturers, heroPhotos, adminId }: GovernanceManagerProps) {
+    const [activeTab, setActiveTab] = useState<'sop' | 'lpj' | 'users' | 'hero'>('sop');
 
 
     const [showUserForm, setShowUserForm] = useState(false);
@@ -76,6 +86,16 @@ export default function GovernanceManager({ sops, lpjs, users, roles, lecturers,
                 >
                     <Users className="w-4 h-4" />
                     Manajemen User
+                </button>
+                <button
+                    onClick={() => { setActiveTab('hero'); setEditingDoc(null); }}
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${activeTab === 'hero'
+                        ? 'bg-white text-[#0F4C81] shadow-sm'
+                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'
+                        }`}
+                >
+                    <ImageIcon className="w-4 h-4" />
+                    Hero Section
                 </button>
             </div>
 
@@ -141,6 +161,10 @@ export default function GovernanceManager({ sops, lpjs, users, roles, lecturers,
                             />
                         )}
                     </>
+                )}
+
+                {activeTab === 'hero' && (
+                    <HeroPhotoManager initialPhotos={heroPhotos} />
                 )}
             </div>
         </div>

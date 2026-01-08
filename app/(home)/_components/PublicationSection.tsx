@@ -1,5 +1,6 @@
-import { BookOpen, Eye, User } from 'lucide-react';
+import { BookOpen, Eye, User, ArrowRight } from 'lucide-react';
 import PublicationLink from '@/features/publications/components/PublicationLink';
+import Link from 'next/link';
 
 interface Publication {
     id: number;
@@ -19,13 +20,22 @@ export default function PublicationSection({ topPublications }: PublicationSecti
 
     return (
         <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-            <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 bg-blue-50 rounded-lg">
-                    <BookOpen className="w-6 h-6 text-[#0F4C81]" />
+            <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-50 rounded-lg">
+                        <BookOpen className="w-6 h-6 text-[#0F4C81]" />
+                    </div>
+                    <h2 className="text-xl font-bold text-gray-900">
+                        Publikasi Terpopuler
+                    </h2>
                 </div>
-                <h2 className="text-xl font-bold text-gray-900">
-                    Publikasi Terpopuler
-                </h2>
+                <Link
+                    href="/publications"
+                    className="text-sm font-medium text-[#0F4C81] hover:underline flex items-center gap-1"
+                >
+                    Lihat Semua
+                    <ArrowRight className="w-4 h-4" />
+                </Link>
             </div>
 
             <div className="flex flex-col gap-4">

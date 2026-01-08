@@ -91,9 +91,9 @@ export class BookingService {
     }
 
     /**
-     * Get booking requests with optional status filter
+     * Get booking requests with optional filters
      */
-    static async getAll(status?: string) {
+    static async getAll(filters?: { status?: string; startDate?: Date; endDate?: Date }) {
         let query = db
             .select({
                 booking: roomBookings,
@@ -105,8 +105,26 @@ export class BookingService {
             .leftJoin(rooms, eq(roomBookings.roomId, rooms.id))
             .orderBy(desc(roomBookings.startTime));
 
-        if (status) {
-            query = query.where(eq(roomBookings.status, status as any)) as any;
+        const conditions = [];
+
+        if (filters?.status) {
+            conditions.push(eq(roomBookings.status, filters.status as any));
+        }
+
+        if (filters?.startDate) {
+            const start = new Date(filters.startDate);
+            start.setHours(0, 0, 0, 0);
+            conditions.push(gte(roomBookings.startTime, start));
+        }
+
+        if (filters?.endDate) {
+            const end = new Date(filters.endDate);
+            end.setHours(23, 59, 59, 999);
+            conditions.push(lte(roomBookings.startTime, end));
+        }
+
+        if (conditions.length > 0) {
+            query = query.where(and(...conditions)) as any;
         }
 
         const results = await query;
@@ -116,6 +134,13 @@ export class BookingService {
             user: row.user!,
             room: row.room!,
         }));
+    }
+
+    /**
+     * Delete a booking
+     */
+    static async delete(id: number) {
+        await db.delete(roomBookings).where(eq(roomBookings.id, id));
     }
 
     /**

@@ -25,14 +25,15 @@ interface Student {
     studentId: number; // User ID
     fullName: string;
     identifier: string; // NIM
-    email: string;
+    email: string | null;
+    enrolledAt: Date | null;
 }
 
 interface SearchResult {
     id: number;
     fullName: string;
     identifier: string;
-    email: string;
+    email: string | null;
     batch?: number;
     studyType?: 'Reguler' | 'Hybrid';
 }

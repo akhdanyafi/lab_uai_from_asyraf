@@ -209,6 +209,30 @@ export class LoanService {
     }
 
     /**
+     * Delete loan record.
+     * Use with caution. If loan status was 'Disetujui', it resets item status to 'Tersedia'.
+     */
+    static async delete(id: number) {
+        const loanResult = await db
+            .select()
+            .from(itemLoans)
+            .where(eq(itemLoans.id, id))
+            .limit(1);
+
+        const loan = loanResult[0];
+        if (!loan) return;
+
+        // If loan was active, reset item status
+        if (loan.status === 'Disetujui' && !loan.actualReturnDate) {
+            await db.update(items)
+                .set({ status: 'Tersedia' })
+                .where(eq(items.id, loan.itemId));
+        }
+
+        await db.delete(itemLoans).where(eq(itemLoans.id, id));
+    }
+
+    /**
      * Mark item as returned
      */
     static async returnItem(loanId: number) {
