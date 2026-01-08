@@ -272,7 +272,114 @@ export async function seedItems() {
 }
 
 /**
- * 7. Seed Publications
+ * 7. Seed Room Bookings
+ */
+export async function seedRoomBookings() {
+    console.log('\n📅 Seeding room bookings...');
+
+    const existingBookings = await db.select().from(roomBookings);
+    if (existingBookings.length > 0) {
+        console.log('   ⏭️  Room bookings already exist, skipping...');
+        return existingBookings;
+    }
+
+    const mahasiswaRole = await db.query.roles.findFirst({
+        where: (roles, { eq }) => eq(roles.name, 'Mahasiswa')
+    });
+    const students = await db.query.users.findMany({
+        where: (users, { eq }) => eq(users.roleId, mahasiswaRole!.id)
+    });
+    const allRooms = await db.select().from(rooms);
+
+    const purposes = [
+        'Rapat Organisasi HMIF',
+        'Praktikum Jaringan Komputer',
+        'Workshop Web Development',
+        'Diskusi Tugas Akhir',
+        'Latihan Presentasi',
+    ];
+
+    const bookingData = [];
+    for (let i = 0; i < 5; i++) {
+        const student = students[i % students.length];
+        const room = allRooms[i % allRooms.length];
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() + i + 1);
+        startDate.setHours(9 + i, 0, 0, 0);
+        const endDate = new Date(startDate);
+        endDate.setHours(startDate.getHours() + 2);
+
+        bookingData.push({
+            userId: student.id,
+            roomId: room.id,
+            startTime: startDate,
+            endTime: endDate,
+            purpose: purposes[i],
+            organisasi: i % 2 === 0 ? 'HMIF' : 'Pribadi',
+            jumlahPeserta: 10 + (i * 5),
+            status: i < 2 ? 'Pending' as const : 'Disetujui' as const,
+        });
+    }
+
+    await db.insert(roomBookings).values(bookingData);
+    console.log(`   ✅ Created ${bookingData.length} room bookings`);
+    return await db.select().from(roomBookings);
+}
+
+/**
+ * 8. Seed Item Loans
+ */
+export async function seedItemLoans() {
+    console.log('\n📦 Seeding item loans...');
+
+    const existingLoans = await db.select().from(itemLoans);
+    if (existingLoans.length > 0) {
+        console.log('   ⏭️  Item loans already exist, skipping...');
+        return existingLoans;
+    }
+
+    const mahasiswaRole = await db.query.roles.findFirst({
+        where: (roles, { eq }) => eq(roles.name, 'Mahasiswa')
+    });
+    const students = await db.query.users.findMany({
+        where: (users, { eq }) => eq(users.roleId, mahasiswaRole!.id)
+    });
+    const allItems = await db.select().from(items);
+
+    const purposes = [
+        'Praktikum Jaringan',
+        'Tugas Akhir',
+        'Proyek Mata Kuliah',
+        'Penelitian',
+        'Workshop',
+    ];
+
+    const loanData = [];
+    for (let i = 0; i < 5; i++) {
+        const student = students[i % students.length];
+        const item = allItems[i % allItems.length];
+        const requestDate = new Date();
+        requestDate.setDate(requestDate.getDate() - (5 - i));
+        const returnPlanDate = new Date();
+        returnPlanDate.setDate(returnPlanDate.getDate() + i + 3);
+
+        loanData.push({
+            studentId: student.id,
+            itemId: item.id,
+            requestDate: requestDate,
+            returnPlanDate: returnPlanDate,
+            purpose: purposes[i],
+            status: i < 2 ? 'Pending' as const : 'Disetujui' as const,
+        });
+    }
+
+    await db.insert(itemLoans).values(loanData);
+    console.log(`   ✅ Created ${loanData.length} item loans`);
+    return await db.select().from(itemLoans);
+}
+
+/**
+ * 9. Seed Publications
  */
 export async function seedPublications() {
     console.log('\n📰 Seeding publications...');
@@ -401,6 +508,8 @@ export async function runComprehensiveSeed() {
         await seedRooms();
         await seedItemCategories();
         await seedItems();
+        await seedRoomBookings();
+        await seedItemLoans();
         await seedPublications();
         await seedGovernanceDocs();
         await seedHeroPhotos();
