@@ -1,12 +1,13 @@
-import { getClasses } from '@/features/academic/actions';
-import ClassDashboard from '@/features/academic/components/practicum/views/ClassDashboard';
+import { getModules, getAllSubjects } from '@/features/practicum/actions';
+import ModuleManager from '@/features/practicum/components/ModuleManager';
 
-export default async function PracticumPage() {
-    const classes = await getClasses();
+export default async function AdminPracticumPage() {
+    const [modules, subjects] = await Promise.all([
+        getModules(),
+        getAllSubjects()
+    ]);
 
     return (
-        <div className="container mx-auto py-8">
-            <ClassDashboard classes={classes} />
-        </div>
+        <ModuleManager modules={modules} allSubjects={subjects} />
     );
 }

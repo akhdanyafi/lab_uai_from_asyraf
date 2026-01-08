@@ -4,7 +4,7 @@
  */
 
 import { createUploadStructure } from './create-upload-structure';
-import { runComprehensiveSeeds } from './comprehensive.seed';
+import { runComprehensiveSeed } from './comprehensive.seed';
 
 async function main() {
     console.log('╔════════════════════════════════════════════════╗');
@@ -18,7 +18,7 @@ async function main() {
 
         // Step 2: Run comprehensive seeds
         console.log('\nStep 2: Seeding database...');
-        await runComprehensiveSeeds();
+        await runComprehensiveSeed();
 
         console.log('\n╔════════════════════════════════════════════════╗');
         console.log('║   ✨ Database seeding completed successfully!  ║');

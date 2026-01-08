@@ -2,22 +2,19 @@
  * Comprehensive Database Seed
  * Seeds ALL tables with realistic sample data
  * 
- * UPDATED FOR SIMPLIFIED SCHEMA:
- * - Removed: courses table (merged into classes)
- * - Removed: modules table (merged into assignments)
- * - Renamed: practicalSessions -> assignments
- * - Added: enrollmentKey, courseCode, courseName to classes
+ * UPDATED FOR SIMPLIFIED PRACTICUM:
+ * - Removed: classes, classEnrollments, assignments, practicalReports
+ * - Added: practicumModules (simple module management)
  */
 
 import { db } from '@/db';
 import {
     roles, users,
-    classes, classEnrollments, assignments, practicalReports,
+    practicumModules,
     rooms, roomBookings,
     itemCategories, items, itemLoans,
     labAttendance,
     governanceDocs, publications, heroPhotos,
-    generateEnrollmentKey
 } from '@/db/schema';
 import bcrypt from 'bcryptjs';
 import { SEED_CONFIG, SAMPLE_DATA } from './seed.config';
@@ -81,12 +78,13 @@ export async function seedUsers() {
     const dosenRole = allRoles.find(r => r.name === 'Dosen')!;
     const mahasiswaRole = allRoles.find(r => r.name === 'Mahasiswa')!;
 
-    // Create different passwords for each role
     const adminPassword = await bcrypt.hash('admin', 10);
     const dosenPassword = await bcrypt.hash('dosen', 10);
     const mahasiswaPassword = await bcrypt.hash('mahasiswa', 10);
 
-    // Check if admin already exists
+    // Lecturer names for reference
+    const lecturerNames = ['Dr. Ahmad Fauzi', 'Dr. Siti Rahayu', 'Dr. Budi Santoso'];
+
     const existingAdmin = await db.query.users.findFirst({
         where: (users, { eq }) => eq(users.email, 'admin@lab.ac.id')
     });
@@ -99,291 +97,103 @@ export async function seedUsers() {
             passwordHash: adminPassword,
             roleId: adminRole.id,
             status: 'Active',
+            dosenPembimbing: '-',
         });
-        console.log('   ✅ Created admin user (password: admin)');
-    } else {
-        console.log('   ⏭️  Admin already exists');
+        console.log('   ✅ Created admin user');
     }
 
-    // Seed Lecturers
-    const lecturerData = SAMPLE_DATA.lecturers
-        .slice(0, SEED_CONFIG.users.lecturersCount)
-        .map(lecturer => ({
-            fullName: lecturer.fullName,
-            identifier: lecturer.identifier,
-            email: lecturer.email,
-            passwordHash: dosenPassword,
-            roleId: dosenRole.id,
-            status: 'Active' as const,
-        }));
-
-    for (const lecturer of lecturerData) {
+    // Create lecturers
+    for (let i = 0; i < lecturerNames.length; i++) {
+        const email = `dosen${i + 1}@lab.ac.id`;
         const existing = await db.query.users.findFirst({
-            where: (users, { eq }) => eq(users.email, lecturer.email)
-        });
-        if (!existing) {
-            await db.insert(users).values(lecturer);
-        }
-    }
-    console.log(`   ✅ Created/verified ${lecturerData.length} lecturers (password: dosen)`);
-
-    // Get all lecturers for assigning as dosen pembimbing
-    const allLecturers = await db.query.users.findMany({
-        where: (users, { eq }) => eq(users.roleId, dosenRole.id)
-    });
-
-    // Seed Students
-    const studentData = SAMPLE_DATA.students
-        .slice(0, SEED_CONFIG.users.studentsCount)
-        .map(student => ({
-            fullName: student.fullName,
-            identifier: student.identifier,
-            email: student.email,
-            passwordHash: mahasiswaPassword,
-            roleId: mahasiswaRole.id,
-            status: 'Active' as const,
-            batch: student.batch,
-            studyType: student.studyType as 'Reguler' | 'Hybrid',
-            programStudi: 'Informatika',
-            dosenPembimbing: getRandomItem(allLecturers).fullName,
-        }));
-
-    for (const student of studentData) {
-        const existing = await db.query.users.findFirst({
-            where: (users, { eq }) => eq(users.email, student.email)
-        });
-        if (!existing) {
-            await db.insert(users).values(student);
-        }
-    }
-    console.log(`   ✅ Created/verified ${studentData.length} students (password: mahasiswa)`);
-
-    // Seed Pre-registered Students (no account yet - for testing bulk enrollment flow)
-    const preRegisteredData = [
-        { fullName: 'Dewi Lestari', identifier: '0102523001', batch: 2023, studyType: 'Reguler' as const },
-        { fullName: 'Agus Setiawan', identifier: '0102523002', batch: 2023, studyType: 'Reguler' as const },
-        { fullName: 'Siti Rahayu', identifier: '0102523003', batch: 2023, studyType: 'Hybrid' as const },
-    ];
-
-    for (const student of preRegisteredData) {
-        const existing = await db.query.users.findFirst({
-            where: (users, { eq }) => eq(users.identifier, student.identifier)
+            where: (users, { eq }) => eq(users.email, email)
         });
         if (!existing) {
             await db.insert(users).values({
-                fullName: student.fullName,
-                identifier: student.identifier,
-                roleId: mahasiswaRole.id,
-                status: 'Pre-registered',
-                batch: student.batch,
-                studyType: student.studyType,
-                programStudi: 'Informatika',
-                dosenPembimbing: getRandomItem(allLecturers).fullName,
-                // No email and passwordHash for pre-registered users
+                fullName: lecturerNames[i],
+                identifier: `DSN${String(i + 1).padStart(3, '0')}`,
+                email,
+                passwordHash: dosenPassword,
+                roleId: dosenRole.id,
+                status: 'Active',
+                dosenPembimbing: '-',
             });
         }
     }
-    console.log(`   ✅ Created/verified ${preRegisteredData.length} pre-registered students (no account yet)`);
+    console.log(`   ✅ Created ${lecturerNames.length} lecturers`);
+
+    // Create students with random dosenPembimbing
+    const studentNames = [
+        'Andi Pratama', 'Budi Wijaya', 'Citra Dewi', 'Dian Sari', 'Eka Putra',
+        'Fitri Handayani', 'Galih Setiawan', 'Hendra Kusuma', 'Indah Permata', 'Joko Susanto'
+    ];
+    for (let i = 0; i < Math.min(SEED_CONFIG.users.studentsCount, studentNames.length); i++) {
+        const email = `mahasiswa${i + 1}@lab.ac.id`;
+        const existing = await db.query.users.findFirst({
+            where: (users, { eq }) => eq(users.email, email)
+        });
+        if (!existing) {
+            await db.insert(users).values({
+                fullName: studentNames[i],
+                identifier: `2024${String(i + 1).padStart(5, '0')}`,
+                email,
+                passwordHash: mahasiswaPassword,
+                roleId: mahasiswaRole.id,
+                status: 'Active',
+                batch: 2024,
+                studyType: getRandomItem(['Reguler', 'Hybrid']),
+                dosenPembimbing: getRandomItem(lecturerNames),
+            });
+        }
+    }
+    console.log(`   ✅ Created ${Math.min(SEED_CONFIG.users.studentsCount, studentNames.length)} students`);
 
     return await db.select().from(users);
 }
 
 /**
- * 3. Seed Classes (Now includes course info directly - courses table removed)
+ * 3. Seed Practicum Modules (NEW - Simple)
  */
-export async function seedClasses() {
-    console.log('\n🏫 Seeding classes (with embedded course info)...');
+export async function seedPracticumModules() {
+    console.log('\n📚 Seeding practicum modules...');
 
-    const existingClasses = await db.select().from(classes);
-    if (existingClasses.length > 0) {
-        console.log('   ⏭️  Classes already exist, skipping...');
-        return existingClasses;
+    const existingModules = await db.select().from(practicumModules);
+    if (existingModules.length > 0) {
+        console.log('   ⏭️  Modules already exist, skipping...');
+        return existingModules;
     }
 
-    const dosenRole = await db.query.roles.findFirst({
-        where: (roles, { eq }) => eq(roles.name, 'Dosen')
-    });
-    const lecturers = await db.query.users.findMany({
-        where: (users, { eq }) => eq(users.roleId, dosenRole!.id)
-    });
+    const moduleData = [
+        {
+            name: 'Modul 1 - Pengenalan Kriptografi',
+            description: 'Mempelajari dasar-dasar kriptografi, termasuk enkripsi simetris dan asimetris.',
+            subjects: JSON.stringify(['Kriptografi', 'Keamanan Informasi']),
+            filePath: '/uploads/assignments/praktikum1.pdf',
+        },
+        {
+            name: 'Modul 2 - Implementasi AES dan RSA',
+            description: 'Praktikum implementasi algoritma AES dan RSA menggunakan Python.',
+            subjects: JSON.stringify(['Kriptografi']),
+            filePath: '/uploads/assignments/praktikum2.pdf',
+        },
+        {
+            name: 'Modul 3 - Pengenalan Cloud Computing',
+            description: 'Pengenalan konsep cloud computing, IaaS, PaaS, SaaS.',
+            subjects: JSON.stringify(['Komputasi Awan', 'Infrastruktur IT']),
+            filePath: '/uploads/assignments/praktikum3.pdf',
+        },
+    ];
 
-    const classNames = ['A', 'B', 'C', 'D'];
-    const classData = [];
-
-    // Create classes for each course in SAMPLE_DATA
-    for (let i = 0; i < Math.min(SEED_CONFIG.academic.classesCount, SAMPLE_DATA.courses.length * 2); i++) {
-        const course = SAMPLE_DATA.courses[i % SAMPLE_DATA.courses.length];
-        const lecturer = getRandomItem(lecturers);
-        const className = classNames[i % classNames.length];
-        const semester = getRandomItem(SAMPLE_DATA.semesters);
-        const uniqueClassName = `IF-${course.code.substring(2)}-${className}${i}`;
-
-        // Generate unique enrollment key with index to avoid duplicates
-        const enrollmentKey = generateEnrollmentKey(course.code, uniqueClassName);
-
-        classData.push({
-            courseCode: course.code,
-            courseName: course.name,
-            lecturerId: lecturer.id,
-            name: uniqueClassName,
-            semester,
-            enrollmentKey,
-        });
-    }
-
-    await db.insert(classes).values(classData);
-    const createdClasses = await db.select().from(classes);
-    console.log(`   ✅ Created ${createdClasses.length} classes`);
-    console.log(`   🔑 Enrollment keys generated for self-enrollment`);
-    return createdClasses;
+    await db.insert(practicumModules).values(moduleData);
+    console.log(`   ✅ Created ${moduleData.length} practicum modules`);
+    return await db.select().from(practicumModules);
 }
 
 /**
- * 4. Seed Class Enrollments
- */
-export async function seedClassEnrollments() {
-    console.log('\n📝 Seeding class enrollments...');
-
-    const existingEnrollments = await db.select().from(classEnrollments);
-    if (existingEnrollments.length > 0) {
-        console.log('   ⏭️  Enrollments already exist, skipping...');
-        return existingEnrollments;
-    }
-
-    const allClasses = await db.select().from(classes);
-    const mahasiswaRole = await db.query.roles.findFirst({
-        where: (roles, { eq }) => eq(roles.name, 'Mahasiswa')
-    });
-    const students = await db.query.users.findMany({
-        where: (users, { eq }) => eq(users.roleId, mahasiswaRole!.id)
-    });
-
-    const enrollmentData = [];
-
-    for (const classItem of allClasses) {
-        // Enroll 4-7 random students per class
-        const studentsToEnroll = getRandomItems(students, 4 + Math.floor(Math.random() * 4));
-
-        for (const student of studentsToEnroll) {
-            enrollmentData.push({
-                classId: classItem.id,
-                studentId: student.id,
-            });
-        }
-    }
-
-    await db.insert(classEnrollments).values(enrollmentData);
-    console.log(`   ✅ Created ${enrollmentData.length} enrollments`);
-    return enrollmentData;
-}
-
-/**
- * 5. Seed Assignments (Previously modules + practicalSessions combined)
- */
-export async function seedAssignments() {
-    console.log('\n📄 Seeding assignments (combines modules + sessions)...');
-
-    const existingAssignments = await db.select().from(assignments);
-    if (existingAssignments.length > 0) {
-        console.log('   ⏭️  Assignments already exist, skipping...');
-        return existingAssignments;
-    }
-
-    const allClasses = await db.select().from(classes);
-    const assignmentData: Array<{
-        classId: number;
-        title: string;
-        description: string;
-        filePath: string;
-        order: number;
-        startDate: Date;
-        deadline: Date;
-    }> = [];
-
-    for (const classItem of allClasses) {
-        // Create assignments (previously modules + sessions)
-        for (let i = 1; i <= SEED_CONFIG.academic.modulesPerCourse; i++) {
-            const startDate = dateOffset(-30 + (i * 7)); // Stagger assignments weekly
-            const deadline = dateOffset(-30 + (i * 7) + 14); // 2 weeks per assignment
-
-            assignmentData.push({
-                classId: classItem.id,
-                title: `Praktikum ${i} - ${classItem.courseName}`,
-                description: `Materi praktikum modul ${i} untuk mata kuliah ${classItem.courseName}. Silakan kerjakan tugas sesuai petunjuk di file PDF.`,
-                filePath: `/uploads/assignments/praktikum${i}.pdf`,
-                order: i,
-                startDate,
-                deadline,
-            });
-        }
-    }
-
-    await db.insert(assignments).values(assignmentData);
-    console.log(`   ✅ Created ${assignmentData.length} assignments`);
-    console.log('   📌 Note: Add PDF files to public/uploads/assignments/');
-    return assignmentData;
-}
-
-/**
- * 6. Seed Practical Reports
- */
-export async function seedPracticalReports() {
-    console.log('\n📋 Seeding practical reports...');
-
-    const existingReports = await db.select().from(practicalReports);
-    if (existingReports.length > 0) {
-        console.log('   ⏭️  Reports already exist, skipping...');
-        return existingReports;
-    }
-
-    const allAssignments = await db.select().from(assignments);
-    const reportData = [];
-
-    for (const assignment of allAssignments) {
-        // Get students enrolled in this assignment's class
-        const enrollments = await db.query.classEnrollments.findMany({
-            where: (classEnrollments, { eq }) => eq(classEnrollments.classId, assignment.classId)
-        });
-
-        // Random subset of students submit reports
-        const studentsToSubmit = getRandomItems(
-            enrollments,
-            Math.min(SEED_CONFIG.academic.reportsPerSession, enrollments.length)
-        );
-
-        for (const enrollment of studentsToSubmit) {
-            const submissionDate = new Date(assignment.startDate);
-            submissionDate.setDate(submissionDate.getDate() + Math.floor(Math.random() * 10));
-
-            // Random: some graded, some not
-            const isGraded = Math.random() > 0.3;
-            const grade = isGraded ? 70 + Math.floor(Math.random() * 30) : null;
-            const feedback = isGraded ? 'Good work! Keep it up.' : null;
-
-            reportData.push({
-                assignmentId: assignment.id,
-                studentId: enrollment.studentId,
-                filePath: `/uploads/reports/session1.pdf`,
-                submissionDate,
-                grade,
-                feedback,
-            });
-        }
-    }
-
-    if (reportData.length > 0) {
-        await db.insert(practicalReports).values(reportData);
-    }
-    console.log(`   ✅ Created ${reportData.length} reports`);
-    console.log('   📌 Note: Add PDF files to public/uploads/reports/');
-    return reportData;
-}
-
-/**
- * 7. Seed Rooms
+ * 4. Seed Rooms
  */
 export async function seedRooms() {
-    console.log('\n🏢 Seeding rooms...');
+    console.log('\n🏠 Seeding rooms...');
 
     const existingRooms = await db.select().from(rooms);
     if (existingRooms.length > 0) {
@@ -392,85 +202,20 @@ export async function seedRooms() {
     }
 
     const roomData = [
-        { name: 'Lab Informatika', location: '613, Lantai 6', capacity: 40, status: 'Tersedia' as const },
-        { name: 'Lab Computer Vision', location: '613A, Lantai 6', capacity: 40, status: 'Tersedia' as const },
-        { name: 'Lab Data Science & Software Engineering', location: '613B, Lantai 6', capacity: 30, status: 'Tersedia' as const },
-        { name: 'Lab Server & Database', location: '614, Lantai 6', capacity: 25, status: 'Tersedia' as const },
-        { name: 'Lab Testing', location: '615, Lantai 6', capacity: 20, status: 'Maintenance' as const },
+        { name: 'Lab Komputer 1', location: 'Gedung Informatika Lt. 1', capacity: 40, status: 'Tersedia' as const },
+        { name: 'Lab Komputer 2', location: 'Gedung Informatika Lt. 1', capacity: 35, status: 'Tersedia' as const },
+        { name: 'Lab Jaringan', location: 'Gedung Informatika Lt. 2', capacity: 30, status: 'Tersedia' as const },
+        { name: 'Lab Multimedia', location: 'Gedung Informatika Lt. 2', capacity: 25, status: 'Tersedia' as const },
+        { name: 'Ruang Seminar', location: 'Gedung Informatika Lt. 3', capacity: 100, status: 'Tersedia' as const },
     ];
+
     await db.insert(rooms).values(roomData);
     console.log(`   ✅ Created ${roomData.length} rooms`);
-    return roomData;
+    return await db.select().from(rooms);
 }
 
 /**
- * 8. Seed Room Bookings
- */
-export async function seedRoomBookings() {
-    console.log('\n🔖 Seeding room bookings...');
-
-    const existingBookings = await db.select().from(roomBookings);
-    if (existingBookings.length > 0) {
-        console.log('   ⏭️  Bookings already exist, skipping...');
-        return existingBookings;
-    }
-
-    const allRooms = await db.select().from(rooms);
-    const allUsers = await db.select().from(users);
-    const allRoles = await db.select().from(roles);
-    const dosenRoleId = allRoles.find(r => r.name === 'Dosen')?.id;
-    const admins = allUsers.filter(u => {
-        return u.email?.includes('admin') || u.email?.includes('lab.ac.id');
-    });
-
-    const bookingData = [];
-    const purposes = [
-        'Penelitian/Riset',
-        'Kegiatan belajar mandiri / kelompok',
-        'Rapat HIMA / organisasi',
-        'Praktikum atau persiapan tugas',
-        'Kehadiran di area laboratorium',
-    ];
-
-    const statuses: Array<'Pending' | 'Disetujui' | 'Ditolak'> = ['Pending', 'Disetujui', 'Ditolak'];
-
-    const organisasiOptions = ['Pribadi', 'HMIF', 'Panitia Fortex', 'Lab Informatika'];
-
-    for (let i = 0; i < SEED_CONFIG.facilities.roomBookingsCount; i++) {
-        const user = getRandomItem(allUsers);
-        const room = getRandomItem(allRooms);
-        const status = getRandomItem(statuses);
-        const validator = status !== 'Pending' ? getRandomItem(admins).id : null;
-
-        const startTime = dateOffset(-10 + i);
-        const endTime = new Date(startTime);
-        endTime.setHours(endTime.getHours() + 2);
-
-        // Only set dosen pembimbing for non-dosen users
-        const isDosen = user.roleId === dosenRoleId;
-        const dosenPembimbing = isDosen ? null : (user.dosenPembimbing || null);
-
-        bookingData.push({
-            userId: user.id,
-            roomId: room.id,
-            validatorId: validator,
-            startTime,
-            endTime,
-            purpose: getRandomItem(purposes),
-            organisasi: getRandomItem(organisasiOptions),
-            jumlahPeserta: 5 + Math.floor(Math.random() * 20),
-            dosenPembimbing,
-            status,
-        });
-    }
-
-    await db.insert(roomBookings).values(bookingData);
-    console.log(`   ✅ Created ${bookingData.length} bookings`);
-    return bookingData;
-}
-
-/**
- * 9. Seed Item Categories
+ * 5. Seed Item Categories
  */
 export async function seedItemCategories() {
     console.log('\n📦 Seeding item categories...');
@@ -481,18 +226,24 @@ export async function seedItemCategories() {
         return existingCategories;
     }
 
-    const categoryData = SAMPLE_DATA.itemCategories.map(name => ({ name }));
-    await db.insert(itemCategories).values(categoryData);
+    const categoryData = [
+        { name: 'Laptop' },
+        { name: 'Proyektor' },
+        { name: 'Kamera' },
+        { name: 'Mikrofon' },
+        { name: 'Peralatan Jaringan' },
+    ];
 
+    await db.insert(itemCategories).values(categoryData);
     console.log(`   ✅ Created ${categoryData.length} categories`);
-    return categoryData;
+    return await db.select().from(itemCategories);
 }
 
 /**
- * 10. Seed Items
+ * 6. Seed Items
  */
 export async function seedItems() {
-    console.log('\n💻 Seeding items...');
+    console.log('\n🔧 Seeding items...');
 
     const existingItems = await db.select().from(items);
     if (existingItems.length > 0) {
@@ -500,209 +251,28 @@ export async function seedItems() {
         return existingItems;
     }
 
-    const categories = await db.select().from(itemCategories);
+    const allCategories = await db.select().from(itemCategories);
     const allRooms = await db.select().from(rooms);
-    const itemData = [];
 
-    for (const category of categories) {
-        for (let i = 1; i <= SEED_CONFIG.facilities.itemsPerCategory; i++) {
-            const room = getRandomItem(allRooms);
-            itemData.push({
-                categoryId: category.id,
-                roomId: room.id,
-                name: `${category.name} ${i}`,
-                description: `${category.name} untuk keperluan praktikum`,
-                qrCode: `QR-${category.name.toUpperCase()}-${String(i).padStart(3, '0')}`,
-                status: getRandomItem(['Tersedia', 'Tersedia', 'Tersedia', 'Maintenance']) as 'Tersedia' | 'Dipinjam' | 'Maintenance',
-            });
-        }
-    }
+    const itemData = [
+        { name: 'Laptop ASUS ROG', categoryId: allCategories[0].id, roomId: allRooms[0].id, qrCode: 'ITEM-LAP-001', status: 'Tersedia' as const },
+        { name: 'Laptop HP EliteBook', categoryId: allCategories[0].id, roomId: allRooms[0].id, qrCode: 'ITEM-LAP-002', status: 'Tersedia' as const },
+        { name: 'Laptop Dell XPS', categoryId: allCategories[0].id, roomId: allRooms[1].id, qrCode: 'ITEM-LAP-003', status: 'Tersedia' as const },
+        { name: 'Proyektor Epson EB-X51', categoryId: allCategories[1].id, roomId: allRooms[3].id, qrCode: 'ITEM-PRO-001', status: 'Tersedia' as const },
+        { name: 'Proyektor BenQ MH733', categoryId: allCategories[1].id, roomId: allRooms[4].id, qrCode: 'ITEM-PRO-002', status: 'Tersedia' as const },
+        { name: 'Kamera Sony A7III', categoryId: allCategories[2].id, roomId: allRooms[3].id, qrCode: 'ITEM-CAM-001', status: 'Tersedia' as const },
+        { name: 'Mikrofon Blue Yeti', categoryId: allCategories[3].id, roomId: allRooms[3].id, qrCode: 'ITEM-MIC-001', status: 'Tersedia' as const },
+        { name: 'Router Cisco 2901', categoryId: allCategories[4].id, roomId: allRooms[2].id, qrCode: 'ITEM-NET-001', status: 'Tersedia' as const },
+        { name: 'Switch Cisco 2960', categoryId: allCategories[4].id, roomId: allRooms[2].id, qrCode: 'ITEM-NET-002', status: 'Tersedia' as const },
+    ];
 
     await db.insert(items).values(itemData);
     console.log(`   ✅ Created ${itemData.length} items`);
-    return itemData;
+    return await db.select().from(items);
 }
 
 /**
- * 11. Seed Item Loans (Enhanced)
- */
-export async function seedItemLoans() {
-    console.log('\n🔄 Seeding item loans...');
-
-    const existingLoans = await db.select().from(itemLoans);
-    if (existingLoans.length > 0) {
-        console.log('   ⏭️  Loans already exist, skipping...');
-        return existingLoans;
-    }
-
-    const allItems = await db.select().from(items);
-    const students = await db.query.users.findMany();
-    const admins = students.filter(u => u.email?.includes('admin'));
-    const lecturers = students.filter(u => u.email?.includes('dosen'));
-
-    // New options for enhanced fields
-    const organisasiOptions = ['Pribadi', 'HMIF', 'Panitia Fortex', 'Ketua Kelompok MK'];
-    const purposeOptions = [
-        'Penelitian/Riset',
-        'Kegiatan belajar mandiri / kelompok',
-        'Rapat HIMA / organisasi',
-        'Praktikum atau persiapan tugas',
-        'Kehadiran di area laboratorium',
-    ];
-    const softwareOptions = [
-        'Web Server', 'Database Server', 'GPU Server', 'Visual Studio Code',
-        'Python', 'Ollama', 'Virtual Box', 'Anydesk'
-    ];
-
-    const loanData = [];
-    const statuses: Array<'Pending' | 'Disetujui' | 'Ditolak' | 'Selesai' | 'Terlambat'> =
-        ['Pending', 'Disetujui', 'Ditolak', 'Selesai', 'Terlambat'];
-
-    for (let i = 0; i < SEED_CONFIG.facilities.itemLoansCount; i++) {
-        const student = getRandomItem(students);
-        const item = getRandomItem(allItems);
-        const status = getRandomItem(statuses);
-        const validator = status !== 'Pending' ? getRandomItem(admins).id : null;
-
-        const requestDate = dateOffset(-20 + i);
-        const returnPlanDate = dateOffset(-20 + i + 7);
-        const actualReturnDate = status === 'Selesai' ? dateOffset(-20 + i + 6) :
-            status === 'Terlambat' ? dateOffset(-20 + i + 10) : null;
-
-        // Generate start/end time for the loan
-        const startHour = 8 + Math.floor(Math.random() * 6);
-        const endHour = startHour + 2 + Math.floor(Math.random() * 4);
-        const startTime = new Date(requestDate);
-        startTime.setHours(startHour, 0, 0, 0);
-        const endTime = new Date(requestDate);
-        endTime.setHours(endHour, 0, 0, 0);
-
-        // Check if item is PC/Server category (simple check by name)
-        const isPCServer = item.name?.toLowerCase().includes('pc') ||
-            item.name?.toLowerCase().includes('server') ||
-            item.name?.toLowerCase().includes('komputer');
-
-        // Random software selection for PC/Server
-        const selectedSoftware = isPCServer
-            ? softwareOptions.slice(0, 2 + Math.floor(Math.random() * 4))
-            : null;
-
-        // Use student's dosenPembimbing (lecturers in seeds don't have dosenPembimbing)
-        const dosenPembimbing = student.dosenPembimbing || null;
-
-        loanData.push({
-            studentId: student.id,
-            itemId: item.id,
-            validatorId: validator,
-            requestDate,
-            returnPlanDate,
-            actualReturnDate,
-            status,
-            // New fields
-            organisasi: getRandomItem(organisasiOptions),
-            startTime,
-            endTime,
-            purpose: getRandomItem(purposeOptions),
-            suratIzin: status === 'Disetujui' && Math.random() > 0.5
-                ? '/uploads/surat-izin-peminjaman/sample-surat.pdf'
-                : null,
-            dosenPembimbing,
-            software: selectedSoftware ? JSON.stringify(selectedSoftware) : null,
-        });
-    }
-
-    await db.insert(itemLoans).values(loanData);
-    console.log(`   ✅ Created ${loanData.length} loans with enhanced fields`);
-    return loanData;
-}
-
-/**
- * 12. Seed Lab Attendance
- */
-export async function seedLabAttendance() {
-    console.log('\n✅ Seeding lab attendance...');
-
-    const existingAttendance = await db.select().from(labAttendance);
-    if (existingAttendance.length > 0) {
-        console.log('   ⏭️  Attendance already exists, skipping...');
-        return existingAttendance;
-    }
-
-    const allUsers = await db.select().from(users);
-    const allRooms = await db.select().from(rooms);
-    const allRoles = await db.select().from(roles);
-    const dosenRoleId = allRoles.find(r => r.name === 'Dosen')?.id;
-    const purposes = [
-        'Penelitian/Riset',
-        'Kegiatan belajar mandiri / kelompok',
-        'Rapat HIMA / organisasi',
-        'Praktikum atau persiapan tugas',
-        'Kehadiran di area laboratorium',
-    ];
-
-    const attendanceData = [];
-
-    for (let i = 0; i < SEED_CONFIG.facilities.labAttendanceCount; i++) {
-        const user = getRandomItem(allUsers);
-        const room = getRandomItem(allRooms);
-        const checkInTime = dateOffset(-15 + Math.floor(i / 2));
-        checkInTime.setHours(8 + Math.floor(Math.random() * 10));
-
-        // Only set dosen penanggung jawab for non-dosen users
-        const isDosen = user.roleId === dosenRoleId;
-        const dosenPenanggungJawab = isDosen ? '-' : (user.dosenPembimbing || 'Dr. Budi Santoso, M.Kom');
-
-        attendanceData.push({
-            userId: user.id,
-            roomId: room.id,
-            purpose: getRandomItem(purposes),
-            dosenPenanggungJawab,
-            checkInTime,
-        });
-    }
-
-    await db.insert(labAttendance).values(attendanceData);
-    console.log(`   ✅ Created ${attendanceData.length} attendance records`);
-    return attendanceData;
-}
-
-/**
- * 13. Seed Governance Docs
- */
-export async function seedGovernanceDocs() {
-    console.log('\n📑 Seeding governance documents...');
-
-    const existingDocs = await db.select().from(governanceDocs);
-    if (existingDocs.length > 0) {
-        console.log('   ⏭️  Governance docs already exist, skipping...');
-        return existingDocs;
-    }
-
-    const admin = await db.query.users.findFirst({
-        where: (users, { eq }) => eq(users.email, 'admin@lab.ac.id')
-    });
-
-    if (!admin) {
-        console.log('   ⚠️  Admin not found, skipping governance docs');
-        return [];
-    }
-
-    const docData = SAMPLE_DATA.governanceDocs.slice(0, SEED_CONFIG.content.governanceDocsCount).map((doc, i) => ({
-        adminId: admin.id,
-        title: doc.title,
-        filePath: `/uploads/governance/${doc.type.toLowerCase().replace(' ', '-')}-${i + 1}.pdf`,
-        coverPath: `/uploads/governance/covers/${doc.type.toLowerCase().replace(' ', '-')}-${i + 1}.jpg`,
-        type: doc.type,
-    }));
-
-    await db.insert(governanceDocs).values(docData);
-    console.log(`   ✅ Created ${docData.length} governance docs`);
-    console.log('   📌 Note: Add PDF files to public/uploads/governance/');
-    return docData;
-}
-
-/**
- * 14. Seed Publications
+ * 7. Seed Publications
  */
 export async function seedPublications() {
     console.log('\n📰 Seeding publications...');
@@ -713,50 +283,74 @@ export async function seedPublications() {
         return existingPubs;
     }
 
-    const allUsers = await db.select().from(users);
-    const uploaders = allUsers.filter(u => u.email?.includes('lab.ac.id'));
-    const students = allUsers.filter(u => u.email?.includes('@student'));
-
-    // Sample keywords
-    const keywordOptions = [
-        ['Machine Learning', 'AI', 'Data Science'],
-        ['Web Development', 'React', 'Next.js'],
-        ['Database', 'SQL', 'Optimization'],
-        ['IoT', 'Embedded Systems', 'Arduino'],
-        ['Computer Vision', 'Image Processing', 'Deep Learning'],
-        ['Mobile App', 'Android', 'Kotlin'],
-        ['Cybersecurity', 'Network Security', 'Encryption'],
-        ['Cloud Computing', 'AWS', 'Microservices'],
+    const pubData = [
+        {
+            title: 'Implementasi Machine Learning untuk Deteksi Fraud',
+            authorName: 'Dr. Ahmad Fauzi',
+            abstract: 'Penelitian ini membahas implementasi algoritma machine learning untuk mendeteksi transaksi fraud.',
+            keywords: JSON.stringify(['Machine Learning', 'Fraud Detection', 'Deep Learning']),
+            filePath: '/uploads/publications/publication-1.pdf',
+            status: 'Published' as const,
+            viewCount: 150,
+            publishDate: new Date(),
+        },
+        {
+            title: 'Analisis Keamanan Jaringan IoT',
+            authorName: 'Dr. Siti Rahayu',
+            abstract: 'Studi komprehensif tentang keamanan perangkat IoT dalam lingkungan smart home.',
+            keywords: JSON.stringify(['IoT', 'Network Security', 'Smart Home']),
+            filePath: '/uploads/publications/publication-2.pdf',
+            status: 'Published' as const,
+            viewCount: 89,
+            publishDate: new Date(),
+        },
+        {
+            title: 'Optimasi Algoritma Kriptografi pada Embedded Systems',
+            authorName: 'Dr. Budi Santoso',
+            abstract: 'Penelitian optimasi algoritma AES untuk implementasi pada sistem embedded.',
+            keywords: JSON.stringify(['Kriptografi', 'Embedded Systems', 'AES']),
+            filePath: '/uploads/publications/publication-3.pdf',
+            status: 'Published' as const,
+            viewCount: 67,
+            publishDate: new Date(),
+        },
     ];
 
-    const pubData = SAMPLE_DATA.publications.slice(0, SEED_CONFIG.content.publicationsCount).map((pub, i) => {
-        const hasFile = Math.random() > 0.3; // 70% have files, 30% external links
-        const uploader = getRandomItem(uploaders);
-        const submitter = students.length > 0 ? getRandomItem(students) : null;
-
-        return {
-            uploaderId: uploader.id,
-            submitterId: submitter?.id || null,
-            authorName: pub.authorName,
-            title: pub.title,
-            abstract: pub.abstract,
-            keywords: JSON.stringify(keywordOptions[i % keywordOptions.length]),
-            filePath: hasFile ? `/uploads/publications/publication-${i + 1}.pdf` : null,
-            link: hasFile ? null : 'https://example.com/external-publication',
-            viewCount: Math.floor(Math.random() * 500),
-            status: 'Published' as const,
-            publishDate: dateOffset(-365 + (i * 30)),
-        };
-    });
-
     await db.insert(publications).values(pubData);
-    console.log(`   ✅ Created ${pubData.length} publications with keywords`);
-    console.log('   📌 Note: Add PDF files to public/uploads/publications/');
-    return pubData;
+    console.log(`   ✅ Created ${pubData.length} publications`);
+    return await db.select().from(publications);
 }
 
 /**
- * 15. Seed Hero Photos
+ * 8. Seed Governance Docs
+ */
+export async function seedGovernanceDocs() {
+    console.log('\n📋 Seeding governance docs...');
+
+    const existingDocs = await db.select().from(governanceDocs);
+    if (existingDocs.length > 0) {
+        console.log('   ⏭️  Governance docs already exist, skipping...');
+        return existingDocs;
+    }
+
+    const adminUser = await db.query.users.findFirst({
+        where: (users, { eq }) => eq(users.email, 'admin@lab.ac.id')
+    });
+
+    const docData = [
+        { type: 'SOP' as const, title: 'SOP Peminjaman Alat Lab', filePath: '/uploads/governance/sop-1.pdf', coverPath: '/uploads/governance/covers/sop-1.png', adminId: adminUser!.id },
+        { type: 'SOP' as const, title: 'SOP Penggunaan Ruangan', filePath: '/uploads/governance/sop-2.pdf', coverPath: '/uploads/governance/covers/sop-2.png', adminId: adminUser!.id },
+        { type: 'LPJ Bulanan' as const, title: 'LPJ Januari 2024', filePath: '/uploads/governance/lpj-bulanan-3.pdf', coverPath: '/uploads/governance/covers/lpj-bulanan-3.png', adminId: adminUser!.id },
+        { type: 'LPJ Bulanan' as const, title: 'LPJ Februari 2024', filePath: '/uploads/governance/lpj-bulanan-4.pdf', coverPath: '/uploads/governance/covers/lpj-bulanan-4.png', adminId: adminUser!.id },
+    ];
+
+    await db.insert(governanceDocs).values(docData);
+    console.log(`   ✅ Created ${docData.length} governance docs`);
+    return await db.select().from(governanceDocs);
+}
+
+/**
+ * 9. Seed Hero Photos
  */
 export async function seedHeroPhotos() {
     console.log('\n🖼️  Seeding hero photos...');
@@ -767,69 +361,55 @@ export async function seedHeroPhotos() {
         return existingPhotos;
     }
 
-    const photoData = SAMPLE_DATA.heroPhotos.slice(0, SEED_CONFIG.content.heroPhotosCount).map((photo, i) => ({
-        title: photo.title,
-        description: photo.description,
-        imageUrl: `/uploads/photos/hero-${i + 1}.jpg`,
-        link: Math.random() > 0.5 ? 'https://example.com/event-details' : null,
-    }));
+    const photoData = [
+        {
+            title: 'Praktikum Jaringan Komputer',
+            description: 'Mahasiswa sedang melakukan praktikum konfigurasi jaringan di Lab Jaringan.',
+            imageUrl: '/uploads/photos/hero-1.jpg',
+            link: null,
+        },
+        {
+            title: 'Workshop Cloud Computing',
+            description: 'Kegiatan workshop cloud computing bersama praktisi industri.',
+            imageUrl: '/uploads/photos/hero-2.jpg',
+            link: null,
+        },
+        {
+            title: 'Seminar Keamanan Siber',
+            description: 'Seminar nasional tentang keamanan siber dan ethical hacking.',
+            imageUrl: '/uploads/photos/hero-3.jpg',
+            link: null,
+        },
+    ];
 
     await db.insert(heroPhotos).values(photoData);
     console.log(`   ✅ Created ${photoData.length} hero photos`);
-    console.log('   📌 Note: Add image files to public/uploads/photos/');
-    return photoData;
+    return await db.select().from(heroPhotos);
 }
 
 /**
- * Run all comprehensive seeds
+ * Main Seed Function
  */
-export async function runComprehensiveSeeds() {
-    console.log('🚀 Starting comprehensive database seeding (SIMPLIFIED SCHEMA)...\n');
-    console.log('═'.repeat(50));
+export async function runComprehensiveSeed() {
+    console.log('🌱 Starting comprehensive database seed...\n');
+    console.log('='.repeat(50));
 
     try {
         await seedRoles();
         await seedUsers();
-        // NOTE: seedCourses and seedModules removed - data now embedded in classes/assignments
-        await seedClasses();
-        await seedClassEnrollments();
-        await seedAssignments(); // Previously seedModules + seedPracticalSessions
-        await seedPracticalReports();
+        await seedPracticumModules();
         await seedRooms();
-        await seedRoomBookings();
         await seedItemCategories();
         await seedItems();
-        await seedItemLoans();
-        await seedLabAttendance();
-        await seedGovernanceDocs();
         await seedPublications();
+        await seedGovernanceDocs();
         await seedHeroPhotos();
 
-        console.log('\n═'.repeat(50));
-        console.log('\n✨ All seeds completed successfully!');
-        console.log('\n📋 Summary (Simplified Schema):');
-        console.log('   - Roles: ✅');
-        console.log('   - Users: ✅');
-        console.log('   - Classes (with embedded course info): ✅');
-        console.log('   - Class Enrollments: ✅');
-        console.log('   - Assignments (combines modules + sessions): ✅');
-        console.log('   - Practical Reports: ✅');
-        console.log('   - Facilities: ✅');
-        console.log('   - Content: ✅');
-        console.log('\n🔐 Test Credentials:');
-        console.log('   Admin: admin@lab.ac.id / admin');
-        console.log('   Lecturer: budi.santoso@lab.ac.id / dosen');
-        console.log('   Student: andi.wijaya@student.ac.id / mahasiswa');
-        console.log('\n🔑 Enrollment Keys:');
-        console.log('   Classes have auto-generated enrollment keys.');
-        console.log('   Students can self-enroll by entering the key.');
-        console.log('\n📌 Next Steps:');
-        console.log('   1. Add actual files to public/uploads/ folders');
-        console.log('   2. Files should match the naming patterns used in seeds');
-        console.log('   3. Check the database to verify all data is correct\n');
-
+        console.log('\n' + '='.repeat(50));
+        console.log('✅ Comprehensive seed completed successfully!');
     } catch (error) {
-        console.error('\n❌ Error during seeding:', error);
+        console.error('\n❌ Seed failed:', error);
         throw error;
     }
 }
+

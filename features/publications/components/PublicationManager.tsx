@@ -540,60 +540,84 @@ export default function PublicationManager({ publications, pendingSubmissions, u
                         <p className="text-xs text-gray-500 mt-2">{filteredPublications.length} dari {publications.length} publikasi</p>
                     </div>
 
-                    {/* Publications List */}
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-                        {filteredPublications.length === 0 ? (
-                            <div className="p-8 text-center">
-                                <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                                <p className="text-gray-500">Tidak ada publikasi yang sesuai filter.</p>
-                            </div>
-                        ) : (
-                            <div className="divide-y divide-gray-100">
-                                {filteredPublications.map((pub) => (
-                                    <div key={pub.id} className="p-4 hover:bg-gray-50">
-                                        <div className="flex items-start justify-between gap-4">
-                                            <div className="flex-1">
-                                                <div className="flex items-center gap-2">
-                                                    <h3 className="font-medium text-gray-900">{pub.title}</h3>
-                                                    <span className={`text-xs px-2 py-0.5 rounded ${pub.status === 'Published' ? 'bg-green-100 text-green-700' :
+                    {/* Publications Grid */}
+                    {filteredPublications.length === 0 ? (
+                        <div className="text-center py-12 text-gray-500">
+                            <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                            <p>Tidak ada publikasi yang sesuai filter.</p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {filteredPublications.map((pub) => {
+                                const keywords = pub.keywords ? (() => {
+                                    try { return JSON.parse(pub.keywords); } catch { return []; }
+                                })() : [];
+
+                                return (
+                                    <div key={pub.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow">
+                                        <div className="flex items-start justify-between mb-3">
+                                            <div className="flex items-center gap-2">
+                                                <BookOpen className="w-5 h-5 text-[#0F4C81]" />
+                                                <span className={`text-xs px-2 py-0.5 rounded ${pub.status === 'Published' ? 'bg-green-100 text-green-700' :
                                                         pub.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' :
                                                             'bg-red-100 text-red-700'
-                                                        }`}>
-                                                        {pub.status}
-                                                    </span>
-                                                </div>
-                                                <p className="text-sm text-gray-500 mt-1">{pub.authorName}</p>
-                                                <p className="text-xs text-gray-400 mt-1">
-                                                    {pub.viewCount} views • {pub.publishDate ? new Date(pub.publishDate).toLocaleDateString('id-ID') : 'Belum dipublikasikan'}
-                                                </p>
+                                                    }`}>
+                                                    {pub.status}
+                                                </span>
                                             </div>
-                                            <div className="flex items-center gap-2">
-                                                {(pub.link || pub.filePath) && (
-                                                    <a href={pub.link || pub.filePath || '#'} target="_blank" rel="noopener noreferrer" className="text-[#0F4C81] hover:text-blue-700">
-                                                        <ExternalLink className="w-5 h-5" />
-                                                    </a>
-                                                )}
+                                            <div className="flex gap-1">
                                                 <button
                                                     onClick={() => setEditingPublication(pub)}
-                                                    className="text-blue-500 hover:text-blue-700 p-2 hover:bg-blue-50 rounded-lg"
+                                                    className="text-blue-500 hover:text-blue-700 p-1.5 hover:bg-blue-50 rounded-lg transition-colors"
                                                     title="Edit"
                                                 >
                                                     <Edit className="w-4 h-4" />
                                                 </button>
                                                 <button
                                                     onClick={() => handleDelete(pub.id)}
-                                                    className="text-red-500 hover:text-red-700 p-2 hover:bg-red-50 rounded-lg"
+                                                    className="text-red-500 hover:text-red-700 p-1.5 hover:bg-red-50 rounded-lg transition-colors"
                                                     title="Hapus"
                                                 >
                                                     <Trash2 className="w-4 h-4" />
                                                 </button>
                                             </div>
                                         </div>
+                                        <h3 className="font-semibold text-gray-900 line-clamp-2 mb-1">{pub.title}</h3>
+                                        <p className="text-sm text-gray-600 mb-2">{pub.authorName}</p>
+                                        {pub.abstract && (
+                                            <p className="text-sm text-gray-500 line-clamp-2 mb-3">{pub.abstract}</p>
+                                        )}
+                                        {keywords.length > 0 && (
+                                            <div className="flex flex-wrap gap-1 mb-3">
+                                                {keywords.slice(0, 3).map((kw: string, idx: number) => (
+                                                    <span key={idx} className="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700">
+                                                        {kw}
+                                                    </span>
+                                                ))}
+                                                {keywords.length > 3 && (
+                                                    <span className="text-xs text-gray-400">+{keywords.length - 3}</span>
+                                                )}
+                                            </div>
+                                        )}
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-xs text-gray-400">{pub.viewCount} views</span>
+                                            {(pub.link || pub.filePath) && (
+                                                <a
+                                                    href={pub.link || pub.filePath || '#'}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="inline-flex items-center gap-1 text-sm text-[#0F4C81] hover:underline"
+                                                >
+                                                    <ExternalLink className="w-3 h-3" />
+                                                    Lihat
+                                                </a>
+                                            )}
+                                        </div>
                                     </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
                 </div>
             )}
 

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { FileText, Users, FileCheck, Image as ImageIcon } from 'lucide-react';
-import DocumentList from '@/features/academic/components/DocumentList';
+import DocumentList from './DocumentList';
 import { deleteGovernanceDoc } from '@/features/governance/actions';
 import GovernanceUploadForm from './GovernanceUploadForm';
 import UserList from './UserList';
@@ -111,7 +111,6 @@ export default function GovernanceManager({ sops, lpjs, users, roles, lecturers,
                         />
                         <DocumentList
                             documents={sops}
-                            canDelete={true}
                             onEdit={handleEdit}
                             onDelete={deleteGovernanceDoc}
                         />
@@ -128,7 +127,6 @@ export default function GovernanceManager({ sops, lpjs, users, roles, lecturers,
                         />
                         <DocumentList
                             documents={lpjs}
-                            canDelete={true}
                             onEdit={handleEdit}
                             onDelete={deleteGovernanceDoc}
                         />
