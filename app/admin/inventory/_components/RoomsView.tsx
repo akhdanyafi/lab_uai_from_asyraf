@@ -9,6 +9,7 @@ interface Room {
     name: string;
     location: string;
     capacity: number;
+    status: 'Tersedia' | 'Maintenance' | null;
 }
 
 interface RoomsViewProps {
@@ -67,6 +68,7 @@ export default function RoomsView({ rooms }: RoomsViewProps) {
                             <th className="px-6 py-4 font-semibold text-gray-700">Nama Ruangan</th>
                             <th className="px-6 py-4 font-semibold text-gray-700">Lokasi</th>
                             <th className="px-6 py-4 font-semibold text-gray-700">Kapasitas</th>
+                            <th className="px-6 py-4 font-semibold text-gray-700">Status</th>
                             <th className="px-6 py-4 font-semibold text-gray-700 text-right">Aksi</th>
                         </tr>
                     </thead>
@@ -79,6 +81,24 @@ export default function RoomsView({ rooms }: RoomsViewProps) {
                                     {room.location}
                                 </td>
                                 <td className="px-6 py-4 text-gray-600">{room.capacity} Orang</td>
+                                <td className="px-6 py-4">
+                                    <select
+                                        defaultValue={room.status || 'Tersedia'}
+                                        onChange={async (e) => {
+                                            const { updateRoomStatus } = await import('@/features/inventory/actions');
+                                            await updateRoomStatus(
+                                                room.id,
+                                                e.target.value as 'Tersedia' | 'Maintenance'
+                                            );
+                                        }}
+                                        className={`text-xs font-medium px-2 py-1 rounded border-0 cursor-pointer ${room.status === 'Tersedia' ? 'bg-green-50 text-green-700' :
+                                                'bg-gray-50 text-gray-700'
+                                            }`}
+                                    >
+                                        <option value="Tersedia">Tersedia</option>
+                                        <option value="Maintenance">Maintenance</option>
+                                    </select>
+                                </td>
                                 <td className="px-6 py-4 text-right">
                                     <form action={async () => {
                                         if (confirm('Apakah Anda yakin ingin menghapus ruangan ini?')) {
@@ -94,7 +114,7 @@ export default function RoomsView({ rooms }: RoomsViewProps) {
                         ))}
                         {rooms.length === 0 && (
                             <tr>
-                                <td colSpan={4} className="px-6 py-12 text-center text-gray-500">
+                                <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
                                     Belum ada data ruangan. Silahkan tambahkan ruangan baru.
                                 </td>
                             </tr>

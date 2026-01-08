@@ -76,7 +76,11 @@ export async function checkIn(
         }
 
         // Use provided dosen or fallback to user's dosenPembimbing
-        const finalDosenPenanggungJawab = dosenPenanggungJawab?.trim() || user.dosenPembimbing || '-';
+        // If user is a lecturer (Dosen), set to null since they don't have a supervisor
+        let finalDosenPenanggungJawab = '-';
+        if (user.roleName !== 'Dosen') {
+            finalDosenPenanggungJawab = dosenPenanggungJawab?.trim() || user.dosenPembimbing || '-';
+        }
 
         // Create attendance record
         await createAttendance(user.id, roomId, purpose.trim(), finalDosenPenanggungJawab);

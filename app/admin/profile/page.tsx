@@ -40,7 +40,7 @@ export default async function AdminProfilePage() {
                 user={{
                     fullName: dbUser.user.fullName,
                     identifier: dbUser.user.identifier,
-                    email: dbUser.user.email,
+                    email: dbUser.user.email || '',
                     roleName: dbUser.roleName || session.user.role,
                     batch: dbUser.user.batch || undefined,
                     studyType: dbUser.user.studyType || undefined,

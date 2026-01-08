@@ -24,6 +24,24 @@ export async function deleteRoom(id: number) {
     revalidatePath('/admin/inventory');
 }
 
+/**
+ * Update room status only (for quick status change)
+ */
+export async function updateRoomStatus(
+    id: number,
+    status: 'Tersedia' | 'Maintenance'
+) {
+    const { db } = await import('@/db');
+    const { rooms } = await import('@/db/schema');
+    const { eq } = await import('drizzle-orm');
+
+    await db.update(rooms)
+        .set({ status })
+        .where(eq(rooms.id, id));
+
+    revalidatePath('/admin/inventory');
+}
+
 // --- Categories ---
 
 export async function getCategories() {

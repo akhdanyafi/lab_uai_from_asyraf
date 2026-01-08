@@ -3,8 +3,9 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { register } from '@/features/users/register';
+import { checkPreRegisteredUser } from '@/features/users/enrollment';
 import Link from 'next/link';
-import { Loader2, Eye, EyeOff } from 'lucide-react';
+import { Loader2, Eye, EyeOff, CheckCircle } from 'lucide-react';
 
 interface Lecturer {
     id: number;
@@ -16,12 +17,59 @@ interface RegisterFormProps {
     lecturers: Lecturer[];
 }
 
+interface PreRegisteredData {
+    fullName: string;
+    batch: number | null;
+    studyType: 'Reguler' | 'Hybrid' | null;
+    programStudi: string | null;
+    dosenPembimbing: string | null;
+}
+
 export default function RegisterForm({ lecturers }: RegisterFormProps) {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
+    const [isCheckingNIM, setIsCheckingNIM] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [preRegistered, setPreRegistered] = useState<PreRegisteredData | null>(null);
+
+    // State-controlled form values for auto-fill
+    const [fullName, setFullName] = useState('');
+    const [batch, setBatch] = useState('');
+    const [studyType, setStudyType] = useState('');
+    const [programStudi, setProgramStudi] = useState('Informatika');
+    const [dosenPembimbing, setDosenPembimbing] = useState('');
+
+    // Check NIM when user finishes typing
+    const handleNIMChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const nim = e.target.value.trim();
+
+        if (nim.length < 5) {
+            setPreRegistered(null);
+            return;
+        }
+
+        setIsCheckingNIM(true);
+        try {
+            const data = await checkPreRegisteredUser(nim);
+            if (data) {
+                setPreRegistered(data);
+                // Auto-fill form fields using state
+                setFullName(data.fullName);
+                if (data.batch) setBatch(data.batch.toString());
+                if (data.studyType) setStudyType(data.studyType);
+                if (data.programStudi) setProgramStudi(data.programStudi);
+                if (data.dosenPembimbing) setDosenPembimbing(data.dosenPembimbing);
+            } else {
+                setPreRegistered(null);
+            }
+        } catch (err) {
+            console.error('Error checking NIM:', err);
+        } finally {
+            setIsCheckingNIM(false);
+        }
+    };
 
     async function handleSubmit(formData: FormData) {
         setIsLoading(true);
@@ -51,27 +99,50 @@ export default function RegisterForm({ lecturers }: RegisterFormProps) {
                     </div>
                 )}
 
+                {preRegistered && (
+                    <div className="bg-green-50 text-green-700 p-3 rounded-lg text-sm mb-6 flex items-center gap-2">
+                        <CheckCircle className="w-4 h-4" />
+                        <span>Data ditemukan! Form sudah terisi otomatis.</span>
+                    </div>
+                )}
+
                 <form action={handleSubmit} className="space-y-4">
+                    {/* NIM - First field to enable auto-fill */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">NIM</label>
+                        <div className="relative">
+                            <input
+                                name="identifier"
+                                type="text"
+                                required
+                                onChange={handleNIMChange}
+                                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#0F4C81] focus:border-transparent outline-none transition-all"
+                                placeholder="Contoh: 0102521001"
+                            />
+                            {isCheckingNIM && (
+                                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                    <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+                                </div>
+                            )}
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">Masukkan NIM untuk mengecek data pre-registrasi</p>
+                    </div>
+
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
                         <input
                             name="fullName"
                             type="text"
                             required
-                            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#0F4C81] focus:border-transparent outline-none transition-all"
+                            value={fullName}
+                            onChange={(e) => !preRegistered && setFullName(e.target.value)}
+                            readOnly={!!preRegistered}
+                            className={`w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#0F4C81] focus:border-transparent outline-none transition-all ${preRegistered ? 'bg-gray-50 text-gray-600' : ''}`}
                             placeholder="Contoh: Budi Santoso"
                         />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">NIM</label>
-                        <input
-                            name="identifier"
-                            type="text"
-                            required
-                            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#0F4C81] focus:border-transparent outline-none transition-all"
-                            placeholder="Contoh: 0102521001"
-                        />
+                        {preRegistered && (
+                            <p className="text-xs text-green-600 mt-1">Nama sesuai data pre-registrasi</p>
+                        )}
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
@@ -80,11 +151,13 @@ export default function RegisterForm({ lecturers }: RegisterFormProps) {
                             <select
                                 name="batch"
                                 required
+                                value={batch}
+                                onChange={(e) => setBatch(e.target.value)}
                                 className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#0F4C81] focus:border-transparent outline-none transition-all bg-white"
                             >
                                 <option value="">Pilih Tahun</option>
-                                {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(year => (
-                                    <option key={year} value={year}>{year}</option>
+                                {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i).map(year => (
+                                    <option key={year} value={String(year)}>{year}</option>
                                 ))}
                             </select>
                         </div>
@@ -93,6 +166,8 @@ export default function RegisterForm({ lecturers }: RegisterFormProps) {
                             <select
                                 name="studyType"
                                 required
+                                value={studyType}
+                                onChange={(e) => setStudyType(e.target.value)}
                                 className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#0F4C81] focus:border-transparent outline-none transition-all bg-white"
                             >
                                 <option value="">Pilih Tipe</option>
@@ -108,8 +183,9 @@ export default function RegisterForm({ lecturers }: RegisterFormProps) {
                             <input
                                 name="programStudi"
                                 type="text"
-                                defaultValue="Informatika"
                                 required
+                                value={programStudi}
+                                onChange={(e) => setProgramStudi(e.target.value)}
                                 className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#0F4C81] focus:border-transparent outline-none transition-all"
                                 placeholder="Contoh: Informatika"
                             />
@@ -119,6 +195,8 @@ export default function RegisterForm({ lecturers }: RegisterFormProps) {
                             <select
                                 name="dosenPembimbing"
                                 required
+                                value={dosenPembimbing}
+                                onChange={(e) => setDosenPembimbing(e.target.value)}
                                 className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#0F4C81] focus:border-transparent outline-none transition-all bg-white"
                             >
                                 <option value="">Pilih Dosen</option>

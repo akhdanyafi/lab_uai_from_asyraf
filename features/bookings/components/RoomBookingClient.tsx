@@ -267,6 +267,7 @@ export default function RoomBookingClient({ rooms, calendarBookings, userId }: R
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Tanggal & Waktu</label>
                                     <div className="space-y-3 p-4 bg-gray-50 rounded-lg border border-gray-100">
                                         <input
+                                            name="date"
                                             type="date"
                                             required
                                             value={selectedDate}
@@ -276,6 +277,7 @@ export default function RoomBookingClient({ rooms, calendarBookings, userId }: R
                                         />
                                         <div className="flex gap-2 items-center">
                                             <input
+                                                name="startTime"
                                                 type="time"
                                                 required
                                                 value={startTime}
@@ -284,6 +286,7 @@ export default function RoomBookingClient({ rooms, calendarBookings, userId }: R
                                             />
                                             <span className="text-gray-400">-</span>
                                             <input
+                                                name="endTime"
                                                 type="time"
                                                 required
                                                 value={endTime}

@@ -84,6 +84,9 @@ export async function updateUserProfile(data: {
     const { user, roleName } = userRecord;
 
     // Verify current password
+    if (!user.passwordHash) {
+        throw new Error('Akun ini belum memiliki password. Silakan daftar ulang.');
+    }
     const passwordMatch = await UserService.verifyPassword(data.currentPassword, user.passwordHash);
     if (!passwordMatch) {
         throw new Error('Password saat ini salah');

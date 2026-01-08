@@ -1,9 +1,9 @@
 import { db } from '@/db';
-import { labAttendance, users, rooms } from '@/db/schema';
+import { labAttendance, users, rooms, roles } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 
 /**
- * Find user by NIM (identifier) with dosenPembimbing for fallback
+ * Find user by NIM (identifier) with dosenPembimbing and role for fallback logic
  */
 export async function findUserByNim(nim: string) {
     const result = await db.select({
@@ -11,8 +11,10 @@ export async function findUserByNim(nim: string) {
         fullName: users.fullName,
         identifier: users.identifier,
         dosenPembimbing: users.dosenPembimbing,
+        roleName: roles.name,
     })
         .from(users)
+        .innerJoin(roles, eq(users.roleId, roles.id))
         .where(eq(users.identifier, nim))
         .limit(1);
 

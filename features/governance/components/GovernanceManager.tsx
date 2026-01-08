@@ -7,6 +7,8 @@ import { deleteGovernanceDoc } from '@/features/governance/actions';
 import GovernanceUploadForm from './GovernanceUploadForm';
 import UserList from './UserList';
 import UserForm from './UserForm';
+import BulkEnrollment from './BulkEnrollment';
+import DataExport from './DataExport';
 
 interface GovernanceManagerProps {
     sops: any[];
@@ -110,6 +112,7 @@ export default function GovernanceManager({ sops, lpjs, users, roles, lecturers,
                             onEdit={handleEdit}
                             onDelete={deleteGovernanceDoc}
                         />
+                        <DataExport />
                     </>
                 )}
 
@@ -126,6 +129,7 @@ export default function GovernanceManager({ sops, lpjs, users, roles, lecturers,
                                         Tambah User Baru
                                     </button>
                                 </div>
+                                <BulkEnrollment />
                                 <UserList users={users} roles={roles} lecturers={lecturers} />
                             </>
                         ) : (

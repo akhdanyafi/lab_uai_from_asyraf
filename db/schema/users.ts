@@ -13,9 +13,9 @@ export const users = mysqlTable('users', {
     roleId: int('role_id').notNull().references(() => roles.id, { onDelete: 'restrict' }),
     fullName: varchar('full_name', { length: 255 }).notNull(),
     identifier: varchar('identifier', { length: 50 }).notNull().unique(), // NIM or NIDN
-    email: varchar('email', { length: 255 }).notNull().unique(),
-    passwordHash: varchar('password_hash', { length: 255 }).notNull(),
-    status: mysqlEnum('status', ['Active', 'Pending', 'Rejected']).default('Pending'),
+    email: varchar('email', { length: 255 }), // Nullable for pre-registered users
+    passwordHash: varchar('password_hash', { length: 255 }), // Nullable for pre-registered users
+    status: mysqlEnum('status', ['Active', 'Pending', 'Rejected', 'Pre-registered']).default('Pending'),
     // New fields for bulk enrollment
     batch: int('batch'), // e.g. 2022
     studyType: mysqlEnum('study_type', ['Reguler', 'Hybrid']).default('Reguler'),

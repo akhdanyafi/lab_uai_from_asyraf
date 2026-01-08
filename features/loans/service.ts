@@ -4,7 +4,7 @@
  */
 
 import { db } from '@/db';
-import { itemLoans, items, itemCategories, rooms, users } from '@/db/schema';
+import { itemLoans, items, itemCategories, rooms, users, roles } from '@/db/schema';
 import { eq, and, desc, sql } from 'drizzle-orm';
 
 export interface CreateLoanInput {
@@ -59,10 +59,22 @@ export class LoanService {
 
     /**
      * Create a new loan request with auto-validation if surat izin provided
+     * Lecturers (Dosen) will have null dosen pembimbing
      */
     static async create(data: CreateLoanInput) {
         // Auto-validation: if surat izin provided, set status to Disetujui
         const status = data.suratIzin ? 'Disetujui' : 'Pending';
+
+        // Get user's role to check if lecturer
+        const user = await db
+            .select({ roleName: roles.name })
+            .from(users)
+            .innerJoin(roles, eq(users.roleId, roles.id))
+            .where(eq(users.id, data.studentId))
+            .limit(1);
+
+        // If user is a lecturer (Dosen), don't set dosen pembimbing
+        const finalDosenPembimbing = user[0]?.roleName === 'Dosen' ? null : (data.dosenPembimbing || null);
 
         await db.insert(itemLoans).values({
             studentId: data.studentId,
@@ -74,7 +86,7 @@ export class LoanService {
             endTime: data.endTime || null,
             purpose: data.purpose || null,
             suratIzin: data.suratIzin || null,
-            dosenPembimbing: data.dosenPembimbing || null,
+            dosenPembimbing: finalDosenPembimbing,
             software: data.software ? JSON.stringify(data.software) : null,
         });
 

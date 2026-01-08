@@ -4,7 +4,7 @@
  */
 
 import { db } from '@/db';
-import { roomBookings, rooms, users } from '@/db/schema';
+import { roomBookings, rooms, users, roles } from '@/db/schema';
 import { eq, and, desc, gte, lte } from 'drizzle-orm';
 
 export interface CreateBookingInput {
@@ -53,21 +53,27 @@ export class BookingService {
     /**
      * Create a new room booking request
      * Auto-validates if suratPermohonan is provided
-     * Uses user's dosenPembimbing as fallback if not provided
+     * Uses user's dosenPembimbing as fallback if not provided (only for students)
      */
     static async create(data: CreateBookingInput) {
         // Auto-validate if surat permohonan is provided
         const status = data.suratPermohonan ? 'Disetujui' : 'Pending';
 
-        // Get user's dosenPembimbing as fallback
-        let finalDosenPembimbing: string | undefined = data.dosenPembimbing;
-        if (!finalDosenPembimbing) {
-            const user = await db
-                .select({ dosenPembimbing: users.dosenPembimbing })
-                .from(users)
-                .where(eq(users.id, data.userId))
-                .limit(1);
-            finalDosenPembimbing = user[0]?.dosenPembimbing || undefined;
+        // Get user's dosenPembimbing and role
+        const user = await db
+            .select({
+                dosenPembimbing: users.dosenPembimbing,
+                roleName: roles.name,
+            })
+            .from(users)
+            .innerJoin(roles, eq(users.roleId, roles.id))
+            .where(eq(users.id, data.userId))
+            .limit(1);
+
+        // If user is a lecturer (Dosen), don't set dosen pembimbing
+        let finalDosenPembimbing: string | undefined = undefined;
+        if (user[0]?.roleName !== 'Dosen') {
+            finalDosenPembimbing = data.dosenPembimbing || user[0]?.dosenPembimbing || undefined;
         }
 
         await db.insert(roomBookings).values({

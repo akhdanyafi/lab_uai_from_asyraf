@@ -158,6 +158,33 @@ export async function seedUsers() {
     }
     console.log(`   ✅ Created/verified ${studentData.length} students (password: mahasiswa)`);
 
+    // Seed Pre-registered Students (no account yet - for testing bulk enrollment flow)
+    const preRegisteredData = [
+        { fullName: 'Dewi Lestari', identifier: '0102523001', batch: 2023, studyType: 'Reguler' as const },
+        { fullName: 'Agus Setiawan', identifier: '0102523002', batch: 2023, studyType: 'Reguler' as const },
+        { fullName: 'Siti Rahayu', identifier: '0102523003', batch: 2023, studyType: 'Hybrid' as const },
+    ];
+
+    for (const student of preRegisteredData) {
+        const existing = await db.query.users.findFirst({
+            where: (users, { eq }) => eq(users.identifier, student.identifier)
+        });
+        if (!existing) {
+            await db.insert(users).values({
+                fullName: student.fullName,
+                identifier: student.identifier,
+                roleId: mahasiswaRole.id,
+                status: 'Pre-registered',
+                batch: student.batch,
+                studyType: student.studyType,
+                programStudi: 'Informatika',
+                dosenPembimbing: getRandomItem(allLecturers).fullName,
+                // No email and passwordHash for pre-registered users
+            });
+        }
+    }
+    console.log(`   ✅ Created/verified ${preRegisteredData.length} pre-registered students (no account yet)`);
+
     return await db.select().from(users);
 }
 
@@ -390,8 +417,10 @@ export async function seedRoomBookings() {
 
     const allRooms = await db.select().from(rooms);
     const allUsers = await db.select().from(users);
+    const allRoles = await db.select().from(roles);
+    const dosenRoleId = allRoles.find(r => r.name === 'Dosen')?.id;
     const admins = allUsers.filter(u => {
-        return u.email.includes('admin') || u.email.includes('lab.ac.id');
+        return u.email?.includes('admin') || u.email?.includes('lab.ac.id');
     });
 
     const bookingData = [];
@@ -417,6 +446,10 @@ export async function seedRoomBookings() {
         const endTime = new Date(startTime);
         endTime.setHours(endTime.getHours() + 2);
 
+        // Only set dosen pembimbing for non-dosen users
+        const isDosen = user.roleId === dosenRoleId;
+        const dosenPembimbing = isDosen ? null : (user.dosenPembimbing || null);
+
         bookingData.push({
             userId: user.id,
             roomId: room.id,
@@ -426,7 +459,7 @@ export async function seedRoomBookings() {
             purpose: getRandomItem(purposes),
             organisasi: getRandomItem(organisasiOptions),
             jumlahPeserta: 5 + Math.floor(Math.random() * 20),
-            dosenPembimbing: user.dosenPembimbing || null,
+            dosenPembimbing,
             status,
         });
     }
@@ -504,8 +537,8 @@ export async function seedItemLoans() {
 
     const allItems = await db.select().from(items);
     const students = await db.query.users.findMany();
-    const admins = students.filter(u => u.email.includes('admin'));
-    const lecturers = students.filter(u => u.email.includes('dosen'));
+    const admins = students.filter(u => u.email?.includes('admin'));
+    const lecturers = students.filter(u => u.email?.includes('dosen'));
 
     // New options for enhanced fields
     const organisasiOptions = ['Pribadi', 'HMIF', 'Panitia Fortex', 'Ketua Kelompok MK'];
@@ -530,7 +563,6 @@ export async function seedItemLoans() {
         const item = getRandomItem(allItems);
         const status = getRandomItem(statuses);
         const validator = status !== 'Pending' ? getRandomItem(admins).id : null;
-        const dosen = lecturers.length > 0 ? getRandomItem(lecturers) : null;
 
         const requestDate = dateOffset(-20 + i);
         const returnPlanDate = dateOffset(-20 + i + 7);
@@ -555,6 +587,9 @@ export async function seedItemLoans() {
             ? softwareOptions.slice(0, 2 + Math.floor(Math.random() * 4))
             : null;
 
+        // Use student's dosenPembimbing (lecturers in seeds don't have dosenPembimbing)
+        const dosenPembimbing = student.dosenPembimbing || null;
+
         loanData.push({
             studentId: student.id,
             itemId: item.id,
@@ -571,7 +606,7 @@ export async function seedItemLoans() {
             suratIzin: status === 'Disetujui' && Math.random() > 0.5
                 ? '/uploads/surat-izin-peminjaman/sample-surat.pdf'
                 : null,
-            dosenPembimbing: dosen ? dosen.fullName : null,
+            dosenPembimbing,
             software: selectedSoftware ? JSON.stringify(selectedSoftware) : null,
         });
     }
@@ -595,6 +630,8 @@ export async function seedLabAttendance() {
 
     const allUsers = await db.select().from(users);
     const allRooms = await db.select().from(rooms);
+    const allRoles = await db.select().from(roles);
+    const dosenRoleId = allRoles.find(r => r.name === 'Dosen')?.id;
     const purposes = [
         'Penelitian/Riset',
         'Kegiatan belajar mandiri / kelompok',
@@ -611,8 +648,9 @@ export async function seedLabAttendance() {
         const checkInTime = dateOffset(-15 + Math.floor(i / 2));
         checkInTime.setHours(8 + Math.floor(Math.random() * 10));
 
-        // Use user's dosenPembimbing or a default name
-        const dosenPenanggungJawab = user.dosenPembimbing || 'Dr. Budi Santoso, M.Kom';
+        // Only set dosen penanggung jawab for non-dosen users
+        const isDosen = user.roleId === dosenRoleId;
+        const dosenPenanggungJawab = isDosen ? '-' : (user.dosenPembimbing || 'Dr. Budi Santoso, M.Kom');
 
         attendanceData.push({
             userId: user.id,
@@ -676,7 +714,7 @@ export async function seedPublications() {
     }
 
     const allUsers = await db.select().from(users);
-    const uploaders = allUsers.filter(u => u.email.includes('lab.ac.id'));
+    const uploaders = allUsers.filter(u => u.email?.includes('lab.ac.id'));
 
     const pubData = SAMPLE_DATA.publications.slice(0, SEED_CONFIG.content.publicationsCount).map((pub, i) => {
         const hasFile = Math.random() > 0.3; // 70% have files, 30% external links
