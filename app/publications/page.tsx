@@ -1,7 +1,8 @@
-import { getPublicPublications, getPublicationKeywords } from '@/features/publications/actions';
+import { getPublicPublications, getPublicationKeywords, getPublicationLikeCounts, getUserLikedPublicationIds } from '@/features/publications/actions';
 import { getSession } from '@/lib/auth';
-import { BookOpen, ExternalLink, User, Search, Tag, LogIn, ArrowLeft } from 'lucide-react';
+import { BookOpen, ExternalLink, User, Search, Tag, LogIn, ArrowLeft, Eye } from 'lucide-react';
 import PublicationLink from '@/features/publications/components/PublicationLink';
+import LikeButton from '@/features/publications/components/LikeButton';
 import Link from 'next/link';
 
 interface SearchParams {
@@ -21,6 +22,11 @@ export default async function PublicationsPage({
         keyword: params.keyword,
     });
     const keywords = await getPublicationKeywords();
+
+    // Get like data
+    const publicationIds = publications.map(p => p.id);
+    const likeCounts = await getPublicationLikeCounts(publicationIds);
+    const userLikedIds = session ? await getUserLikedPublicationIds(session.user.id, publicationIds) : [];
 
     return (
         <div className="min-h-screen bg-gray-50 p-8">
@@ -200,7 +206,18 @@ export default async function PublicationsPage({
                                             {pub.publishDate && (
                                                 <span>{new Date(pub.publishDate).toLocaleDateString('id-ID')}</span>
                                             )}
-                                            <span>{pub.viewCount} views</span>
+                                            <div className="flex items-center gap-3">
+                                                <span className="flex items-center gap-1">
+                                                    <Eye className="w-3 h-3" />
+                                                    {pub.viewCount}
+                                                </span>
+                                                <LikeButton
+                                                    publicationId={pub.id}
+                                                    userId={session?.user.id}
+                                                    initialLiked={userLikedIds.includes(pub.id)}
+                                                    initialLikeCount={likeCounts[pub.id] || 0}
+                                                />
+                                            </div>
                                         </div>
 
                                         {(pub.link || pub.filePath) && (

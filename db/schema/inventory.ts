@@ -52,6 +52,11 @@ export const itemLoans = mysqlTable('item_loans', {
     suratIzin: varchar('surat_izin', { length: 255 }),
     dosenPembimbing: varchar('dosen_pembimbing', { length: 255 }),
     software: text('software'), // JSON array of selected software for PC/Server
+    notificationRead: mysqlEnum('notification_read', ['0', '1']).default('0'), // Track if admin has seen auto-approval notification
+    // Return mechanism fields
+    returnPhoto: varchar('return_photo', { length: 255 }), // Photo proof of return
+    returnStatus: mysqlEnum('return_status', ['Belum', 'Pending', 'Dikembalikan']).default('Belum'), // Return status
+    returnNotificationRead: mysqlEnum('return_notification_read', ['0', '1']).default('0'), // Track if admin has seen auto-return notification
 }, (table) => ({
     studentIdx: index('student_idx').on(table.studentId),
     itemIdx: index('item_idx').on(table.itemId),

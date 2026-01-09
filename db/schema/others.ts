@@ -36,7 +36,7 @@ export const publications = mysqlTable('publications', {
     statusIdx: index('status_idx').on(table.status),
 }));
 
-export const publicationsRelations = relations(publications, ({ one }) => ({
+export const publicationsRelations = relations(publications, ({ one, many }) => ({
     uploader: one(users, {
         fields: [publications.uploaderId],
         references: [users.id],
@@ -46,6 +46,31 @@ export const publicationsRelations = relations(publications, ({ one }) => ({
         fields: [publications.submitterId],
         references: [users.id],
         relationName: 'submitter',
+    }),
+    likes: many(publicationLikes),
+}));
+
+// Publication Likes (Many-to-Many: User <-> Publication)
+export const publicationLikes = mysqlTable('publication_likes', {
+    id: int('id').autoincrement().primaryKey(),
+    publicationId: int('publication_id').notNull().references(() => publications.id, { onDelete: 'cascade' }),
+    userId: int('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
+}, (table) => ({
+    publicationIdx: index('publication_idx').on(table.publicationId),
+    userIdx: index('user_idx').on(table.userId),
+    // Unique constraint: one like per user per publication
+    uniqueLike: index('unique_like').on(table.publicationId, table.userId),
+}));
+
+export const publicationLikesRelations = relations(publicationLikes, ({ one }) => ({
+    publication: one(publications, {
+        fields: [publicationLikes.publicationId],
+        references: [publications.id],
+    }),
+    user: one(users, {
+        fields: [publicationLikes.userId],
+        references: [users.id],
     }),
 }));
 

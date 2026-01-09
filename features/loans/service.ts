@@ -233,9 +233,11 @@ export class LoanService {
     }
 
     /**
-     * Mark item as returned
+     * Request item return (by student)
+     * With photo: auto-approved (returnStatus = 'Dikembalikan', status = 'Selesai')
+     * Without photo: pending admin approval (returnStatus = 'Pending')
      */
-    static async returnItem(loanId: number) {
+    static async requestReturn(loanId: number, returnPhoto?: string) {
         const loanResult = await db
             .select()
             .from(itemLoans)
@@ -244,16 +246,97 @@ export class LoanService {
 
         const loan = loanResult[0];
         if (!loan) throw new Error('Loan not found');
+        if (loan.status !== 'Disetujui') throw new Error('Loan is not active');
+
+        if (returnPhoto) {
+            // Auto-approved return with photo
+            await db.update(itemLoans)
+                .set({
+                    returnPhoto,
+                    returnStatus: 'Dikembalikan',
+                    returnNotificationRead: '0', // Notification for admin
+                    status: 'Selesai',
+                    actualReturnDate: new Date(),
+                })
+                .where(eq(itemLoans.id, loanId));
+
+            // Update item status to available
+            await db.update(items)
+                .set({ status: 'Tersedia' })
+                .where(eq(items.id, loan.itemId));
+
+            return { autoApproved: true };
+        } else {
+            // Pending return - needs admin approval
+            await db.update(itemLoans)
+                .set({
+                    returnStatus: 'Pending',
+                })
+                .where(eq(itemLoans.id, loanId));
+
+            return { autoApproved: false };
+        }
+    }
+
+    /**
+     * Approve pending return (by admin)
+     */
+    static async approveReturn(loanId: number, validatorId: number) {
+        const loanResult = await db
+            .select()
+            .from(itemLoans)
+            .where(eq(itemLoans.id, loanId))
+            .limit(1);
+
+        const loan = loanResult[0];
+        if (!loan) throw new Error('Loan not found');
+        if (loan.returnStatus !== 'Pending') throw new Error('Return is not pending');
 
         await db.update(itemLoans)
             .set({
+                returnStatus: 'Dikembalikan',
                 status: 'Selesai',
                 actualReturnDate: new Date(),
+                validatorId,
             })
             .where(eq(itemLoans.id, loanId));
 
         await db.update(items)
             .set({ status: 'Tersedia' })
             .where(eq(items.id, loan.itemId));
+    }
+
+    /**
+     * Reject pending return (by admin)
+     */
+    static async rejectReturn(loanId: number) {
+        await db.update(itemLoans)
+            .set({
+                returnStatus: 'Belum',
+            })
+            .where(eq(itemLoans.id, loanId));
+    }
+
+    /**
+     * Get pending returns for admin
+     */
+    static async getPendingReturns() {
+        const results = await db
+            .select({
+                loan: itemLoans,
+                student: users,
+                item: items,
+            })
+            .from(itemLoans)
+            .leftJoin(users, eq(itemLoans.studentId, users.id))
+            .leftJoin(items, eq(itemLoans.itemId, items.id))
+            .where(eq(itemLoans.returnStatus, 'Pending'))
+            .orderBy(desc(itemLoans.requestDate));
+
+        return results.map(row => ({
+            ...row.loan,
+            student: row.student!,
+            item: row.item!,
+        }));
     }
 }

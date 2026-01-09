@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useTransition, useMemo } from 'react';
-import { BookOpen, Clock, CheckCircle, XCircle, Plus, Trash2, Send, ExternalLink, FileText, Upload, X, Search, Edit } from 'lucide-react';
+import { BookOpen, Clock, CheckCircle, XCircle, Plus, Trash2, Send, ExternalLink, FileText, Upload, X, Search, Edit, Eye } from 'lucide-react';
 import { createPublication, approvePublication, rejectPublication, deletePublication, updatePublication } from '@/features/publications/actions';
+import LikeButton from './LikeButton';
 
 interface Publication {
     id: number;
@@ -559,8 +560,8 @@ export default function PublicationManager({ publications, pendingSubmissions, u
                                             <div className="flex items-center gap-2">
                                                 <BookOpen className="w-5 h-5 text-[#0F4C81]" />
                                                 <span className={`text-xs px-2 py-0.5 rounded ${pub.status === 'Published' ? 'bg-green-100 text-green-700' :
-                                                        pub.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' :
-                                                            'bg-red-100 text-red-700'
+                                                    pub.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' :
+                                                        'bg-red-100 text-red-700'
                                                     }`}>
                                                     {pub.status}
                                                 </span>
@@ -600,7 +601,16 @@ export default function PublicationManager({ publications, pendingSubmissions, u
                                             </div>
                                         )}
                                         <div className="flex items-center justify-between">
-                                            <span className="text-xs text-gray-400">{pub.viewCount} views</span>
+                                            <div className="flex items-center gap-3">
+                                                <span className="text-xs text-gray-400 flex items-center gap-1">
+                                                    <Eye className="w-3 h-3" />
+                                                    {pub.viewCount}
+                                                </span>
+                                                <LikeButton
+                                                    publicationId={pub.id}
+                                                    userId={userId}
+                                                />
+                                            </div>
                                             {(pub.link || pub.filePath) && (
                                                 <a
                                                     href={pub.link || pub.filePath || '#'}

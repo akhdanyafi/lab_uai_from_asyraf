@@ -1,9 +1,10 @@
-import { getPublicPublications, getPublicationKeywords, getUserPublications } from '@/features/publications/actions';
+import { getPublicPublications, getPublicationKeywords, getUserPublications, getPublicationLikeCounts, getUserLikedPublicationIds } from '@/features/publications/actions';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
-import { BookOpen, Clock, CheckCircle, XCircle, ExternalLink, FileText, Search, User, Plus, ArrowLeft } from 'lucide-react';
+import { BookOpen, Clock, CheckCircle, XCircle, ExternalLink, FileText, Search, User, Plus, ArrowLeft, Eye } from 'lucide-react';
 import Link from 'next/link';
 import PublicationLink from '@/features/publications/components/PublicationLink';
+import LikeButton from '@/features/publications/components/LikeButton';
 
 interface SearchParams {
     search?: string;
@@ -29,6 +30,11 @@ export default async function StudentPublicationsPage({
     });
     const keywords = await getPublicationKeywords();
     const mySubmissions = await getUserPublications(session.user.id);
+
+    // Get like data for published publications
+    const publicationIds = publishedPublications.map(p => p.id);
+    const likeCounts = await getPublicationLikeCounts(publicationIds);
+    const userLikedIds = await getUserLikedPublicationIds(session.user.id, publicationIds);
 
     const getStatusBadge = (status: string) => {
         switch (status) {
@@ -80,8 +86,8 @@ export default async function StudentPublicationsPage({
                 <Link
                     href="/student/publications?tab=all"
                     className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'all'
-                            ? 'bg-white text-[#0F4C81] shadow-sm'
-                            : 'text-gray-500 hover:text-gray-700'
+                        ? 'bg-white text-[#0F4C81] shadow-sm'
+                        : 'text-gray-500 hover:text-gray-700'
                         }`}
                 >
                     <BookOpen className="w-4 h-4" />
@@ -90,8 +96,8 @@ export default async function StudentPublicationsPage({
                 <Link
                     href="/student/publications?tab=my"
                     className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'my'
-                            ? 'bg-white text-[#0F4C81] shadow-sm'
-                            : 'text-gray-500 hover:text-gray-700'
+                        ? 'bg-white text-[#0F4C81] shadow-sm'
+                        : 'text-gray-500 hover:text-gray-700'
                         }`}
                 >
                     <FileText className="w-4 h-4" />
@@ -220,7 +226,18 @@ export default async function StudentPublicationsPage({
                                                 {pub.publishDate && (
                                                     <span>{new Date(pub.publishDate).toLocaleDateString('id-ID')}</span>
                                                 )}
-                                                <span>{pub.viewCount} views</span>
+                                                <div className="flex items-center gap-3">
+                                                    <span className="flex items-center gap-1">
+                                                        <Eye className="w-3 h-3" />
+                                                        {pub.viewCount}
+                                                    </span>
+                                                    <LikeButton
+                                                        publicationId={pub.id}
+                                                        userId={session.user.id}
+                                                        initialLiked={userLikedIds.includes(pub.id)}
+                                                        initialLikeCount={likeCounts[pub.id] || 0}
+                                                    />
+                                                </div>
                                             </div>
                                         </div>
                                     );

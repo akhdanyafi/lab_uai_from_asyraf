@@ -1,4 +1,4 @@
-import { getLoanRequests, updateLoanStatus, deleteLoan } from '@/features/loans/actions';
+import { getLoanRequests, updateLoanStatus, deleteLoan, getPendingReturns } from '@/features/loans/actions';
 import { getBookingRequests, updateBookingStatus, getAllRooms, getMonthBookings, deleteBooking } from '@/features/bookings/actions';
 import { getPendingUsers, updateUserStatus } from '@/features/users/actions';
 import { getSession } from '@/lib/auth';
@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation';
 import { Box, User, CheckCircle, XCircle, MapPin, Trash2 } from 'lucide-react';
 import CalendarView from '@/components/shared/CalendarView';
 import ValidationTabs from './_components/ValidationTabs';
+import PendingReturnsList from './_components/PendingReturnsList';
 
 import LoanHistoryFilter from './_components/LoanHistoryFilter';
 
@@ -46,6 +47,9 @@ export default async function AdminValidationsPage({
 
     // --- Data Fetching for Users ---
     const pendingUsers = await getPendingUsers();
+
+    // --- Data Fetching for Returns ---
+    const pendingReturns = await getPendingReturns();
 
     // --- Loans Content ---
     const loansContent = (
@@ -520,6 +524,12 @@ export default async function AdminValidationsPage({
             <ValidationTabs
                 loansContent={loansContent}
                 roomsContent={roomsContent}
+                returnsContent={
+                    <PendingReturnsList
+                        returns={pendingReturns as any}
+                        validatorId={session.user.id}
+                    />
+                }
                 historyContent={historyContent}
                 usersContent={usersContent}
             />

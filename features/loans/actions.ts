@@ -73,13 +73,45 @@ export async function getMyLoans(userId: number) {
 }
 
 /**
- * Mark item as returned
+ * Request item return (by student)
+ * With photo: auto-approved, without photo: pending admin approval
  */
-export async function returnItem(loanId: number) {
-    await LoanService.returnItem(loanId);
+export async function requestItemReturn(loanId: number, returnPhoto?: string) {
+    const result = await LoanService.requestReturn(loanId, returnPhoto);
     revalidatePath('/student/loans');
+    revalidatePath('/student/items');
     revalidatePath('/admin/loans');
+    revalidatePath('/admin/validations');
+    revalidatePath('/admin/dashboard');
+    return result;
+}
+
+/**
+ * Approve pending return (by admin)
+ */
+export async function approveReturn(loanId: number, validatorId: number) {
+    await LoanService.approveReturn(loanId, validatorId);
+    revalidatePath('/admin/loans');
+    revalidatePath('/admin/validations');
     revalidatePath('/admin/inventory');
+    revalidatePath('/student/loans');
+}
+
+/**
+ * Reject pending return (by admin)
+ */
+export async function rejectReturn(loanId: number) {
+    await LoanService.rejectReturn(loanId);
+    revalidatePath('/admin/loans');
+    revalidatePath('/admin/validations');
+    revalidatePath('/student/loans');
+}
+
+/**
+ * Get pending returns for admin
+ */
+export async function getPendingReturns() {
+    return LoanService.getPendingReturns();
 }
 
 /**
@@ -100,3 +132,4 @@ export async function getLecturersForLoan() {
 
     return lecturers;
 }
+

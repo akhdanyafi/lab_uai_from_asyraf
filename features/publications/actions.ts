@@ -120,3 +120,27 @@ export async function getTopPublications(limit: number = 5) {
     return PublicationService.getTop(limit);
 }
 
+// Like functionality
+export async function togglePublicationLike(publicationId: number, userId: number) {
+    const result = await PublicationService.toggleLike(publicationId, userId);
+    revalidatePath('/publications');
+    revalidatePath('/');
+    return result;
+}
+
+export async function getPublicationLikeCount(publicationId: number) {
+    return PublicationService.getLikeCount(publicationId);
+}
+
+export async function checkUserLikedPublication(publicationId: number, userId: number) {
+    return PublicationService.checkUserLiked(publicationId, userId);
+}
+
+export async function getPublicationLikeCounts(publicationIds: number[]) {
+    return PublicationService.getLikeCounts(publicationIds);
+}
+
+export async function getUserLikedPublicationIds(userId: number, publicationIds: number[]) {
+    return PublicationService.getUserLikedIds(userId, publicationIds);
+}
+
