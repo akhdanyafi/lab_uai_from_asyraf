@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { db } from '@/db';
 import { users } from '@/db/schema';
 import { eq } from 'drizzle-orm';
+import { requireAdmin } from '@/lib/auth';
 
 /**
  * Get available items for borrowing
@@ -28,6 +29,7 @@ export async function createLoanRequest(data: {
     dosenPembimbing?: string;
     software?: string[];
 }) {
+    // Ideally check session.user.id === data.studentId
     await LoanService.create(data);
     revalidatePath('/student/loans');
     revalidatePath('/student/items');
@@ -39,6 +41,7 @@ export async function createLoanRequest(data: {
  * Get loan requests (for admin)
  */
 export async function getLoanRequests(status?: string, startDate?: Date, endDate?: Date) {
+    await requireAdmin();
     return LoanService.getAll({ status, startDate, endDate });
 }
 
@@ -50,6 +53,7 @@ export async function updateLoanStatus(
     status: 'Disetujui' | 'Ditolak',
     validatorId: number
 ) {
+    await requireAdmin();
     await LoanService.updateStatus(loanId, status, validatorId);
     revalidatePath('/admin/loans');
     revalidatePath('/student/loans');
@@ -60,6 +64,7 @@ export async function updateLoanStatus(
  * Delete loan
  */
 export async function deleteLoan(id: number) {
+    await requireAdmin();
     await LoanService.delete(id);
     revalidatePath('/admin/loans');
     revalidatePath('/admin/inventory');
@@ -69,6 +74,7 @@ export async function deleteLoan(id: number) {
  * Get user's loans
  */
 export async function getMyLoans(userId: number) {
+    // Ideally check session.user.id === userId
     return LoanService.getByUserId(userId);
 }
 
@@ -90,6 +96,7 @@ export async function requestItemReturn(loanId: number, returnPhoto?: string) {
  * Approve pending return (by admin)
  */
 export async function approveReturn(loanId: number, validatorId: number) {
+    await requireAdmin();
     await LoanService.approveReturn(loanId, validatorId);
     revalidatePath('/admin/loans');
     revalidatePath('/admin/validations');
@@ -101,6 +108,7 @@ export async function approveReturn(loanId: number, validatorId: number) {
  * Reject pending return (by admin)
  */
 export async function rejectReturn(loanId: number) {
+    await requireAdmin();
     await LoanService.rejectReturn(loanId);
     revalidatePath('/admin/loans');
     revalidatePath('/admin/validations');
@@ -111,6 +119,7 @@ export async function rejectReturn(loanId: number) {
  * Get pending returns for admin
  */
 export async function getPendingReturns() {
+    await requireAdmin();
     return LoanService.getPendingReturns();
 }
 

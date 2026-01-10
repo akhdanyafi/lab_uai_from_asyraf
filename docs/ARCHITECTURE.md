@@ -36,7 +36,10 @@ LAB_UAI/
 │   │   └── practicum/[id]/_components/
 │   │
 │   ├── student/                # Student routes
-│   └── lecturer/               # Lecturer routes
+│   ├── lecturer/               # Lecturer routes
+│   │
+│   ├── items/[qrCode]/         # Public Item Detail (QR Scan)
+│   └── publications/           # Public Publications List
 │
 ├── features/                   # Feature-based modules ⭐
 │   ├── academic/               # Academic & Practicum feature

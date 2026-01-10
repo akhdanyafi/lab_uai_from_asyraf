@@ -2,17 +2,30 @@
 
 import { UserService } from './service';
 import { revalidatePath } from 'next/cache';
-import { getSession } from '@/lib/auth';
+import { getSession, requireAdmin } from '@/lib/auth';
 
 export async function getUsers() {
+    // Optional: Restrict viewing all users to Admin only? 
+    // For now, let's keep it open or restrict if needed. 
+    // Ideally user list management is admin only.
+    await requireAdmin();
     return UserService.getAll();
 }
 
 export async function getRoles() {
+    await requireAdmin();
     return UserService.getRoles();
 }
 
 export async function getLecturers() {
+    // This might be used by students for loan requests, so maybe public?
+    // Checking usage... requestItemLoan uses getLecturersForLoan which is separate.
+    // UserService.getLecturers seems to be for User Management dropdowns.
+    // Let's safe default to Admin, but verify usage later.
+    // Actually, createBookingRequest uses getLecturers too. 
+    // Wait, createBookingRequest imports getLecturers from features/bookings/actions.
+    // This one is in features/users/actions. Let's restrict to Admin for now as it maps to User Management.
+    await requireAdmin();
     return UserService.getLecturers();
 }
 
@@ -27,6 +40,7 @@ export async function createUser(data: {
     programStudi?: string;
     dosenPembimbing?: string;
 }) {
+    await requireAdmin();
     await UserService.create(data);
     revalidatePath('/admin/governance');
 }
@@ -42,11 +56,13 @@ export async function updateUser(id: number, data: {
     programStudi?: string;
     dosenPembimbing?: string;
 }) {
+    await requireAdmin();
     await UserService.update(id, data);
     revalidatePath('/admin/governance');
 }
 
 export async function deleteUser(id: number) {
+    await requireAdmin();
     await UserService.delete(id);
     revalidatePath('/admin/governance');
 }

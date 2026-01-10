@@ -26,6 +26,14 @@ export async function getSession() {
     return await decrypt(session);
 }
 
+export async function requireAdmin() {
+    const session = await getSession();
+    if (!session || session.user.role !== 'Admin') {
+        throw new Error('Unauthorized: Admin access required');
+    }
+    return session;
+}
+
 export async function updateSession(request: NextRequest) {
     const session = request.cookies.get('session')?.value;
     if (!session) return;
