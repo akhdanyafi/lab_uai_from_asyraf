@@ -50,7 +50,7 @@ This project uses Drizzle ORM.
     The seed functions are located in `db/seeds/initial.seed.ts` and include:
     - Default roles (Admin, Mahasiswa, Dosen)
     - Admin user (admin@lab-uai.ac.id / admin123)
-    - Sample rooms, categories, and courses
+    - Sample rooms, categories, and modules
     
     To run seeds, you can use ts-node or tsx:
     ```bash
@@ -69,16 +69,24 @@ This project uses Drizzle ORM.
 ## Project Structure
 
 ```
-lib/
-├── actions/      # Server Actions (entry points)
-├── services/     # Business logic
-├── validators/   # Zod validation schemas
+features/             # Feature-based modules ⭐
+├── inventory/        # Item management
+├── loans/            # Item borrowing
+├── bookings/         # Room booking
+├── users/            # User management
+├── practicum/        # Academic practicum
+├── publications/     # Research publications
 └── ...
 
 db/
-├── schema/       # Database models
-├── seeds/        # Seed data
+├── schema/           # Database models
+├── seeds/            # Seed data
 └── ...
+
+lib/
+├── auth.ts           # Authentication utilities
+├── upload.ts         # File upload utilities
+└── utils.ts          # General utilities
 ```
 
 See [ARCHITECTURE.md](./ARCHITECTURE.md) for detailed structure.

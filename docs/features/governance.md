@@ -42,10 +42,10 @@ Admin dapat mengunggah dokumen Standar Operasional Prosedur (SOP) dan Laporan Pe
 
 | Action | File | Deskripsi |
 |--------|------|-----------|
-| `getGovernanceDocs(type)` | `lib/actions/governance.ts` | Ambil dokumen per tipe |
-| `createGovernanceDoc()` | `lib/actions/governance.ts` | Upload dokumen |
-| `updateGovernanceDoc()` | `lib/actions/governance.ts` | Edit dokumen |
-| `deleteGovernanceDoc()` | `lib/actions/governance.ts` | Hapus dokumen |
+| `getGovernanceDocs(type)` | `features/governance/actions.ts` | Ambil dokumen per tipe |
+| `createGovernanceDoc()` | `features/governance/actions.ts` | Upload dokumen |
+| `updateGovernanceDoc()` | `features/governance/actions.ts` | Edit dokumen |
+| `deleteGovernanceDoc()` | `features/governance/actions.ts` | Hapus dokumen |
 
 ### Halaman Terkait
 
@@ -89,11 +89,11 @@ Dosen dan Admin dapat mengunggah publikasi ilmiah (jurnal, paper, penelitian) ya
 
 | Action | File | Deskripsi |
 |--------|------|-----------|
-| `getPublications()` | `lib/actions/publication.ts` | Ambil semua publikasi |
-| `getTopPublications(limit)` | `lib/actions/publication.ts` | Top publikasi (untuk homepage) |
-| `createPublication()` | `lib/actions/publication.ts` | Upload publikasi |
-| `deletePublication()` | `lib/actions/publication.ts` | Hapus publikasi |
-| `incrementViewCount()` | `lib/actions/publication.ts` | Tambah view count |
+| `getPublications()` | `features/publications/actions.ts` | Ambil semua publikasi |
+| `getTopPublications(limit)` | `features/publications/actions.ts` | Top publikasi (untuk homepage) |
+| `createPublication()` | `features/publications/actions.ts` | Upload publikasi |
+| `deletePublication()` | `features/publications/actions.ts` | Hapus publikasi |
+| `incrementViewCount()` | `features/publications/actions.ts` | Tambah view count |
 
 ### Halaman Terkait
 
@@ -134,10 +134,10 @@ Admin dapat mengelola foto-foto kegiatan yang tampil sebagai carousel di homepag
 
 | Action | File | Deskripsi |
 |--------|------|-----------|
-| `getHeroPhotos()` | `lib/actions/hero-photo.ts` | Ambil semua foto |
-| `addHeroPhoto()` | `lib/actions/hero-photo.ts` | Tambah foto |
-| `updateHeroPhoto()` | `lib/actions/hero-photo.ts` | Edit foto |
-| `deleteHeroPhoto()` | `lib/actions/hero-photo.ts` | Hapus foto |
+| `getHeroPhotos()` | `features/hero-photos/actions.ts` | Ambil semua foto |
+| `addHeroPhoto()` | `features/hero-photos/actions.ts` | Tambah foto |
+| `updateHeroPhoto()` | `features/hero-photos/actions.ts` | Edit foto |
+| `deleteHeroPhoto()` | `features/hero-photos/actions.ts` | Hapus foto |
 
 ### Halaman Terkait
 
@@ -152,6 +152,7 @@ Admin dapat mengelola foto-foto kegiatan yang tampil sebagai carousel di homepag
 
 | Fitur | Relasi |
 |-------|--------|
-| [User Management](./user-management.md) | Admin sebagai pengunggah dokumen/foto, Dosen sebagai author publikasi |
-| [Academic](./academic-practicum.md) | Publikasi bisa terkait hasil praktikum |
+| [User Management](./users.md) | Admin sebagai pengunggah dokumen/foto, Dosen sebagai author publikasi |
+| [Practicum](./practicum.md) | Publikasi bisa terkait hasil praktikum |
 | Homepage | Semua konten governance tampil di homepage |
+

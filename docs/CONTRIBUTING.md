@@ -87,10 +87,30 @@ export async function seedMyFeature() {
 - **Client vs Server Components**: Use `"use client"` only when necessary.
 - **Type Safety**: Avoid using `any`. Define proper interfaces/types.
 
+## Security Best Practices
+
+All **admin-only actions** must be protected with role checking:
+
+```typescript
+// features/my-feature/actions.ts
+'use server';
+import { requireAdmin } from '@/lib/auth';
+
+export async function deleteItem(id: number) {
+    await requireAdmin(); // ← REQUIRED for admin actions
+    await MyFeatureService.delete(id);
+    revalidatePath('/admin/my-feature');
+}
+```
+
+**Helper Functions:**
+- `getSession()`: Get current user session (may be null)
+- `requireAdmin()`: Throws error if user is not Admin
+
 ## File Naming Conventions
 
 | Type | Pattern | Example |
-|------|---------|---------|
+|------|---------|---------| 
 | **Components** | `PascalCase.tsx` | `HeroCarousel.tsx`, `UserForm.tsx` |
 | **Actions** | `actions.ts` | `features/loans/actions.ts` |
 | **Services** | `service.ts` | `features/loans/service.ts` |
@@ -114,3 +134,4 @@ export async function seedMyFeature() {
 2. **Actions use relative imports**: `import { Service } from './service'`
 3. **Components use PascalCase**: `UserForm.tsx` not `user-form.tsx`
 4. **Colocated page components**: Place in `_components/` within route folder
+5. **Admin actions require auth**: Always use `requireAdmin()` for mutations

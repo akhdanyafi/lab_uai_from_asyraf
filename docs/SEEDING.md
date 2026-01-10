@@ -7,7 +7,7 @@ Comprehensive guide for seeding the LAB UAI database with sample data.
 The seeding system automatically populates all database tables with realistic Indonesian sample data, including:
 
 - **Users**: Admin, Lecturers (Dosen), and Students (Mahasiswa)
-- **Academic**: Courses, Classes, Modules, Sessions, Reports  
+- **Practicum**: Modules (Simple repository)
 - **Facilities**: Rooms, Bookings, Inventory Items, Loans, Lab Attendance
 - **Content**: Publications, Governance Documents, Hero Photos
 
@@ -30,8 +30,7 @@ After seeding, add actual files to match the paths used in seed data:
 
 ```
 public/uploads/
-├── modules/               # PDF files: if101-modul-1.pdf, if102-modul-2.pdf, etc.
-├── reports/               # PDF files: report-session1-student2.pdf, etc.
+├── modules/               # PDF files: modul-1.pdf, modul-2.pdf, etc.
 ├── publications/          # PDF files: publication-1.pdf, publication-2.pdf, etc.
 ├── governance/            # PDF files: sop-1.pdf, lpj-bulanan-1.pdf, etc.
 │   └── covers/           # Cover images: sop-1.jpg, lpj-bulanan-1.jpg, etc.
@@ -47,10 +46,8 @@ Default quantities (configured in `db/seeds/seed.config.ts`):
 | **Users** | Students | 12 |
 | | Lecturers | 4 |
 | | Admins | 1 |
-| **Academic** | Courses | 5 |
-| | Classes | 8 |
-| | Modules per Course | 6 |
-| | Sessions per Class | 4 |
+| **Practicum** | Modules | 3 |
+| | | |
 | **Facilities** | Rooms | 5 |
 | | Room Bookings | 15 |
 | | Lab Attendance | 20 |
@@ -77,50 +74,30 @@ All test accounts use the password: **`password123`**
 | Dewi Lestari, S.T, M.Kom | dewi.lestari@lab.ac.id | 0004089804 | password123 |
 
 ### Student Accounts
-| Name | Email | NIM | Batch | Study Type | Password |
-|------|-------|-----|-------|------------|----------|
-| Andi Wijaya | andi.wijaya@student.ac.id | 2201010001 | 2022 | Reguler | password123 |
-| Rina Maharani | rina.maharani@student.ac.id | 2201010002 | 2022 | Reguler | password123 |
-| Dimas Pradipta | dimas.pradipta@student.ac.id | 2201010003 | 2022 | Hybrid | password123 |
-| Fitri Handayani | fitri.handayani@student.ac.id | 2201010004 | 2022 | Reguler | password123 |
-| Reza Firmansyah | reza.firmansyah@student.ac.id | 2301010001 | 2023 | Reguler | password123 |
-| Sari Permata | sari.permata@student.ac.id | 2301010002 | 2023 | Hybrid | password123 |
-| Yudi Setiawan | yudi.setiawan@student.ac.id | 2301010003 | 2023 | Reguler | password123 |
-| Maya Kusuma | maya.kusuma@student.ac.id | 2301010004 | 2023 | Reguler | password123 |
-| Fajar Nugroho | fajar.nugroho@student.ac.id | 2401010001 | 2024 | Reguler | password123 |
-| Indah Sari | indah.sari@student.ac.id | 2401010002 | 2024 | Hybrid | password123 |
-| Arief Rahman | arief.rahman@student.ac.id | 2401010003 | 2024 | Reguler | password123 |
-| Linda Wati | linda.wati@student.ac.id | 2401010004 | 2024 | Reguler | password123 |
+| Name | Email | NIM | Batch | Study Type | Program Studi | Dosen Pembimbing | Password |
+|------|-------|-----|-------|------------|---------------|------------------|----------|
+| Andi Wijaya | andi.wijaya@student.ac.id | 2201010001 | 2022 | Reguler | Informatika | Dr. Budi Santoso | password123 |
+| Rina Maharani | rina.maharani@student.ac.id | 2201010002 | 2022 | Reguler | Informatika | Siti Nurhaliza | password123 |
+| Dimas Pradipta | dimas.pradipta@student.ac.id | 2201010003 | 2022 | Hybrid | Informatika | Ahmad Hidayat | password123 |
+| Fitri Handayani | fitri.handayani@student.ac.id | 2201010004 | 2022 | Reguler | Informatika | Dewi Lestari | password123 |
+| Reza Firmansyah | reza.firmansyah@student.ac.id | 2301010001 | 2023 | Reguler | Informatika | Dr. Budi Santoso | password123 |
+| Sari Permata | sari.permata@student.ac.id | 2301010002 | 2023 | Hybrid | Informatika | Siti Nurhaliza | password123 |
+| Yudi Setiawan | yudi.setiawan@student.ac.id | 2301010003 | 2023 | Reguler | Informatika | Ahmad Hidayat | password123 |
+| Maya Kusuma | maya.kusuma@student.ac.id | 2301010004 | 2023 | Reguler | Informatika | Dewi Lestari | password123 |
+| Fajar Nugroho | fajar.nugroho@student.ac.id | 2401010001 | 2024 | Reguler | Informatika | Dr. Budi Santoso | password123 |
+| Indah Sari | indah.sari@student.ac.id | 2401010002 | 2024 | Hybrid | Informatika | Siti Nurhaliza | password123 |
+| Arief Rahman | arief.rahman@student.ac.id | 2401010003 | 2024 | Reguler | Informatika | Ahmad Hidayat | password123 |
+| Linda Wati | linda.wati@student.ac.id | 2401010004 | 2024 | Reguler | Informatika | Dewi Lestari | password123 |
 
 ## ⚙️ Customization
 
 ### Adjusting Quantities
 
-Edit `db/seeds/seed.config.ts` to customize sample data quantities:
-
-```typescript
-export const SEED_CONFIG = {
-  users: {
-    studentsCount: 20,        // Increase to 20 students
-    lecturersCount: 6,        // Increase to 6 lecturers
-    defaultPassword: 'newpass123'  // Change default password
-  },
-  academic: {
-    coursesCount: 8,          // More courses
-    classesCount: 12,         // More classes
-    // ... etc
-  },
-  // ... etc
-}
-```
+Edit `db/seeds/seed.config.ts` to customize sample data quantities.
 
 ### Adding Custom Sample Data
 
-Edit the `SAMPLE_DATA` object in `db/seeds/seed.config.ts` to add:
-- More courses
-- More lecturer/student names
-- Publications with real data
-- Custom governance document titles
+Edit the `SAMPLE_DATA` object in `db/seeds/seed.config.ts` to add custom names or titles.
 
 ## 🔍 Data Relationships
 
@@ -128,24 +105,18 @@ The seed system ensures proper foreign key relationships:
 
 ```
 roles → users
-courses → modules
-courses + lecturers → classes
-classes + students → classEnrollments
-classes + modules → practicalSessions
-practicalSessions + students → practicalReports
-rooms → roomBookings
 items → itemLoans
+rooms → roomBookings
 ```
 
 ## 📁 File Naming Convention
 
 ### Modules
-Pattern: `{course-code}-modul-{number}.pdf`
-- Example: `if101-modul-1.pdf`, `if102-modul-2.pdf`
+Pattern: `modul-{number}.pdf`
+- Example: `modul-1.pdf`, `modul-2.pdf`
 
 ### Reports
-Pattern: `report-session{sessionId}-student{studentId}.pdf`
-- Example: `report-session1-student5.pdf`
+*(System simplified, no report files needed)*
 
 ### Publications
 Pattern: `publication-{number}.pdf`
@@ -192,7 +163,7 @@ The seed functions are idempotent - they check for existing data and skip if pre
 
 ### Foreign key constraint errors
 - Ensure you're running the full seed (not individual functions)
-- The order of seeding is important (roles → users → courses → etc.)
+- The order of seeding is important (roles → users → items → etc.)
 
 ### "File not found" when testing
 - Seeds only create database records with file paths

@@ -44,12 +44,13 @@ Dokumentasi lengkap fitur-fitur sistem LAB_UAI (Laboratorium Informatika Univers
 
 | # | Fitur | Deskripsi | Dokumentasi |
 |---|-------|-----------|-------------|
-| 1 | **User Management** | Registrasi, validasi akun, role management | [Detail →](./features/user-management.md) |
-| 2 | **Inventory & Loans** | Katalog alat, peminjaman, pengembalian | [Detail →](./features/inventory-loan.md) |
-| 3 | **Room Booking** | Pemesanan ruangan, kalender, validasi | [Detail →](./features/room-booking.md) |
-| 4 | **Academic & Practicum** | Mata kuliah, kelas, modul, sesi, penilaian | [Detail →](./features/academic-practicum.md) |
-| 5 | **Governance** | SOP, LPJ, Hero Photos, Publikasi | [Detail →](./features/governance.md) |
-| 6 | **Authentication** | Login, logout, session, middleware | [Detail →](./features/authentication.md) |
+| 1 | **User Management** | Registrasi, validasi akun, role management | [Detail →](./features/users.md) |
+| 2 | **Inventory** | Katalog alat, kategori, ruangan | [Detail →](./features/inventory.md) |
+| 3 | **Item Loans** | Peminjaman alat, pengembalian | [Detail →](./features/loans.md) |
+| 4 | **Room Booking** | Pemesanan ruangan, kalender, validasi | [Detail →](./features/bookings.md) |
+| 5 | **Practicum** | Modul praktikum, upload/download | [Detail →](./features/practicum.md) |
+| 6 | **Governance** | SOP, LPJ, Hero Photos, Publikasi | [Detail →](./features/governance.md) |
+| 7 | **Authentication** | Login, logout, session, middleware | [Detail →](./features/auth.md) |
 
 ## User Roles
 
@@ -77,26 +78,17 @@ Dokumentasi lengkap fitur-fitur sistem LAB_UAI (Laboratorium Informatika Univers
      │                       │                       │
      ▼                       ▼                       ▼
 ┌─────────────┐      ┌──────────────┐      ┌──────────────┐
-│ Item Loans  │      │ Room         │      │ Classes      │
+│ Item Loans  │      │ Room         │      │ Publications │
 │             │      │ Bookings     │      │              │
-│ studentId   │      │ userId       │      │ lecturerId   │
+│ studentId   │      │ userId       │      │ uploaderId   │
 │ validatorId │      │ validatorId  │      │              │
-└─────────────┘      └──────────────┘      └──────┬───────┘
-                                                  │
-                                                  ▼
-                                           ┌──────────────┐
-                                           │ Enrollments  │
-                                           │              │
-                                           │ studentId    │
-                                           └──────────────┘
-```
+└─────────────┘      └──────────────┘      └──────────────┘
 
 ### Flow Data Praktikum
 
 ```
-Course → Class → Session → Report
-                    ↓
-                  Module
+Admin/Dosen Upload PDF → Mahasiswa Download & Belajar
+       (Module)
 ```
 
 ### Item & Room Relationship
@@ -112,9 +104,19 @@ Room ─────┬───── Items (penyimpanan)
 ### Item Loan Status Flow
 
 ```
-Pending → Disetujui → Selesai
-    └──→ Ditolak
+                  ┌─────────────────────────────────────────────┐
+                  │              LOAN STATUS                    │
+                  │ Pending → Disetujui → Ditolak               │
+                  └─────────────────┬───────────────────────────┘
+                                    │ (If Disetujui)
+                                    ▼
+                  ┌─────────────────────────────────────────────┐
+                  │            RETURN STATUS                    │
+                  │ - → Pending → Dikembalikan / Ditolak        │
+                  └─────────────────────────────────────────────┘
 ```
+- **Loan Status**: `Pending` → `Disetujui` / `Ditolak`
+- **Return Status**: `-` → `Pending` (student requests return) → `Dikembalikan` (admin approves) / `Ditolak`
 
 ### Room Booking Status Flow
 
@@ -132,11 +134,36 @@ Pending → Active
 
 ## Tech Stack per Fitur
 
-| Fitur | Actions | Services | Validators |
-|-------|---------|----------|------------|
-| User Management | `user.ts` | `user.service.ts` | `user.validator.ts` |
-| Inventory & Loans | `loan.ts`, `inventory.ts` | `loan.service.ts`, `inventory.service.ts` | `loan.validator.ts`, `inventory.validator.ts` |
-| Room Booking | `booking.ts` | `booking.service.ts` | `booking.validator.ts` |
-| Academic | `academic.ts`, `practicum.ts` | - | - |
-| Governance | `governance.ts`, `publication.ts`, `hero-photo.ts` | `publication.service.ts`, `hero-photo.service.ts` | - |
-| Authentication | `auth.ts`, `register.ts` | - | - |
+| Fitur | Location | Files |
+|-------|----------|-------|
+| **User Management** | `features/users/` | `actions.ts`, `service.ts` |
+| **Inventory** | `features/inventory/` | `actions.ts`, `service.ts` |
+| **Loans** | `features/loans/` | `actions.ts`, `service.ts` |
+| **Room Booking** | `features/bookings/` | `actions.ts`, `service.ts`, `validator.ts` |
+| **Academic/Practicum** | `features/practicum/` | `actions.ts`, `service.ts` |
+| **Governance** | `features/governance/` | `actions.ts`, components |
+| **Publications** | `features/publications/` | `actions.ts`, `service.ts` |
+| **Hero Photos** | `features/hero-photos/` | `actions.ts`, `service.ts` |
+| **Authentication** | `features/auth/` | `actions.ts` |
+
+## Security Model
+
+All administrative Server Actions are protected with **Role-Based Access Control (RBAC)**:
+
+```typescript
+// lib/auth.ts
+export async function requireAdmin() {
+    const session = await getSession();
+    if (!session || session.user.role !== 'Admin') {
+        throw new Error('Unauthorized: Admin access required');
+    }
+    return session;
+}
+```
+
+Protected actions include:
+- All Inventory mutations (create, update, delete)
+- All User management actions
+- Loan/Booking approval/rejection
+- History deletion
+

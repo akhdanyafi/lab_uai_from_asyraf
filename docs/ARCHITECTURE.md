@@ -4,11 +4,11 @@ This document provides a high-level overview of the LAB_UAI technical architectu
 
 ## Technology Stack
 
-- **Framework**: [Next.js 15](https://nextjs.org/) (App Router)
+- **Framework**: [Next.js 16](https://nextjs.org/) (App Router)
 - **Language**: TypeScript
 - **Database ORM**: [Drizzle ORM](https://orm.drizzle.team/)
-- **Database**: MySQL
-- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **Database**: MySQL (via mysql2)
+- **Styling**: [Tailwind CSS v4](https://tailwindcss.com/)
 - **UI Components**: Custom components with [Lucide React](https://lucide.dev/) icons
 - **Validation**: [Zod](https://zod.dev/) for input validation
 
@@ -42,11 +42,9 @@ LAB_UAI/
 │   └── publications/           # Public Publications List
 │
 ├── features/                   # Feature-based modules ⭐
-│   ├── academic/               # Academic & Practicum feature
-│   │   ├── actions.ts          # Server actions
-│   │   ├── practicum.ts        # Practicum-specific actions
-│   │   ├── types.ts            # TypeScript types
-│   │   └── components/         # Feature components
+│   ├── attendance/             # Lab attendance feature
+│   │   ├── actions.ts
+│   │   └── components/
 │   │
 │   ├── auth/                   # Authentication feature
 │   │   └── actions.ts
@@ -63,6 +61,11 @@ LAB_UAI/
 │   ├── hero-photos/            # Hero carousel feature
 │   ├── inventory/              # Item inventory feature
 │   ├── loans/                  # Item loan feature
+│   ├── practicum/              # Academic & Practicum feature
+│   │   ├── actions.ts
+│   │   ├── service.ts
+│   │   └── components/
+│   │
 │   ├── publications/           # Publications feature
 │   └── users/                  # User management feature
 │

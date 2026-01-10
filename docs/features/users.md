@@ -63,19 +63,29 @@ Fitur manajemen pengguna mengatur seluruh siklus hidup akun pengguna dalam siste
 | status | ENUM | Pending, Active, Rejected |
 | batch | INT | Angkatan (khusus mahasiswa) |
 | studyType | ENUM | Reguler atau Hybrid |
+| programStudi | VARCHAR | Program studi |
+| dosenPembimbing | VARCHAR | Dosen pembimbing |
 | createdAt | DATETIME | Waktu pembuatan akun |
 
 ## Server Actions
 
 | Action | File | Deskripsi |
 |--------|------|-----------|
-| `getUsers()` | `lib/actions/user.ts` | Ambil semua pengguna |
-| `getRoles()` | `lib/actions/user.ts` | Ambil daftar role |
-| `createUser()` | `lib/actions/user.ts` | Buat pengguna baru |
-| `updateUser()` | `lib/actions/user.ts` | Update data pengguna |
-| `deleteUser()` | `lib/actions/user.ts` | Hapus pengguna |
-| `getPendingUsers()` | `lib/actions/user.ts` | Ambil pengguna pending |
-| `updateUserStatus()` | `lib/actions/user.ts` | Validasi/tolak akun |
+| `getUsers()` | `features/users/actions.ts` | Ambil semua pengguna (Admin) |
+| `getRoles()` | `features/users/actions.ts` | Ambil daftar role (Admin) |
+| `createUser()` | `features/users/actions.ts` | Buat pengguna baru (Admin) |
+| `updateUser()` | `features/users/actions.ts` | Update data pengguna (Admin) |
+| `deleteUser()` | `features/users/actions.ts` | Hapus pengguna (Admin) |
+| `getPendingUsers()` | `features/users/actions.ts` | Ambil pengguna pending |
+| `updateUserStatus()` | `features/users/actions.ts` | Validasi/tolak akun |
+| `updateUserProfile()` | `features/users/actions.ts` | Update profil sendiri |
+
+## Security
+
+Semua action user management dilindungi dengan `requireAdmin()`:
+- `getUsers`, `getRoles`, `createUser`, `updateUser`, `deleteUser`
+
+Fungsi `updateUserProfile()` menggunakan `getSession()` untuk memastikan user hanya bisa update profil sendiri.
 
 ## Halaman Terkait
 
@@ -83,7 +93,8 @@ Fitur manajemen pengguna mengatur seluruh siklus hidup akun pengguna dalam siste
 |-------|-----------|
 | `/register` | Halaman registrasi mandiri |
 | `/admin/governance` (Tab Users) | Manajemen pengguna oleh admin |
-| `/admin/validations` (Tab Akun) | Validasi akun pending |
+| `/admin/validations` (Tab Validasi User) | Validasi akun pending |
+| `/*/profile` | Halaman profil per role |
 
 ## Validasi & Business Rules
 
@@ -91,12 +102,14 @@ Fitur manajemen pengguna mengatur seluruh siklus hidup akun pengguna dalam siste
 2. **Password minimal 6 karakter** - Dienkripsi dengan bcrypt
 3. **Login bisa dengan Email atau NIM** - Fleksibilitas login
 4. **Mahasiswa wajib isi batch dan studyType** - Untuk pengelompokan kelas
+5. **Admin tidak bisa menghapus diri sendiri** - Pencegahan self-deletion
 
 ## Relasi dengan Fitur Lain
 
 | Fitur | Relasi |
 |-------|--------|
-| [Peminjaman Alat](./inventory-loan.md) | User sebagai peminjam (`studentId`) dan validator (`validatorId`) |
-| [Pemesanan Ruangan](./room-booking.md) | User sebagai pemesan (`userId`) dan validator (`validatorId`) |
-| [Praktikum](./academic-practicum.md) | User sebagai dosen (`lecturerId`) dan mahasiswa (`studentId`) |
+| [Peminjaman Alat](./loans.md) | User sebagai peminjam (`studentId`) dan validator (`validatorId`) |
+| [Pemesanan Ruangan](./bookings.md) | User sebagai pemesan (`userId`) dan validator (`validatorId`) |
+| [Praktikum](./practicum.md) | User sebagai dosen (`lecturerId`) dan mahasiswa (`studentId`) |
 | [Governance](./governance.md) | User sebagai admin pengunggah dokumen |
+

@@ -65,25 +65,36 @@ Fitur pemesanan ruangan memungkinkan mahasiswa dan dosen untuk memesan ruangan l
 | startTime | DATETIME | Waktu mulai |
 | endTime | DATETIME | Waktu selesai |
 | purpose | TEXT | Keperluan/alasan pemesanan |
+| organisasi | VARCHAR | Organisasi pemohon |
+| jumlahPeserta | INT | Jumlah peserta |
+| suratPermohonan | VARCHAR | Path surat permohonan |
+| dosenPembimbing | VARCHAR | Nama dosen pembimbing |
 | status | ENUM | Pending, Disetujui, Ditolak |
 
 ## Server Actions
 
 | Action | File | Deskripsi |
 |--------|------|-----------|
-| `getAllRooms()` | `lib/actions/booking.ts` | Ambil semua ruangan |
-| `getMonthBookings()` | `lib/actions/booking.ts` | Booking per bulan (kalender) |
-| `getMyBookings()` | `lib/actions/booking.ts` | Pemesanan milik saya |
-| `createRoomBooking()` | `lib/actions/booking.ts` | Ajukan pemesanan |
-| `getBookingRequests()` | `lib/actions/booking.ts` | Semua permintaan (admin) |
-| `updateBookingStatus()` | `lib/actions/booking.ts` | Validasi pemesanan |
-| `getMaintenanceRooms()` | `lib/actions/booking.ts` | Ruangan maintenance |
+| `getAllRooms()` | `features/bookings/actions.ts` | Ambil semua ruangan |
+| `getMonthBookings()` | `features/bookings/actions.ts` | Booking per bulan (kalender) |
+| `getMyBookings()` | `features/bookings/actions.ts` | Pemesanan milik saya |
+| `createRoomBooking()` | `features/bookings/actions.ts` | Ajukan pemesanan |
+| `getBookingRequests()` | `features/bookings/actions.ts` | Semua permintaan (Admin) |
+| `updateBookingStatus()` | `features/bookings/actions.ts` | Validasi pemesanan (Admin) |
+| `deleteBooking()` | `features/bookings/actions.ts` | Hapus booking (Admin) |
+| `getMaintenanceRooms()` | `features/bookings/actions.ts` | Ruangan maintenance |
+
+## Security
+
+Semua action admin dilindungi dengan `requireAdmin()`:
+- `getBookingRequests`, `updateBookingStatus`, `deleteBooking`
 
 ## Halaman Terkait
 
 | Route | Deskripsi |
 |-------|-----------|
 | `/admin/validations` (Tab Ruangan) | Validasi permintaan pemesanan |
+| `/admin/validations` (Tab Riwayat) | Riwayat booking selesai |
 | `/student/rooms` | Kalender + form pemesanan |
 | `/lecturer/rooms` | Kalender + form pemesanan |
 | Homepage | Kalender ruangan publik |
@@ -93,7 +104,7 @@ Fitur pemesanan ruangan memungkinkan mahasiswa dan dosen untuk memesan ruangan l
 | Komponen | Lokasi | Fungsi |
 |----------|--------|--------|
 | `CalendarView` | `components/shared/` | Tampilan kalender interaktif |
-| `RoomBookingClient` | `components/rooms/` | Form pemesanan ruangan |
+| `RoomBookingClient` | `features/bookings/components/` | Form pemesanan ruangan |
 | `HomeCalendar` | `app/(home)/_components/` | Kalender homepage (view only) |
 
 ## Validasi & Business Rules
@@ -102,11 +113,13 @@ Fitur pemesanan ruangan memungkinkan mahasiswa dan dosen untuk memesan ruangan l
 2. **End time harus setelah start time**
 3. **Ruangan Maintenance tidak bisa dipesan**
 4. **Hanya booking dengan status Disetujui yang tampil di kalender**
+5. **Booking dengan surat permohonan** bisa auto-approve
 
 ## Relasi dengan Fitur Lain
 
 | Fitur | Relasi |
 |-------|--------|
-| [User Management](./user-management.md) | User sebagai pemesan dan validator |
-| [Inventory](./inventory-loan.md) | Ruangan menyimpan alat (items.roomId) |
+| [User Management](./users.md) | User sebagai pemesan dan validator |
+| [Inventory](./inventory.md) | Ruangan menyimpan alat (items.roomId) |
 | Homepage | Ruangan maintenance tampil di pengumuman |
+

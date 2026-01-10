@@ -2,7 +2,7 @@
 
 ## Deskripsi
 
-Fitur autentikasi mengelola proses login, logout, dan manajemen sesi pengguna. Sistem menggunakan cookie-based session untuk menjaga keamanan dan persistensi login.
+Fitur autentikasi mengelola proses login, logout, dan manajemen sesi pengguna. Sistem menggunakan cookie-based session dengan JWT untuk menjaga keamanan dan persistensi login.
 
 ## Alur Autentikasi
 
@@ -54,7 +54,7 @@ Cek Session Cookie
 | HTTP Only | Yes (tidak bisa diakses JavaScript) |
 | Secure | Yes (hanya HTTPS di production) |
 | SameSite | Strict |
-| Max Age | 7 hari |
+| Max Age | 24 jam |
 
 ### Session Data
 
@@ -76,12 +76,14 @@ interface Session {
 
 ```typescript
 // middleware.ts
-const protectedRoutes = {
-    '/admin/*': ['Admin'],
-    '/lecturer/*': ['Dosen'],
-    '/student/*': ['Mahasiswa'],
-    '/dashboard': ['Admin', 'Dosen', 'Mahasiswa'],
-};
+const isAdminRoute = request.nextUrl.pathname.startsWith('/admin');
+const isStudentRoute = request.nextUrl.pathname.startsWith('/student');
+const isLecturerRoute = request.nextUrl.pathname.startsWith('/lecturer');
+
+// Role-based access control
+if (isAdminRoute && role !== 'Admin') redirect('/dashboard');
+if (isStudentRoute && role !== 'Mahasiswa') redirect('/dashboard');
+if (isLecturerRoute && role !== 'Dosen') redirect('/dashboard');
 ```
 
 ### Route Access Matrix
@@ -92,6 +94,7 @@ const protectedRoutes = {
 | `/login` | ✓ | ✓ | ✓ | ✓ |
 | `/register` | ✓ | ✓ | ✓ | ✓ |
 | `/publications` | ✓ | ✓ | ✓ | ✓ |
+| `/items/[qrCode]` | ✓ | ✓ | ✓ | ✓ |
 | `/dashboard` | ✓ | ✓ | ✓ | ✗ |
 | `/admin/*` | ✓ | ✗ | ✗ | ✗ |
 | `/lecturer/*` | ✗ | ✓ | ✗ | ✗ |
@@ -101,10 +104,29 @@ const protectedRoutes = {
 
 | Action | File | Deskripsi |
 |--------|------|-----------|
-| `login()` | `lib/actions/auth.ts` | Proses login |
-| `logout()` | `lib/actions/auth.ts` | Proses logout |
+| `login()` | `features/auth/actions.ts` | Proses login |
+| `logout()` | `features/auth/actions.ts` | Proses logout |
 | `getSession()` | `lib/auth.ts` | Ambil session saat ini |
-| `register()` | `lib/actions/register.ts` | Registrasi user baru |
+| `requireAdmin()` | `lib/auth.ts` | Guard untuk admin actions |
+| `register()` | `features/auth/actions.ts` | Registrasi user baru |
+
+## Security Helpers
+
+```typescript
+// lib/auth.ts
+
+// Get current session (may be null)
+export async function getSession() { ... }
+
+// Require admin role (throws if not admin)
+export async function requireAdmin() {
+    const session = await getSession();
+    if (!session || session.user.role !== 'Admin') {
+        throw new Error('Unauthorized: Admin access required');
+    }
+    return session;
+}
+```
 
 ## Halaman Terkait
 
@@ -124,7 +146,7 @@ const protectedRoutes = {
 
 1. **Login bisa dengan Email atau NIM/NIDN**
 2. **Password dienkripsi dengan bcrypt** (saltRounds: 10)
-3. **Session expired otomatis setelah 7 hari**
+3. **Session expired otomatis setelah 24 jam**
 4. **User dengan status Pending/Rejected tidak bisa login**
 5. **Middleware redirect ke halaman sesuai role**
 
@@ -146,5 +168,7 @@ const protectedRoutes = {
 
 | Fitur | Relasi |
 |-------|--------|
-| [User Management](./user-management.md) | Status user menentukan akses login |
+| [User Management](./users.md) | Status user menentukan akses login |
 | Semua fitur | Session digunakan untuk identifikasi user |
+| Server Actions | `requireAdmin()` digunakan untuk proteksi mutations |
+

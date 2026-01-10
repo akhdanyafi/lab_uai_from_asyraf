@@ -12,7 +12,7 @@ A comprehensive web application for managing laboratory resources, academic acti
 
 ## Tech Stack
 
-- **Framework**: Next.js 15 (App Router)
+- **Framework**: Next.js 16 (App Router)
 - **Database**: MySQL with Drizzle ORM
 - **Styling**: Tailwind CSS
 - **Language**: TypeScript
