@@ -26,9 +26,9 @@ export default function Footer() {
                         </p>
                         <div className="flex gap-4 pt-2">
                             {/* Social Icons: Hover effect menggunakan warna Aksen #F59E0B */}
-                            <a href="#" className="text-blue-200 hover:text-[#F59E0B] transition-colors"><Instagram className="w-5 h-5" /></a>
-                            <a href="#" className="text-blue-200 hover:text-[#F59E0B] transition-colors"><Linkedin className="w-5 h-5" /></a>
-                            <a href="https://uai.ac.id" target="_blank" className="text-blue-200 hover:text-[#F59E0B] transition-colors"><Globe className="w-5 h-5" /></a>
+                            <a href="https://www.instagram.com/if.uai/" className="text-blue-200 hover:text-[#F59E0B] transition-colors"><Instagram className="w-5 h-5" /></a>
+                            <a href="https://www.linkedin.com/school/universitasalazharindonesia/" className="text-blue-200 hover:text-[#F59E0B] transition-colors"><Linkedin className="w-5 h-5" /></a>
+                            <a href="https://if.uai.ac.id" target="_blank" className="text-blue-200 hover:text-[#F59E0B] transition-colors"><Globe className="w-5 h-5" /></a>
                         </div>
                     </div>
 

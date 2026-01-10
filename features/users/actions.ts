@@ -18,14 +18,8 @@ export async function getRoles() {
 }
 
 export async function getLecturers() {
-    // This might be used by students for loan requests, so maybe public?
-    // Checking usage... requestItemLoan uses getLecturersForLoan which is separate.
-    // UserService.getLecturers seems to be for User Management dropdowns.
-    // Let's safe default to Admin, but verify usage later.
-    // Actually, createBookingRequest uses getLecturers too. 
-    // Wait, createBookingRequest imports getLecturers from features/bookings/actions.
-    // This one is in features/users/actions. Let's restrict to Admin for now as it maps to User Management.
-    await requireAdmin();
+    // Public access - needed for registration dropdown (dosen pembimbing selection)
+    // and other user-facing forms
     return UserService.getLecturers();
 }
 
