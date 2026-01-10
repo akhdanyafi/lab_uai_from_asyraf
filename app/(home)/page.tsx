@@ -1,5 +1,8 @@
 import Navbar from '@/components/layout/Navbar';
 import HeroSection from './_components/HeroSection';
+import QuickStats from './_components/QuickStats';
+import ModuleSection from './_components/ModuleSection';
+import AvailableItemsSection from './_components/AvailableItemsSection';
 import SOPSection from './_components/SOPSection';
 import AnnouncementSection from './_components/AnnouncementSection';
 import HomeCalendar from './_components/HomeCalendar';
@@ -8,14 +11,27 @@ import Footer from '@/components/layout/Footer';
 import { getAllRooms, getMonthBookings, getMaintenanceRooms } from '@/features/bookings/actions';
 import { getGovernanceDocs } from '@/features/governance/actions';
 import { getTopPublications } from '@/features/publications/actions';
-import { getMaintenanceItems } from '@/features/inventory/actions';
+import { getMaintenanceItems, getAvailableItems, getHomepageStats } from '@/features/inventory/actions';
+import { getModules } from '@/features/practicum/actions';
 
 export default async function Home() {
     const today = new Date();
     const currentMonth = today.getMonth();
     const currentYear = today.getFullYear();
 
-    const [rooms, currentMonthBookings, nextMonthBookings, nextNextMonthBookings, sops, topPublications, maintenanceRooms, maintenanceItems] = await Promise.all([
+    const [
+        rooms,
+        currentMonthBookings,
+        nextMonthBookings,
+        nextNextMonthBookings,
+        sops,
+        topPublications,
+        maintenanceRooms,
+        maintenanceItems,
+        availableItems,
+        homepageStats,
+        modules
+    ] = await Promise.all([
         getAllRooms(),
         getMonthBookings(currentMonth, currentYear),
         getMonthBookings((currentMonth + 1) % 12, currentMonth + 1 > 11 ? currentYear + 1 : currentYear),
@@ -24,6 +40,9 @@ export default async function Home() {
         getTopPublications(3),
         getMaintenanceRooms(),
         getMaintenanceItems(),
+        getAvailableItems(),
+        getHomepageStats(),
+        getModules()
     ]);
 
     const calendarBookings = [
@@ -35,25 +54,43 @@ export default async function Home() {
     return (
         <main className="min-h-screen bg-gray-100">
             <Navbar />
-            <div className="container mx-auto px-4 py-8 space-y-8">
+            <div className="container mx-auto px-4 py-8 space-y-6">
                 <HeroSection />
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <div className="space-y-8">
-                        <SOPSection sops={sops} />
+
+                {/* Quick Stats */}
+                <QuickStats
+                    totalItems={homepageStats.totalItems}
+                    availableItems={homepageStats.availableItems}
+                    totalModules={homepageStats.totalModules}
+                    totalPublications={homepageStats.totalPublications}
+                />
+
+                {/* Modules + Available Items Row */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <ModuleSection modules={modules} />
+                    <AvailableItemsSection items={availableItems} />
+                </div>
+
+                {/* Main Content Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="space-y-6">
+                        <div id="sop">
+                            <SOPSection sops={sops} />
+                        </div>
                         <PublicationSection topPublications={topPublications} />
                     </div>
-                    <div className="space-y-8">
-                        <div className="grid grid-cols-1 gap-8">
+                    <div className="space-y-6">
+                        <div id="calendar">
                             <HomeCalendar
                                 rooms={rooms}
                                 bookings={calendarBookings}
                                 title="Kalender Ruangan"
                             />
-                            <AnnouncementSection
-                                maintenanceRooms={maintenanceRooms}
-                                maintenanceItems={maintenanceItems}
-                            />
                         </div>
+                        <AnnouncementSection
+                            maintenanceRooms={maintenanceRooms}
+                            maintenanceItems={maintenanceItems}
+                        />
                     </div>
                 </div>
             </div>

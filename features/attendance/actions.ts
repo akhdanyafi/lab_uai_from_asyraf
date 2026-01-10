@@ -136,3 +136,21 @@ async function getLatestAttendanceForUser(userId: number) {
 
     return result[0] || null;
 }
+
+/**
+ * Get today's attendance for dashboard
+ */
+export async function getTodayAttendanceAction() {
+    const { getTodayAttendance } = await import('./service');
+    return getTodayAttendance();
+}
+
+/**
+ * Get room attendance statistics for dashboard chart
+ */
+export async function getRoomAttendanceStatsAction() {
+    const { getRoomAttendanceStats } = await import('./service');
+    return getRoomAttendanceStats();
+}
+
+

@@ -1,17 +1,5 @@
-import Link from 'next/link';
 import { getSession } from '@/lib/auth';
-import { logout } from '@/features/auth/actions';
 import { redirect } from 'next/navigation';
-import {
-    LayoutDashboard,
-    Box,
-    ClipboardList,
-    CalendarDays,
-    FileText,
-    Key,
-    BookOpen,
-    LogOut
-} from 'lucide-react';
 import Sidebar from '@/components/layout/Sidebar';
 
 export default async function StudentLayout({
@@ -26,17 +14,16 @@ export default async function StudentLayout({
     }
 
     const menuItems = [
-        { name: 'Dashboard', href: '/student/dashboard', icon: LayoutDashboard },
-        { name: 'Pinjam Alat', href: '/student/items', icon: Box },
-        { name: 'Peminjaman Saya', href: '/student/loans', icon: ClipboardList },
-        { name: 'Booking Ruangan', href: '/student/rooms', icon: CalendarDays },
-        { name: 'Modul Praktikum', href: '/student/practicum', icon: BookOpen },
-        { name: 'Publikasi', href: '/student/publications', icon: FileText },
+        { name: 'Dashboard', href: '/student/dashboard', iconName: 'LayoutDashboard' },
+        { name: 'Pinjam Alat', href: '/student/items', iconName: 'Box' },
+        { name: 'Peminjaman Saya', href: '/student/loans', iconName: 'ClipboardList' },
+        { name: 'Booking Ruangan', href: '/student/rooms', iconName: 'CalendarDays' },
+        { name: 'Modul Praktikum', href: '/student/practicum', iconName: 'BookOpen' },
+        { name: 'Publikasi', href: '/student/publications', iconName: 'FileText' },
     ];
 
     return (
         <div className="flex min-h-screen bg-gray-50">
-            {/* Sidebar */}
             {/* Sidebar */}
             <Sidebar
                 subtitle="Student Portal"
@@ -49,8 +36,8 @@ export default async function StudentLayout({
                 }}
             />
 
-            {/* Main Content */}
-            <main className="flex-1 ml-64 p-8">
+            {/* Main Content - responsive margin */}
+            <main className="flex-1 lg:ml-64 pt-20 lg:pt-0 p-4 lg:p-8">
                 {children}
             </main>
         </div>

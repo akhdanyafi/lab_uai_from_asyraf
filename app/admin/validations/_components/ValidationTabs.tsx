@@ -1,18 +1,22 @@
 'use client';
 
 import { useState } from 'react';
-import { ClipboardList, CalendarDays, History, RotateCcw, Users } from 'lucide-react';
+import { ClipboardList, CalendarDays, History, Users } from 'lucide-react';
 
 interface ValidationTabsProps {
     loansContent: React.ReactNode;
     roomsContent: React.ReactNode;
-    returnsContent: React.ReactNode;
-    historyContent: React.ReactNode;
+    riwayatContent: React.ReactNode;
     usersContent: React.ReactNode;
 }
 
-export default function ValidationTabs({ loansContent, roomsContent, returnsContent, historyContent, usersContent }: ValidationTabsProps) {
-    const [activeTab, setActiveTab] = useState<'loans' | 'rooms' | 'returns' | 'history' | 'users'>('loans');
+export default function ValidationTabs({
+    loansContent,
+    roomsContent,
+    riwayatContent,
+    usersContent
+}: ValidationTabsProps) {
+    const [activeTab, setActiveTab] = useState<'loans' | 'rooms' | 'riwayat' | 'users'>('loans');
 
     return (
         <div>
@@ -39,18 +43,8 @@ export default function ValidationTabs({ loansContent, roomsContent, returnsCont
                     Ruangan
                 </button>
                 <button
-                    onClick={() => setActiveTab('returns')}
-                    className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'returns'
-                        ? 'bg-white text-[#0F4C81] shadow-sm'
-                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'
-                        }`}
-                >
-                    <RotateCcw className="w-4 h-4" />
-                    Pengembalian
-                </button>
-                <button
-                    onClick={() => setActiveTab('history')}
-                    className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'history'
+                    onClick={() => setActiveTab('riwayat')}
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'riwayat'
                         ? 'bg-white text-[#0F4C81] shadow-sm'
                         : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'
                         }`}
@@ -66,7 +60,7 @@ export default function ValidationTabs({ loansContent, roomsContent, returnsCont
                         }`}
                 >
                     <Users className="w-4 h-4" />
-                    Akun
+                    Validasi User
                 </button>
             </div>
 
@@ -74,11 +68,9 @@ export default function ValidationTabs({ loansContent, roomsContent, returnsCont
             <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
                 {activeTab === 'loans' && loansContent}
                 {activeTab === 'rooms' && roomsContent}
-                {activeTab === 'returns' && returnsContent}
-                {activeTab === 'history' && historyContent}
+                {activeTab === 'riwayat' && riwayatContent}
                 {activeTab === 'users' && usersContent}
             </div>
         </div>
     );
 }
-

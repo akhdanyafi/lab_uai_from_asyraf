@@ -29,3 +29,29 @@ export async function markAllNotificationsRead() {
     await DashboardService.markAllNotificationsRead();
     revalidatePath('/admin/dashboard');
 }
+
+// Analytics actions
+export async function getLoanTrendData() {
+    return DashboardService.getLoanTrendData();
+}
+
+export async function getBookingsByRoom() {
+    return DashboardService.getBookingsByRoom();
+}
+
+export async function getLoansByCategory() {
+    return DashboardService.getLoansByCategory();
+}
+
+export async function getIdleItemsCount() {
+    return DashboardService.getIdleItemsCount();
+}
+
+export async function getPendingCounts() {
+    return DashboardService.getPendingCounts();
+}
+
+export async function getRecentBookings(days?: number) {
+    return DashboardService.getRecentBookings(days);
+}
+

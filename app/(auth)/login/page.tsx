@@ -17,6 +17,7 @@ export default function LoginPage() {
 
     // Check if user just registered
     const justRegistered = searchParams.get('registered') === 'true';
+    const callbackUrl = searchParams.get('callbackUrl');
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -25,7 +26,8 @@ export default function LoginPage() {
 
         try {
             await login({ email, password });
-            router.push('/dashboard');
+            // Redirect to callback URL if provided, otherwise to dashboard
+            router.push(callbackUrl || '/dashboard');
         } catch (err: any) {
             setError(err.message || 'Login gagal. Periksa kembali kredensial Anda.');
         } finally {
@@ -105,13 +107,6 @@ export default function LoginPage() {
                                 <label className="block text-sm font-semibold text-[#1F2937]">
                                     Password
                                 </label>
-                                {/* Aksi Sekunder: Accent Color #F59E0B (Untuk hover/link penting) */}
-                                <Link
-                                    href="/forgot-password"
-                                    className="text-xs font-medium text-[#6B7280] hover:text-[#F59E0B] transition-colors"
-                                >
-                                    Lupa password?
-                                </Link>
                             </div>
                             <div className="relative group">
                                 <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#0F4C81] transition-colors">
@@ -149,11 +144,16 @@ export default function LoginPage() {
                         </button>
                     </form>
 
-                    <div className="mt-6 text-center text-sm text-gray-500">
-                        Belum punya akun?{' '}
-                        <Link href="/register" className="text-[#0F4C81] font-medium hover:underline">
-                            Ajukan Pembuatan Akun
-                        </Link>
+                    <div className="mt-6 text-center text-sm">
+                        <div className="text-gray-500 mb-2">
+                            Belum punya akun?{' '}
+                            <Link href="/register" className="text-[#0F4C81] font-medium hover:underline">
+                                Ajukan Pembuatan Akun
+                            </Link>
+                        </div>
+                        <p className="text-gray-400 text-xs">
+                            Lupa password? Hubungi admin untuk reset password manual
+                        </p>
                     </div>
                 </div>
 

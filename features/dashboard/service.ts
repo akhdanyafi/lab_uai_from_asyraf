@@ -318,5 +318,141 @@ export class DashboardService {
                 ))
         ]);
     }
+
+    /**
+     * Get loan trend data for last 7 days
+     */
+    static async getLoanTrendData() {
+        const days = 7;
+        const data: { date: string; count: number }[] = [];
+
+        for (let i = days - 1; i >= 0; i--) {
+            const date = new Date();
+            date.setDate(date.getDate() - i);
+            date.setHours(0, 0, 0, 0);
+
+            const nextDate = new Date(date);
+            nextDate.setDate(nextDate.getDate() + 1);
+
+            const result = await db
+                .select({ count: sql<number>`count(*)` })
+                .from(itemLoans)
+                .where(and(
+                    gte(itemLoans.requestDate, date),
+                    sql`${itemLoans.requestDate} < ${nextDate}`
+                ));
+
+            data.push({
+                date: date.toISOString(),
+                count: result[0]?.count || 0
+            });
+        }
+
+        return data;
+    }
+
+    /**
+     * Get bookings by room for chart
+     */
+    static async getBookingsByRoom() {
+        const result = await db
+            .select({
+                name: rooms.name,
+                count: sql<number>`count(*)`,
+            })
+            .from(roomBookings)
+            .leftJoin(rooms, eq(roomBookings.roomId, rooms.id))
+            .groupBy(rooms.name)
+            .orderBy(sql`count(*) DESC`)
+            .limit(5);
+
+        return result.map(r => ({
+            name: r.name || 'Unknown',
+            value: r.count
+        }));
+    }
+
+    /**
+     * Get loans by category for chart
+     */
+    static async getLoansByCategory() {
+        const result = await db
+            .select({
+                name: itemCategories.name,
+                count: sql<number>`count(*)`,
+            })
+            .from(itemLoans)
+            .leftJoin(items, eq(itemLoans.itemId, items.id))
+            .leftJoin(itemCategories, eq(items.categoryId, itemCategories.id))
+            .groupBy(itemCategories.name)
+            .orderBy(sql`count(*) DESC`)
+            .limit(5);
+
+        return result.map(r => ({
+            name: r.name || 'Unknown',
+            value: r.count
+        }));
+    }
+
+    /**
+     * Get idle items (not borrowed for 60+ days)
+     */
+    static async getIdleItemsCount() {
+        const sixtyDaysAgo = new Date();
+        sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+
+        const result = await db
+            .select({ count: sql<number>`count(*)` })
+            .from(items)
+            .where(and(
+                eq(items.status, 'Tersedia'),
+                sql`${items.id} NOT IN (
+                    SELECT DISTINCT item_id FROM item_loans 
+                    WHERE request_date >= ${sixtyDaysAgo}
+                )`
+            ));
+
+        return result[0]?.count || 0;
+    }
+
+    /**
+     * Get all pending counts for insights
+     */
+    static async getPendingCounts() {
+        const [pendingLoans, pendingBookings, pendingUsers, publications] = await Promise.all([
+            db.select({ count: sql<number>`count(*)` }).from(itemLoans).where(eq(itemLoans.status, 'Pending')),
+            db.select({ count: sql<number>`count(*)` }).from(roomBookings).where(eq(roomBookings.status, 'Pending')),
+            db.select({ count: sql<number>`count(*)` }).from(users).where(eq(users.status, 'Pending')),
+            import('@/db/schema').then(async (schema) => {
+                const result = await db
+                    .select({ count: sql<number>`count(*)` })
+                    .from(schema.publications)
+                    .where(eq(schema.publications.status, 'Pending'));
+                return result;
+            })
+        ]);
+
+        return {
+            pendingLoans: pendingLoans[0]?.count || 0,
+            pendingBookings: pendingBookings[0]?.count || 0,
+            pendingUsers: pendingUsers[0]?.count || 0,
+            pendingPublications: publications[0]?.count || 0
+        };
+    }
+
+    /**
+     * Get recent bookings for peak hour detection
+     */
+    static async getRecentBookings(days: number = 30) {
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - days);
+
+        const result = await db
+            .select({ startTime: roomBookings.startTime })
+            .from(roomBookings)
+            .where(gte(roomBookings.startTime, startDate));
+
+        return result;
+    }
 }
 

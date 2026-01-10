@@ -1,16 +1,5 @@
-import Link from 'next/link';
 import { getSession } from '@/lib/auth';
-import { logout } from '@/features/auth/actions';
 import { redirect } from 'next/navigation';
-import {
-    LayoutDashboard,
-    Box,
-    ClipboardList,
-    FileText,
-    LogOut,
-    CalendarDays,
-    Image as ImageIcon
-} from 'lucide-react';
 import Sidebar from '@/components/layout/Sidebar';
 
 export default async function AdminLayout({
@@ -25,12 +14,12 @@ export default async function AdminLayout({
     }
 
     const menuItems = [
-        { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
-        { name: 'Validasi', href: '/admin/validations', icon: ClipboardList },
-        { name: 'Manajemen Aset', href: '/admin/inventory', icon: Box },
-        { name: 'Praktikum', href: '/admin/practicum', icon: ClipboardList },
-        { name: 'Jurnal Publikasi', href: '/admin/publications', icon: FileText },
-        { name: 'Tata Kelola', href: '/admin/governance', icon: FileText },
+        { name: 'Dashboard', href: '/admin/dashboard', iconName: 'LayoutDashboard' },
+        { name: 'Validasi', href: '/admin/validations', iconName: 'ClipboardList' },
+        { name: 'Manajemen Aset', href: '/admin/inventory', iconName: 'Box' },
+        { name: 'Praktikum', href: '/admin/practicum', iconName: 'ClipboardList' },
+        { name: 'Jurnal Publikasi', href: '/admin/publications', iconName: 'BookOpen' },
+        { name: 'Tata Kelola', href: '/admin/governance', iconName: 'FileText' },
     ];
 
     return (
@@ -47,8 +36,8 @@ export default async function AdminLayout({
                 }}
             />
 
-            {/* Main Content */}
-            <main className="flex-1 ml-64 p-8">
+            {/* Main Content - responsive margin */}
+            <main className="flex-1 lg:ml-64 pt-20 lg:pt-0 p-4 lg:p-8">
                 {children}
             </main>
         </div>

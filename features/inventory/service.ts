@@ -127,4 +127,27 @@ export class InventoryService {
             room: row.room!,
         }));
     }
+
+    static async getByQrCode(qrCode: string) {
+        const result = await db
+            .select({
+                item: items,
+                category: itemCategories,
+                room: rooms,
+            })
+            .from(items)
+            .leftJoin(itemCategories, eq(items.categoryId, itemCategories.id))
+            .leftJoin(rooms, eq(items.roomId, rooms.id))
+            .where(eq(items.qrCode, qrCode))
+            .limit(1);
+
+        if (result.length === 0) return null;
+
+        const row = result[0];
+        return {
+            ...row.item,
+            category: row.category!,
+            room: row.room!,
+        };
+    }
 }

@@ -120,3 +120,56 @@ export async function getMaintenanceItems() {
     return InventoryService.getMaintenanceItems();
 }
 
+export async function getItemByQrCode(qrCode: string) {
+    return InventoryService.getByQrCode(qrCode);
+}
+
+/**
+ * Get available items with category for homepage
+ */
+export async function getAvailableItems() {
+    const { db } = await import('@/db');
+    const { items, itemCategories } = await import('@/db/schema');
+    const { eq } = await import('drizzle-orm');
+
+    const result = await db.select({
+        id: items.id,
+        name: items.name,
+        qrCode: items.qrCode,
+        status: items.status,
+        category: {
+            name: itemCategories.name
+        }
+    })
+        .from(items)
+        .leftJoin(itemCategories, eq(items.categoryId, itemCategories.id))
+        .where(eq(items.status, 'Tersedia'));
+
+    return result;
+}
+
+/**
+ * Get homepage statistics
+ */
+export async function getHomepageStats() {
+    const { db } = await import('@/db');
+    const { items, publications } = await import('@/db/schema');
+    const { practicumModules } = await import('@/db/schema');
+    const { eq, sql } = await import('drizzle-orm');
+
+    const [totalItemsResult, availableItemsResult, modulesResult, publicationsResult] = await Promise.all([
+        db.select({ count: sql<number>`count(*)` }).from(items),
+        db.select({ count: sql<number>`count(*)` }).from(items).where(eq(items.status, 'Tersedia')),
+        db.select({ count: sql<number>`count(*)` }).from(practicumModules),
+        db.select({ count: sql<number>`count(*)` }).from(publications).where(eq(publications.status, 'Published'))
+    ]);
+
+    return {
+        totalItems: totalItemsResult[0]?.count || 0,
+        availableItems: availableItemsResult[0]?.count || 0,
+        totalModules: modulesResult[0]?.count || 0,
+        totalPublications: publicationsResult[0]?.count || 0
+    };
+}
+
+

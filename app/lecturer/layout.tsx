@@ -1,14 +1,5 @@
-import Link from 'next/link';
 import { getSession } from '@/lib/auth';
-import { logout } from '@/features/auth/actions';
 import { redirect } from 'next/navigation';
-import {
-    LayoutDashboard,
-    CalendarDays,
-    FileText,
-    BookOpen,
-    LogOut
-} from 'lucide-react';
 import Sidebar from '@/components/layout/Sidebar';
 
 export default async function LecturerLayout({
@@ -23,15 +14,14 @@ export default async function LecturerLayout({
     }
 
     const menuItems = [
-        { name: 'Dashboard', href: '/lecturer/dashboard', icon: LayoutDashboard },
-        { name: 'Booking Ruangan', href: '/lecturer/rooms', icon: CalendarDays },
-        { name: 'Praktikum', href: '/lecturer/practicum', icon: FileText },
-        { name: 'Publikasi', href: '/lecturer/publications', icon: BookOpen },
+        { name: 'Dashboard', href: '/lecturer/dashboard', iconName: 'LayoutDashboard' },
+        { name: 'Booking Ruangan', href: '/lecturer/rooms', iconName: 'CalendarDays' },
+        { name: 'Praktikum', href: '/lecturer/practicum', iconName: 'FileText' },
+        { name: 'Publikasi', href: '/lecturer/publications', iconName: 'BookOpen' },
     ];
 
     return (
         <div className="flex min-h-screen bg-gray-50">
-            {/* Sidebar */}
             {/* Sidebar */}
             <Sidebar
                 subtitle="Lecturer Portal"
@@ -44,8 +34,8 @@ export default async function LecturerLayout({
                 }}
             />
 
-            {/* Main Content */}
-            <main className="flex-1 ml-64 p-8">
+            {/* Main Content - responsive margin */}
+            <main className="flex-1 lg:ml-64 pt-20 lg:pt-0 p-4 lg:p-8">
                 {children}
             </main>
         </div>

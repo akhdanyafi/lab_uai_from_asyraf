@@ -173,7 +173,7 @@ export default function ItemsView({ items, rooms, categories }: ItemsViewProps) 
                                                 );
                                             }}
                                             className={`text-xs font-medium px-2 py-1 rounded border-0 cursor-pointer ${item.status === 'Tersedia' ? 'bg-green-50 text-green-700' :
-                                                    'bg-gray-50 text-gray-700'
+                                                'bg-gray-50 text-gray-700'
                                                 }`}
                                         >
                                             <option value="Tersedia">Tersedia</option>
@@ -182,7 +182,7 @@ export default function ItemsView({ items, rooms, categories }: ItemsViewProps) 
                                     )}
                                 </td>
                                 <td className="px-6 py-4">
-                                    <QRCodeDisplay value={item.qrCode} />
+                                    <QRCodeDisplay value={item.qrCode} baseUrl={process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'} />
                                 </td>
                                 <td className="px-6 py-4 text-right">
                                     <form action={async () => {

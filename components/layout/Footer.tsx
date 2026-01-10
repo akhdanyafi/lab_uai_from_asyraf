@@ -9,7 +9,7 @@ export default function Footer() {
             {/* --- Main Footer Content --- */}
             <div className="container mx-auto px-4 py-12">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
-                    
+
                     {/* Kolom 1: Identitas & Deskripsi */}
                     <div className="space-y-4">
                         <div className="flex items-center gap-3">
@@ -40,22 +40,22 @@ export default function Footer() {
                         </h4>
                         <ul className="space-y-3 text-sm">
                             <li>
-                                <Link href="/dashboard" className="text-blue-100 hover:text-[#F59E0B] hover:pl-1 transition-all">
+                                <Link href="/login" className="text-blue-100 hover:text-[#F59E0B] hover:pl-1 transition-all">
                                     Dashboard & Peminjaman
                                 </Link>
                             </li>
                             <li>
-                                <Link href="/jadwal" className="text-blue-100 hover:text-[#F59E0B] hover:pl-1 transition-all">
+                                <a href="#calendar" className="text-blue-100 hover:text-[#F59E0B] hover:pl-1 transition-all">
                                     Jadwal Laboratorium
-                                </Link>
+                                </a>
                             </li>
                             <li>
-                                <Link href="/sop" className="text-blue-100 hover:text-[#F59E0B] hover:pl-1 transition-all">
+                                <a href="#sop" className="text-blue-100 hover:text-[#F59E0B] hover:pl-1 transition-all">
                                     SOP & Tata Tertib
-                                </Link>
+                                </a>
                             </li>
                             <li>
-                                <Link href="/publikasi" className="text-blue-100 hover:text-[#F59E0B] hover:pl-1 transition-all">
+                                <Link href="/publications" className="text-blue-100 hover:text-[#F59E0B] hover:pl-1 transition-all">
                                     Publikasi Mahasiswa
                                 </Link>
                             </li>

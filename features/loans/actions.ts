@@ -133,3 +133,26 @@ export async function getLecturersForLoan() {
     return lecturers;
 }
 
+/**
+ * Request item loan via QR scan
+ */
+export async function requestItemLoan(data: {
+    itemId: number;
+    studentId: number;
+    purpose: string;
+    returnPlanDate: Date;
+    permitLetter?: string;
+}) {
+    await LoanService.create({
+        itemId: data.itemId,
+        studentId: data.studentId,
+        purpose: data.purpose,
+        returnPlanDate: data.returnPlanDate,
+        suratIzin: data.permitLetter,
+    });
+    revalidatePath('/student/loans');
+    revalidatePath('/admin/loans');
+    revalidatePath('/admin/inventory');
+    revalidatePath('/items');
+}
+
