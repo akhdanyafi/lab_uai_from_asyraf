@@ -1,7 +1,7 @@
 'use client';
 
-import { createItem, deleteItem } from '@/features/inventory/actions';
-import { Plus, Trash2, Box, Tag, MapPin, Settings } from 'lucide-react';
+import { createItem, deleteItem, updateItem } from '@/features/inventory/actions';
+import { Plus, Trash2, Box, Tag, MapPin, Settings, Edit } from 'lucide-react';
 import QRCodeDisplay from '@/components/shared/QRCodeDisplay';
 import { useState } from 'react';
 import Modal from '@/components/shared/Modal';
@@ -36,6 +36,26 @@ interface ItemsViewProps {
 export default function ItemsView({ items, rooms, categories }: ItemsViewProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showCategoryModal, setShowCategoryModal] = useState(false);
+    const [editingItem, setEditingItem] = useState<Item | null>(null);
+
+    const handleEdit = async (formData: FormData) => {
+        if (!editingItem) return;
+        setIsSubmitting(true);
+        const name = formData.get('name') as string;
+        const categoryId = parseInt(formData.get('categoryId') as string);
+        const roomId = parseInt(formData.get('roomId') as string);
+        const description = formData.get('description') as string;
+
+        await updateItem(editingItem.id, {
+            name,
+            categoryId,
+            roomId,
+            description: description || undefined,
+            status: editingItem.status || 'Tersedia' as const
+        });
+        setIsSubmitting(false);
+        setEditingItem(null);
+    };
 
     return (
         <div>
@@ -185,15 +205,27 @@ export default function ItemsView({ items, rooms, categories }: ItemsViewProps) 
                                     <QRCodeDisplay value={item.qrCode} baseUrl={process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'} />
                                 </td>
                                 <td className="px-6 py-4 text-right">
-                                    <form action={async () => {
-                                        if (confirm('Apakah Anda yakin ingin menghapus alat ini?')) {
-                                            await deleteItem(item.id);
-                                        }
-                                    }}>
-                                        <button className="text-red-500 hover:text-red-700 p-2 hover:bg-red-50 rounded-lg transition-colors">
-                                            <Trash2 className="w-4 h-4" />
+                                    <div className="flex gap-1 justify-end">
+                                        <button
+                                            onClick={() => setEditingItem(item)}
+                                            className="text-blue-500 hover:text-blue-700 p-2 hover:bg-blue-50 rounded-lg transition-colors"
+                                            title="Edit"
+                                        >
+                                            <Edit className="w-4 h-4" />
                                         </button>
-                                    </form>
+                                        <form action={async () => {
+                                            if (confirm('Apakah Anda yakin ingin menghapus alat ini?')) {
+                                                await deleteItem(item.id);
+                                            }
+                                        }}>
+                                            <button
+                                                className="text-red-500 hover:text-red-700 p-2 hover:bg-red-50 rounded-lg transition-colors"
+                                                title="Hapus"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         ))}
@@ -215,6 +247,78 @@ export default function ItemsView({ items, rooms, categories }: ItemsViewProps) 
                 title="Manajemen Kategori"
             >
                 <CategoriesView categories={categories} />
+            </Modal>
+
+            {/* Edit Item Modal */}
+            <Modal
+                isOpen={!!editingItem}
+                onClose={() => setEditingItem(null)}
+                title="Edit Alat"
+            >
+                {editingItem && (
+                    <form action={handleEdit} className="space-y-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Nama Alat</label>
+                            <input
+                                name="name"
+                                required
+                                defaultValue={editingItem.name}
+                                className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Kategori</label>
+                            <select
+                                name="categoryId"
+                                required
+                                defaultValue={editingItem.category.id}
+                                className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                            >
+                                {categories.map(cat => (
+                                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Ruangan</label>
+                            <select
+                                name="roomId"
+                                required
+                                defaultValue={editingItem.room.id}
+                                className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                            >
+                                {rooms.map(room => (
+                                    <option key={room.id} value={room.id}>{room.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
+                            <textarea
+                                name="description"
+                                defaultValue={editingItem.description || ''}
+                                rows={2}
+                                className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                            />
+                        </div>
+                        <div className="flex gap-3 justify-end pt-4">
+                            <button
+                                type="button"
+                                onClick={() => setEditingItem(null)}
+                                className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium text-sm"
+                            >
+                                Batal
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={isSubmitting}
+                                className="bg-[#0F4C81] text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-[#0F4C81]/90 transition-colors disabled:opacity-50"
+                            >
+                                {isSubmitting ? 'Menyimpan...' : 'Simpan'}
+                            </button>
+                        </div>
+                    </form>
+                )}
             </Modal>
         </div>
     );

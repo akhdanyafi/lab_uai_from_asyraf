@@ -1,7 +1,9 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { User, Box, Search, X } from 'lucide-react';
+import { useState, useMemo, useTransition } from 'react';
+import { User, Box, Search, X, Trash2 } from 'lucide-react';
+import { deleteLoan } from '@/features/loans/actions';
+import { deleteBooking } from '@/features/bookings/actions';
 
 interface CompletedLoan {
     id: number;
@@ -34,6 +36,7 @@ interface SearchableRiwayatProps {
 
 export default function SearchableRiwayatSection({ completedLoans, completedBookings }: SearchableRiwayatProps) {
     const [searchQuery, setSearchQuery] = useState('');
+    const [isPending, startTransition] = useTransition();
 
     const filteredLoans = useMemo(() => {
         if (!searchQuery) return completedLoans;
@@ -54,6 +57,22 @@ export default function SearchableRiwayatSection({ completedLoans, completedBook
             booking.room.name.toLowerCase().includes(query)
         );
     }, [completedBookings, searchQuery]);
+
+    const handleDeleteLoan = (loanId: number) => {
+        if (confirm('Apakah Anda yakin ingin menghapus riwayat peminjaman ini?')) {
+            startTransition(async () => {
+                await deleteLoan(loanId);
+            });
+        }
+    };
+
+    const handleDeleteBooking = (bookingId: number) => {
+        if (confirm('Apakah Anda yakin ingin menghapus riwayat booking ini?')) {
+            startTransition(async () => {
+                await deleteBooking(bookingId);
+            });
+        }
+    };
 
     return (
         <div className="space-y-8">
@@ -93,11 +112,12 @@ export default function SearchableRiwayatSection({ completedLoans, completedBook
                                 <th className="px-6 py-4 font-semibold text-gray-700">Alat</th>
                                 <th className="px-6 py-4 font-semibold text-gray-700">Tanggal</th>
                                 <th className="px-6 py-4 font-semibold text-gray-700">Status</th>
+                                <th className="px-6 py-4 font-semibold text-gray-700 text-right">Aksi</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
                             {filteredLoans.map((loan) => (
-                                <tr key={loan.id} className="hover:bg-gray-50 transition-colors">
+                                <tr key={loan.id} className={`hover:bg-gray-50 transition-colors ${isPending ? 'opacity-50' : ''}`}>
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-2">
                                             <User className="w-4 h-4 text-gray-400" />
@@ -121,11 +141,21 @@ export default function SearchableRiwayatSection({ completedLoans, completedBook
                                             Selesai
                                         </span>
                                     </td>
+                                    <td className="px-6 py-4 text-right">
+                                        <button
+                                            onClick={() => handleDeleteLoan(loan.id)}
+                                            disabled={isPending}
+                                            className="text-red-500 hover:text-red-700 p-2 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                                            title="Hapus Riwayat"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </td>
                                 </tr>
                             ))}
                             {filteredLoans.length === 0 && (
                                 <tr>
-                                    <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
+                                    <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
                                         {searchQuery ? 'Tidak ada hasil pencarian' : 'Tidak ada riwayat selesai'}
                                     </td>
                                 </tr>
@@ -146,11 +176,12 @@ export default function SearchableRiwayatSection({ completedLoans, completedBook
                                 <th className="px-6 py-4 font-semibold text-gray-700">Ruangan</th>
                                 <th className="px-6 py-4 font-semibold text-gray-700">Waktu</th>
                                 <th className="px-6 py-4 font-semibold text-gray-700">Status</th>
+                                <th className="px-6 py-4 font-semibold text-gray-700 text-right">Aksi</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
                             {filteredBookings.map((booking) => (
-                                <tr key={booking.id} className="hover:bg-gray-50 transition-colors">
+                                <tr key={booking.id} className={`hover:bg-gray-50 transition-colors ${isPending ? 'opacity-50' : ''}`}>
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-2">
                                             <User className="w-4 h-4 text-gray-400" />
@@ -171,11 +202,21 @@ export default function SearchableRiwayatSection({ completedLoans, completedBook
                                             Selesai
                                         </span>
                                     </td>
+                                    <td className="px-6 py-4 text-right">
+                                        <button
+                                            onClick={() => handleDeleteBooking(booking.id)}
+                                            disabled={isPending}
+                                            className="text-red-500 hover:text-red-700 p-2 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                                            title="Hapus Riwayat"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </td>
                                 </tr>
                             ))}
                             {filteredBookings.length === 0 && (
                                 <tr>
-                                    <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
+                                    <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
                                         {searchQuery ? 'Tidak ada hasil pencarian' : 'Tidak ada riwayat selesai'}
                                     </td>
                                 </tr>
@@ -187,3 +228,4 @@ export default function SearchableRiwayatSection({ completedLoans, completedBook
         </div>
     );
 }
+

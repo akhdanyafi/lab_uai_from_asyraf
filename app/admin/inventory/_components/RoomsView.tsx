@@ -1,8 +1,9 @@
 'use client';
 
-import { createRoom, deleteRoom } from '@/features/inventory/actions';
-import { Plus, Trash2, MapPin } from 'lucide-react';
+import { createRoom, deleteRoom, updateRoom } from '@/features/inventory/actions';
+import { Plus, Trash2, MapPin, Edit } from 'lucide-react';
 import { useState } from 'react';
+import Modal from '@/components/shared/Modal';
 
 interface Room {
     id: number;
@@ -18,6 +19,19 @@ interface RoomsViewProps {
 
 export default function RoomsView({ rooms }: RoomsViewProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [editingRoom, setEditingRoom] = useState<Room | null>(null);
+
+    const handleEdit = async (formData: FormData) => {
+        if (!editingRoom) return;
+        setIsSubmitting(true);
+        const name = formData.get('name') as string;
+        const location = formData.get('location') as string;
+        const capacity = parseInt(formData.get('capacity') as string);
+
+        await updateRoom(editingRoom.id, { name, location, capacity });
+        setIsSubmitting(false);
+        setEditingRoom(null);
+    };
 
     return (
         <div>
@@ -92,7 +106,7 @@ export default function RoomsView({ rooms }: RoomsViewProps) {
                                             );
                                         }}
                                         className={`text-xs font-medium px-2 py-1 rounded border-0 cursor-pointer ${room.status === 'Tersedia' ? 'bg-green-50 text-green-700' :
-                                                'bg-gray-50 text-gray-700'
+                                            'bg-gray-50 text-gray-700'
                                             }`}
                                     >
                                         <option value="Tersedia">Tersedia</option>
@@ -100,15 +114,27 @@ export default function RoomsView({ rooms }: RoomsViewProps) {
                                     </select>
                                 </td>
                                 <td className="px-6 py-4 text-right">
-                                    <form action={async () => {
-                                        if (confirm('Apakah Anda yakin ingin menghapus ruangan ini?')) {
-                                            await deleteRoom(room.id);
-                                        }
-                                    }}>
-                                        <button className="text-red-500 hover:text-red-700 p-2 hover:bg-red-50 rounded-lg transition-colors">
-                                            <Trash2 className="w-4 h-4" />
+                                    <div className="flex gap-1 justify-end">
+                                        <button
+                                            onClick={() => setEditingRoom(room)}
+                                            className="text-blue-500 hover:text-blue-700 p-2 hover:bg-blue-50 rounded-lg transition-colors"
+                                            title="Edit"
+                                        >
+                                            <Edit className="w-4 h-4" />
                                         </button>
-                                    </form>
+                                        <form action={async () => {
+                                            if (confirm('Apakah Anda yakin ingin menghapus ruangan ini?')) {
+                                                await deleteRoom(room.id);
+                                            }
+                                        }}>
+                                            <button
+                                                className="text-red-500 hover:text-red-700 p-2 hover:bg-red-50 rounded-lg transition-colors"
+                                                title="Hapus"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         ))}
@@ -122,6 +148,63 @@ export default function RoomsView({ rooms }: RoomsViewProps) {
                     </tbody>
                 </table>
             </div>
+
+            {/* Edit Room Modal */}
+            <Modal
+                isOpen={!!editingRoom}
+                onClose={() => setEditingRoom(null)}
+                title="Edit Ruangan"
+            >
+                {editingRoom && (
+                    <form action={handleEdit} className="space-y-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Nama Ruangan</label>
+                            <input
+                                name="name"
+                                required
+                                defaultValue={editingRoom.name}
+                                className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Lokasi</label>
+                            <input
+                                name="location"
+                                required
+                                defaultValue={editingRoom.location}
+                                className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Kapasitas</label>
+                            <input
+                                name="capacity"
+                                type="number"
+                                required
+                                defaultValue={editingRoom.capacity}
+                                className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                            />
+                        </div>
+                        <div className="flex gap-3 justify-end pt-4">
+                            <button
+                                type="button"
+                                onClick={() => setEditingRoom(null)}
+                                className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium text-sm"
+                            >
+                                Batal
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={isSubmitting}
+                                className="bg-[#0F4C81] text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-[#0F4C81]/90 transition-colors disabled:opacity-50"
+                            >
+                                {isSubmitting ? 'Menyimpan...' : 'Simpan'}
+                            </button>
+                        </div>
+                    </form>
+                )}
+            </Modal>
         </div>
     );
 }
+
