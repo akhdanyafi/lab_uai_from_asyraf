@@ -43,6 +43,28 @@ Fitur peminjaman memungkinkan mahasiswa mengajukan peminjaman alat yang tersedia
    Item Status: "Tersedia"
 ```
 
+### 3. QR Code Flow (Alternatif)
+
+Memudahkan peminjaman dengan scan kode fisik pada alat.
+
+```
+[User] Scan QR Code fisik
+        ↓
+Buka URL: /items/[kode-unik]
+        ↓
+    Cek Status Alat
+   ┌────┴────────────────────────┐
+Tersedia                   Dipinjam/Maintenance
+   ↓                             ↓
+Tombol "Pinjam Alat Ini"    (Tampilkan Info Status)
+   ↓
+(Login jika belum)
+   ↓
+Form Peminjaman
+   ↓
+(Lanjut ke alur 1)
+```
+
 ## Data Model
 
 ### Tabel `item_loans`
