@@ -4,45 +4,55 @@ Dokumentasi lengkap backend sistem LAB_UAI, mencakup Entity Relationship Diagram
 
 ## Entity Relationship Diagram (ERD)
 
+ERD dibagi menjadi beberapa diagram per domain agar lebih compact dan mudah di-screenshot.
+
+---
+
+### ERD 1: User & Role Domain
+
 ```mermaid
 erDiagram
-    %% ==================== USER DOMAIN ====================
     ROLES {
         int id PK
-        varchar name UK "Admin, Mahasiswa, Dosen"
+        varchar name UK
     }
-    
     USERS {
         int id PK
         int role_id FK
         varchar full_name
-        varchar identifier UK "NIM atau NIDN"
+        varchar identifier UK
         varchar email
         varchar password_hash
-        enum status "Active, Pending, Rejected, Pre-registered"
-        int batch "Angkatan, e.g. 2022"
-        enum study_type "Reguler, Hybrid"
+        enum status
+        int batch
+        enum study_type
         varchar program_studi
         varchar dosen_pembimbing
         datetime created_at
     }
-    
-    ROLES ||--o{ USERS : "has"
-    
-    %% ==================== INVENTORY DOMAIN ====================
+    ROLES ||--o{ USERS : "memiliki"
+```
+
+> **Status**: `Active`, `Pending`, `Rejected`, `Pre-registered`  
+> **Study Type**: `Reguler`, `Hybrid`
+
+---
+
+### ERD 2: Inventory & Item Loan Domain
+
+```mermaid
+erDiagram
+    ITEM_CATEGORIES {
+        int id PK
+        varchar name
+    }
     ROOMS {
         int id PK
         varchar name
         varchar location
         int capacity
-        enum status "Tersedia, Maintenance"
+        enum status
     }
-    
-    ITEM_CATEGORIES {
-        int id PK
-        varchar name
-    }
-    
     ITEMS {
         int id PK
         int category_id FK
@@ -50,13 +60,8 @@ erDiagram
         varchar name
         text description
         varchar qr_code UK
-        enum status "Tersedia, Dipinjam, Maintenance"
+        enum status
     }
-    
-    ITEM_CATEGORIES ||--o{ ITEMS : "categorizes"
-    ROOMS ||--o{ ITEMS : "stores"
-    
-    %% ==================== LOAN DOMAIN ====================
     ITEM_LOANS {
         int id PK
         int student_id FK
@@ -64,26 +69,31 @@ erDiagram
         int validator_id FK
         datetime request_date
         datetime return_plan_date
-        datetime actual_return_date
-        enum status "Pending, Disetujui, Ditolak, Selesai, Terlambat"
-        varchar organisasi
-        datetime start_time
-        datetime end_time
-        varchar purpose
-        varchar surat_izin
-        varchar dosen_pembimbing
-        text software "JSON array"
-        enum notification_read "0, 1"
-        varchar return_photo
-        enum return_status "Belum, Pending, Dikembalikan"
-        enum return_notification_read "0, 1"
+        enum status
+        enum return_status
     }
-    
-    USERS ||--o{ ITEM_LOANS : "borrows (student)"
-    USERS ||--o{ ITEM_LOANS : "validates (admin)"
-    ITEMS ||--o{ ITEM_LOANS : "is borrowed"
-    
-    %% ==================== BOOKING DOMAIN ====================
+    ITEM_CATEGORIES ||--o{ ITEMS : "kategori"
+    ROOMS ||--o{ ITEMS : "lokasi"
+    ITEMS ||--o{ ITEM_LOANS : "dipinjam"
+```
+
+> **Item Status**: `Tersedia`, `Dipinjam`, `Maintenance`  
+> **Loan Status**: `Pending`, `Disetujui`, `Ditolak`, `Selesai`, `Terlambat`  
+> **Return Status**: `Belum`, `Pending`, `Dikembalikan`
+
+---
+
+### ERD 3: Room Booking & Attendance Domain
+
+```mermaid
+erDiagram
+    ROOMS {
+        int id PK
+        varchar name
+        varchar location
+        int capacity
+        enum status
+    }
     ROOM_BOOKINGS {
         int id PK
         int user_id FK
@@ -93,18 +103,8 @@ erDiagram
         datetime end_time
         text purpose
         varchar organisasi
-        int jumlah_peserta
-        varchar surat_permohonan
-        varchar dosen_pembimbing
-        enum status "Pending, Disetujui, Ditolak"
-        enum notification_read "0, 1"
+        enum status
     }
-    
-    USERS ||--o{ ROOM_BOOKINGS : "books"
-    USERS ||--o{ ROOM_BOOKINGS : "validates"
-    ROOMS ||--o{ ROOM_BOOKINGS : "is booked"
-    
-    %% ==================== ATTENDANCE DOMAIN ====================
     LAB_ATTENDANCE {
         int id PK
         int user_id FK
@@ -113,35 +113,19 @@ erDiagram
         varchar dosen_penanggung_jawab
         datetime check_in_time
     }
-    
-    USERS ||--o{ LAB_ATTENDANCE : "attends"
-    ROOMS ||--o{ LAB_ATTENDANCE : "hosts"
-    
-    %% ==================== PRACTICUM DOMAIN ====================
-    PRACTICUM_MODULES {
-        int id PK
-        varchar name
-        text description
-        varchar file_path
-        text subjects "JSON array"
-        datetime created_at
-        datetime updated_at
-    }
-    
-    %% ==================== GOVERNANCE DOMAIN ====================
-    GOVERNANCE_DOCS {
-        int id PK
-        int admin_id FK
-        varchar title
-        varchar file_path
-        varchar cover_path
-        enum type "SOP, LPJ Bulanan"
-        datetime created_at
-    }
-    
-    USERS ||--o{ GOVERNANCE_DOCS : "uploads"
-    
-    %% ==================== PUBLICATION DOMAIN ====================
+    ROOMS ||--o{ ROOM_BOOKINGS : "dipesan"
+    ROOMS ||--o{ LAB_ATTENDANCE : "lokasi"
+```
+
+> **Booking Status**: `Pending`, `Disetujui`, `Ditolak`  
+> **Room Status**: `Tersedia`, `Maintenance`
+
+---
+
+### ERD 4: Publication Domain
+
+```mermaid
+erDiagram
     PUBLICATIONS {
         int id PK
         int uploader_id FK
@@ -149,28 +133,48 @@ erDiagram
         varchar author_name
         varchar title
         text abstract
-        text keywords "JSON array"
+        text keywords
         varchar file_path
         varchar link
         int view_count
-        enum status "Pending, Published, Rejected"
+        enum status
         datetime publish_date
-        datetime created_at
     }
-    
     PUBLICATION_LIKES {
         int id PK
         int publication_id FK
         int user_id FK
         datetime created_at
     }
-    
-    USERS ||--o{ PUBLICATIONS : "uploads"
-    USERS ||--o{ PUBLICATIONS : "submits"
-    PUBLICATIONS ||--o{ PUBLICATION_LIKES : "receives"
-    USERS ||--o{ PUBLICATION_LIKES : "gives"
-    
-    %% ==================== HOMEPAGE DOMAIN ====================
+    PUBLICATIONS ||--o{ PUBLICATION_LIKES : "diberikan"
+```
+
+> **Publication Status**: `Pending`, `Published`, `Rejected`
+
+---
+
+### ERD 5: Content Management Domain
+
+```mermaid
+erDiagram
+    GOVERNANCE_DOCS {
+        int id PK
+        int admin_id FK
+        varchar title
+        varchar file_path
+        varchar cover_path
+        enum type
+        datetime created_at
+    }
+    PRACTICUM_MODULES {
+        int id PK
+        varchar name
+        text description
+        varchar file_path
+        text subjects
+        datetime created_at
+        datetime updated_at
+    }
     HERO_PHOTOS {
         int id PK
         varchar title
@@ -179,6 +183,22 @@ erDiagram
         text link
         datetime created_at
     }
+```
+
+> **Doc Type**: `SOP`, `LPJ Bulanan`
+
+---
+
+### ERD Lengkap (Relasi Antar Domain)
+
+```mermaid
+erDiagram
+    USERS ||--o{ ITEM_LOANS : "meminjam"
+    USERS ||--o{ ROOM_BOOKINGS : "memesan"
+    USERS ||--o{ LAB_ATTENDANCE : "absen"
+    USERS ||--o{ PUBLICATIONS : "submit"
+    USERS ||--o{ PUBLICATION_LIKES : "like"
+    USERS ||--o{ GOVERNANCE_DOCS : "upload"
 ```
 
 ---
@@ -257,229 +277,210 @@ graph TB
 
 ## Flowchart Fitur
 
-### 1. Authentication Flow
+Flowchart dibagi per proses agar lebih compact dan mudah di-screenshot.
+
+---
+
+### 1. Login Flow
 
 ```mermaid
-flowchart TD
-    subgraph "Login Flow"
-        A[User Input Email/NIM + Password] --> B{Cari User}
-        B -->|Not Found| C[❌ Error: User not found]
-        B -->|Found| D{Password Valid?}
-        D -->|No| E[❌ Error: Password salah]
-        D -->|Yes| F{Status User?}
-        F -->|Pending| G[❌ Error: Menunggu approval]
-        F -->|Rejected| H[❌ Error: Akun ditolak]
-        F -->|Active| I[Get Role Name]
-        I --> J[Create Session JWT]
-        J --> K[Set Cookie]
-        K --> L[✅ Login Berhasil]
-    end
-    
-    subgraph "Session Management"
-        M[Request Masuk] --> N{Cookie ada?}
-        N -->|No| O[Redirect ke Login]
-        N -->|Yes| P[Decrypt JWT]
-        P --> Q{Token Valid?}
-        Q -->|No| O
-        Q -->|Yes| R[Return Session Data]
-    end
+flowchart LR
+    A[Input Email/NIM] --> B{User Ada?}
+    B -->|No| C[❌ Error]
+    B -->|Yes| D{Password OK?}
+    D -->|No| E[❌ Error]
+    D -->|Yes| F{Status?}
+    F -->|Active| G[Create JWT] --> H[✅ Login]
+    F -->|Pending/Rejected| I[❌ Error]
 ```
 
-### 2. User Registration & Validation Flow
+---
+
+### 2. Session Check Flow
 
 ```mermaid
-flowchart TD
-    subgraph "Registration"
-        A[User Submit Form] --> B[Validasi Input]
-        B --> C{Email/NIM unik?}
-        C -->|No| D[❌ Error: Sudah terdaftar]
-        C -->|Yes| E[Hash Password]
-        E --> F[Create User dengan Status=Pending]
-        F --> G[✅ Registrasi Berhasil]
-    end
-    
-    subgraph "Admin Validation"
-        H[Admin Lihat Pending Users] --> I[Review User Data]
-        I --> J{Keputusan}
-        J -->|Approve| K[Update Status=Active]
-        J -->|Reject| L[Update Status=Rejected]
-        K --> M[User Bisa Login]
-        L --> N[User Tidak Bisa Login]
-    end
+flowchart LR
+    A[Request] --> B{Cookie?}
+    B -->|No| C[Redirect Login]
+    B -->|Yes| D{Token Valid?}
+    D -->|No| C
+    D -->|Yes| E[✅ Return Session]
 ```
 
-### 3. Item Loan Flow
+---
+
+### 3. User Registration Flow
 
 ```mermaid
-flowchart TD
-    subgraph "Request Peminjaman"
-        A[Mahasiswa Scan QR / Pilih Item] --> B{Item Tersedia?}
-        B -->|No| C[❌ Error: Item tidak tersedia]
-        B -->|Yes| D[Isi Form Peminjaman]
-        D --> E{Ada Surat Izin?}
-        E -->|Yes| F[Auto-Approve]
-        E -->|No| G[Status = Pending]
-        F --> H[Status = Disetujui]
-        H --> I[Update Item Status = Dipinjam]
-    end
-    
-    subgraph "Admin Validation"
-        G --> J[Admin Review Request]
-        J --> K{Keputusan}
-        K -->|Approve| H
-        K -->|Reject| L[Status = Ditolak]
-    end
-    
-    subgraph "Pengembalian"
-        M[Mahasiswa Request Return] --> N{Upload Foto?}
-        N -->|Yes| O[Auto-Approve Return]
-        N -->|No| P[Return Status = Pending]
-        P --> Q[Admin Review]
-        Q --> R{Keputusan}
-        R -->|Approve| O
-        R -->|Reject| S[Return Status = Belum]
-        O --> T[Update Return Status = Dikembalikan]
-        T --> U[Update Item Status = Tersedia]
-        U --> V[Update Loan Status = Selesai]
-    end
+flowchart LR
+    A[Submit Form] --> B{Email/NIM Unik?}
+    B -->|No| C[❌ Error]
+    B -->|Yes| D[Hash Password]
+    D --> E[Create User: Pending]
+    E --> F[✅ Registrasi OK]
 ```
 
-### 4. Room Booking Flow
+---
+
+### 4. User Validation Flow (Admin)
 
 ```mermaid
-flowchart TD
-    subgraph "Request Booking"
-        A[User Pilih Ruangan & Waktu] --> B{Ruangan Tersedia?}
-        B -->|No| C[❌ Error: Bentrok jadwal]
-        B -->|Yes| D[Isi Form Booking]
-        D --> E{Ada Surat Permohonan?}
-        E -->|Yes| F[Auto-Approve]
-        E -->|No| G[Status = Pending]
-        F --> H[Status = Disetujui]
-    end
-    
-    subgraph "Admin Validation"
-        G --> I[Admin Review Booking]
-        I --> J{Keputusan}
-        J -->|Approve| H
-        J -->|Reject| K[Status = Ditolak]
-    end
-    
-    subgraph "Calendar View"
-        L[User Lihat Kalender] --> M[Ambil Booking Bulan Ini]
-        M --> N[Filter by Room]
-        N --> O[Display pada Calendar]
-    end
+flowchart LR
+    A[Admin Review] --> B{Keputusan}
+    B -->|Approve| C[Status: Active] --> D[✅ Bisa Login]
+    B -->|Reject| E[Status: Rejected] --> F[❌ Tidak Bisa Login]
 ```
 
-### 5. Lab Attendance Flow
+---
+
+### 5. Item Loan Request Flow
 
 ```mermaid
-flowchart TD
-    A[User Input NIM] --> B{User Terdaftar?}
-    B -->|No| C[❌ Error: NIM tidak terdaftar]
+flowchart LR
+    A[Scan QR/Pilih Item] --> B{Tersedia?}
+    B -->|No| C[❌ Error]
+    B -->|Yes| D[Isi Form]
+    D --> E{Surat Izin?}
+    E -->|Yes| F[Auto-Approve]
+    E -->|No| G[Pending]
+```
+
+---
+
+### 6. Item Loan Approval Flow
+
+```mermaid
+flowchart LR
+    A[Admin Review] --> B{Keputusan}
+    B -->|Approve| C[Disetujui] --> D[Item: Dipinjam]
+    B -->|Reject| E[Ditolak]
+```
+
+---
+
+### 7. Item Return Flow
+
+```mermaid
+flowchart LR
+    A[Request Return] --> B{Upload Foto?}
+    B -->|Yes| C[Auto-Approve]
+    B -->|No| D[Pending Admin]
+    D --> E{Keputusan}
+    E -->|Approve| C
+    E -->|Reject| F[Belum]
+    C --> G[Item: Tersedia]
+```
+
+---
+
+### 8. Room Booking Request Flow
+
+```mermaid
+flowchart LR
+    A[Pilih Ruangan] --> B{Tersedia?}
+    B -->|No| C[❌ Bentrok]
+    B -->|Yes| D[Isi Form]
+    D --> E{Surat?}
+    E -->|Yes| F[Auto-Approve]
+    E -->|No| G[Pending]
+```
+
+---
+
+### 9. Room Booking Approval Flow
+
+```mermaid
+flowchart LR
+    A[Admin Review] --> B{Keputusan}
+    B -->|Approve| C[Disetujui]
+    B -->|Reject| D[Ditolak]
+```
+
+---
+
+### 10. Lab Attendance Flow
+
+```mermaid
+flowchart LR
+    A[Input NIM] --> B{Terdaftar?}
+    B -->|No| C[❌ Error]
     B -->|Yes| D[Pilih Ruangan]
-    D --> E[Pilih/Input Tujuan]
-    E --> F{User adalah Dosen?}
-    F -->|Yes| G[Skip Dosen Penanggung Jawab]
-    F -->|No| H[Input Dosen Penanggung Jawab]
-    H --> I{Input Manual?}
-    I -->|Yes| J[Gunakan Input]
-    I -->|No| K[Gunakan default dari profil]
-    G --> L[Create Attendance Record]
-    J --> L
-    K --> L
-    L --> M[✅ Check-in Berhasil]
-    M --> N[Tampilkan Detail Absensi]
+    D --> E[Input Tujuan]
+    E --> F[Create Record]
+    F --> G[✅ Check-in OK]
 ```
 
-### 6. Publication Flow
+---
+
+### 11. Publication Submit Flow
 
 ```mermaid
-flowchart TD
-    subgraph "Admin Direct Publish"
-        A1[Admin Upload Publikasi] --> B1[Set Status = Published]
-        B1 --> C1[Publikasi Live]
-    end
-    
-    subgraph "User Submission"
-        A2[User Submit Draft] --> B2[Status = Pending]
-        B2 --> C2[Admin Review]
-        C2 --> D2{Keputusan}
-        D2 -->|Approve| E2[Admin bisa Edit]
-        E2 --> F2[Set Status = Published]
-        F2 --> C1
-        D2 -->|Reject| G2[Status = Rejected]
-    end
-    
-    subgraph "Public View"
-        H[Public Akses] --> I[Get Published Only]
-        I --> J[Filter by Keyword]
-        J --> K[Search by Title/Author]
-        K --> L[Display Publications]
-        L --> M[View Detail]
-        M --> N[Increment View Count]
-    end
-    
-    subgraph "Like System"
-        O[User Click Like] --> P{Already Liked?}
-        P -->|Yes| Q[Remove Like]
-        P -->|No| R[Add Like]
-    end
+flowchart LR
+    A[User Submit Draft] --> B[Status: Pending]
+    B --> C[Admin Review]
+    C --> D{Keputusan}
+    D -->|Approve| E[Published]
+    D -->|Reject| F[Rejected]
 ```
 
-### 7. Practicum Module Flow
+---
+
+### 12. Publication Direct Publish (Admin)
 
 ```mermaid
-flowchart TD
-    subgraph "Admin/Dosen Upload"
-        A[Admin/Dosen Akses] --> B[Create New Module]
-        B --> C[Input Nama & Deskripsi]
-        C --> D[Upload PDF File]
-        D --> E[Pilih Subject Tags]
-        E --> F[Save to DB]
-    end
-    
-    subgraph "Student View"
-        G[Mahasiswa Akses] --> H[Lihat Daftar Modul]
-        H --> I[Filter by Subject]
-        I --> J[Search by Name]
-        J --> K[View Module Detail]
-        K --> L[Download PDF]
-    end
-    
-    subgraph "Update/Delete"
-        M[Admin/Dosen Edit] --> N[Update Fields]
-        N --> O{New File?}
-        O -->|Yes| P[Replace File]
-        O -->|No| Q[Keep Existing]
-        P --> R[Save Changes]
-        Q --> R
-        
-        S[Admin/Dosen Delete] --> T[Hard Delete]
-    end
+flowchart LR
+    A[Admin Upload] --> B[Status: Published] --> C[✅ Live]
 ```
 
-### 8. Governance Document Flow
+---
+
+### 13. Publication Like Flow
 
 ```mermaid
-flowchart TD
-    subgraph "Document Upload"
-        A[Admin Upload] --> B[Select Type: SOP/LPJ]
-        B --> C[Input Title]
-        C --> D[Upload PDF File]
-        D --> E{Upload Cover?}
-        E -->|Yes| F[Upload Cover Image]
-        E -->|No| G[Skip Cover]
-        F --> H[Save to DB]
-        G --> H
-    end
-    
-    subgraph "Public Display"
-        I[Homepage] --> J[Get SOP Documents]
-        J --> K[Display with Cover]
-        K --> L[Click to Download]
-    end
+flowchart LR
+    A[Click Like] --> B{Already Liked?}
+    B -->|Yes| C[Remove Like]
+    B -->|No| D[Add Like]
+```
+
+---
+
+### 14. Practicum Module Upload Flow
+
+```mermaid
+flowchart LR
+    A[Admin/Dosen] --> B[Input Data]
+    B --> C[Upload PDF]
+    C --> D[Pilih Subject]
+    D --> E[✅ Save]
+```
+
+---
+
+### 15. Practicum Module View Flow
+
+```mermaid
+flowchart LR
+    A[Mahasiswa] --> B[List Modul]
+    B --> C[Filter/Search]
+    C --> D[View Detail]
+    D --> E[Download PDF]
+```
+
+---
+
+### 16. Governance Doc Upload Flow
+
+```mermaid
+flowchart LR
+    A[Admin] --> B[Pilih Type]
+    B --> C[Input Title]
+    C --> D[Upload PDF]
+    D --> E{Cover?}
+    E -->|Yes| F[Upload Cover]
+    E -->|No| G[Skip]
+    F --> H[✅ Save]
+    G --> H
 ```
 
 ---
