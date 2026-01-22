@@ -1,0 +1,72 @@
+@startuml BookingRuangan
+
+title Activity Diagram: Booking Ruangan LAB_UAI
+
+|Mahasiswa/Dosen|
+start
+:Buka Halaman Booking;
+:Pilih Ruangan;
+:Pilih Tanggal & Waktu;
+
+|Sistem|
+:Cek Ketersediaan Ruangan;
+
+if (Ruangan Tersedia?) then (Ya)
+    |Mahasiswa/Dosen|
+    :Isi Form Booking;
+    note right
+        - Tujuan Penggunaan
+        - Organisasi
+        - Jumlah Peserta
+        - Dosen Pembimbing
+        - Surat Permohonan (opsional)
+    end note
+    
+    :Submit Request;
+    
+    |Sistem|
+    if (Ada Surat Permohonan?) then (Ya)
+        :Auto-Approve Booking;
+        :Set Status = Disetujui;
+    else (Tidak)
+        :Set Status = Pending;
+        
+        |Admin|
+        :Review Request Booking;
+        :Lihat Detail Booking;
+        
+        if (Keputusan Admin?) then (Approve)
+            :Set Status = Disetujui;
+        else (Reject)
+            :Set Status = Ditolak;
+        endif
+    endif
+    
+    |Sistem|
+    :Simpan ke Database;
+    :Kirim Notifikasi ke User;
+    
+    |Mahasiswa/Dosen|
+    :Terima Notifikasi Status;
+    
+    if (Status?) then (Disetujui)
+        :Booking Berhasil;
+        :Tampil di Kalender;
+    else (Ditolak)
+        :Booking Gagal;
+        :Lihat Alasan Penolakan;
+    endif
+    
+else (Tidak)
+    |Sistem|
+    :Tampilkan Pesan Error;
+    note right: "Jadwal bentrok dengan booking lain"
+    
+    |Mahasiswa/Dosen|
+    :Pilih Waktu Lain;
+    stop
+endif
+
+stop
+
+@enduml

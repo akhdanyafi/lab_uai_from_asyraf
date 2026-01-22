@@ -93,72 +93,57 @@ graph LR
 
 ```mermaid
 graph TD
-    %% External Entities
+    %% Entities
+    User[User: Mhs/Dosen/Admin]
     M[Mahasiswa]
-    D[Dosen]
     A[Admin]
-    PUB[Public/Guest]
 
     %% Data Stores
-    DB_USER[(D1: Users)]
-    DB_ITEM[(D2: Items)]
-    DB_LOAN[(D3: Item Loans)]
-    DB_BOOK[(D4: Room Bookings)]
-    DB_ATT[(D5: Attendance)]
-    DB_PUB[(D6: Publications)]
-    DB_MOD[(D7: Modules)]
-    DB_GOV[(D8: Governance)]
+    DS1[(D1: Items)]
+    DS2[(D2: Loans)]
+    DS3[(D3: Bookings)]
+    DS4[(D4: Attendance)]
 
-    %% Main Processes
-    P1((1.0<br>Auth))
-    P2((2.0<br>Inventory))
-    P3((3.0<br>Loans))
-    P4((4.0<br>Bookings))
-    P5((5.0<br>Attendance))
-    P6((6.0<br>Publications))
-    P7((7.0<br>Practicum))
-    P8((8.0<br>Governance))
+    %% Processes
+    P1((1.0<br>Autentikasi))
+    P2((2.0<br>Manajemen<br>Inventaris))
+    P3((3.0<br>Transaksi<br>Peminjaman))
+    P4((4.0<br>Booking<br>Ruangan))
+    P5((5.0<br>Smart<br>Reporting))
 
-    %% Auth Flows
-    M & D -->|Login/Register| P1
-    P1 <-->|R/W| DB_USER
-    A -->|Validate User| P1
+    %% Flow 1.0 Auth
+    User -->|Login/Register| P1
+    P1 -->|Session Akses| User
+    A -->|Validasi User| P1
 
-    %% Inventory Flows
-    A -->|CRUD Items| P2
-    P2 <-->|R/W| DB_ITEM
-    M & PUB -->|View Items| P2
+    %% Flow 2.0 Inventaris
+    A -->|Input Alat / Gen QR| P2
+    P2 -->|Simpan Data Alat| DS1
+    M -->|Scan QR / View| P2
+    P2 -->|Info Item| M
 
-    %% Loan Flows
-    M -->|Request Loan| P3
-    P3 <-->|R/W| DB_LOAN
-    P3 -->|Update Status| DB_ITEM
+    %% Flow 3.0 Loans (Inti Sistem)
+    M -->|Scan QR / Request| P3
+    P3 -->|Cek Stok| DS1
+    DS1 -->|Info Stok| P3
     A -->|Approve/Reject| P3
+    P3 -->|Update Status Item| DS1
+    P3 -->|Simpan Transaksi| DS2
+    P3 -->|Status Peminjaman| M
 
-    %% Booking Flows
-    M & D -->|Request Booking| P4
-    P4 <-->|R/W| DB_BOOK
+    %% Flow 4.0 Booking Ruangan
+    M -->|Request Booking| P4
+    P4 -->|Cek Availability| DS3
     A -->|Approve/Reject| P4
+    P4 -->|Simpan Booking| DS3
+    P4 -->|Status Booking| M
 
-    %% Attendance Flows
-    M & D -->|Check-in| P5
-    P5 <-->|R/W| DB_ATT
-
-    %% Publication Flows
-    M & D -->|Submit Publication| P6
-    P6 <-->|R/W| DB_PUB
-    A -->|Approve/Reject| P6
-    PUB -->|View Publications| P6
-
-    %% Practicum Flows
-    A & D -->|Upload Module| P7
-    P7 <-->|R/W| DB_MOD
-    M -->|Download Module| P7
-
-    %% Governance Flows
-    A -->|Upload SOP/LPJ| P8
-    P8 <-->|R/W| DB_GOV
-    PUB -->|View SOP| P8
+    %% Flow 5.0 Reporting (Automated)
+    DS1 -->|Query Data| P5
+    DS2 -->|Query Loans| P5
+    DS3 -->|Query Bookings| P5
+    DS4 -->|Query Attendance| P5
+    P5 -->|Dashboard & Statistik| A
 ```
 
 ---

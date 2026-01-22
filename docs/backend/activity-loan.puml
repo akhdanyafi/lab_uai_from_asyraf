@@ -1,0 +1,88 @@
+@startuml ItemLoan
+
+title Activity Diagram: Peminjaman Alat
+
+|Mahasiswa|
+start
+:Buka Halaman Peminjaman;
+:Scan QR / Pilih Alat;
+
+|Sistem|
+:Ambil Data Alat;
+
+if (Alat Tersedia?) then (Ya)
+    |Mahasiswa|
+    :Isi Form Peminjaman;
+    note right
+        - Tanggal Pengembalian
+        - Organisasi
+        - Tujuan Penggunaan
+        - Dosen Pembimbing
+        - Surat Izin (opsional)
+    end note
+    :Submit Request;
+    
+    |Sistem|
+    :Simpan Request Peminjaman;
+    
+    if (Ada Surat Izin?) then (Ya)
+        :Auto-Approve;
+        :Set Status = Disetujui;
+        :Update Item = Dipinjam;
+    else (Tidak)
+        :Set Status = Pending;
+        
+        |Admin|
+        :Review Request;
+        
+        if (Approve?) then (Ya)
+            :Set Status = Disetujui;
+            :Update Item = Dipinjam;
+        else (Tidak)
+            :Set Status = Ditolak;
+        endif
+    endif
+    
+    |Sistem|
+    :Kirim Notifikasi;
+    
+    |Mahasiswa|
+    :Terima Notifikasi;
+    
+    if (Disetujui?) then (Ya)
+        :Ambil Alat di Lab;
+        :Gunakan Alat;
+        :Request Pengembalian;
+        
+        |Sistem|
+        if (Upload Foto?) then (Ya)
+            :Auto-Approve Return;
+        else (Tidak)
+            :Set Return = Pending;
+            
+            |Admin|
+            :Konfirmasi Return;
+        endif
+        
+        |Sistem|
+        :Update Item = Tersedia;
+        :Set Loan = Selesai;
+        
+        |Mahasiswa|
+        :Pengembalian Selesai;
+    else (Tidak)
+        :Peminjaman Ditolak;
+    endif
+
+else (Tidak)
+    |Sistem|
+    :Tampilkan Error;
+    note right: "Alat tidak tersedia"
+    
+    |Mahasiswa|
+    :Pilih Alat Lain;
+endif
+
+stop
+
+@enduml

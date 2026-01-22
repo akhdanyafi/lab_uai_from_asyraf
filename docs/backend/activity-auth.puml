@@ -1,0 +1,98 @@
+@startuml Login
+
+title Activity Diagram: Autentikasi (Login & Register)
+
+|User|
+start
+
+if (Aksi?) then (Login)
+    :Buka Halaman Login;
+    :Input Email/NIM;
+    :Input Password;
+    :Klik Login;
+    
+    |Sistem|
+    :Cari User di Database;
+    
+    if (User Ditemukan?) then (Ya)
+        :Verifikasi Password;
+        
+        if (Password Valid?) then (Ya)
+            :Cek Status Akun;
+            
+            if (Status Active?) then (Ya)
+                :Ambil Data Role;
+                :Generate JWT Token;
+                :Set Session Cookie;
+                
+                |User|
+                :Redirect ke Dashboard;
+                :Login Berhasil;
+            else (Tidak)
+                |Sistem|
+                :Tampilkan Error;
+                note right: "Akun Pending/Rejected"
+                stop
+            endif
+        else (Tidak)
+            :Tampilkan Error;
+            note right: "Password salah"
+            stop
+        endif
+    else (Tidak)
+        :Tampilkan Error;
+        note right: "User tidak ditemukan"
+        stop
+    endif
+
+else (Register)
+    |User|
+    :Buka Halaman Register;
+    :Isi Form Registrasi;
+    note right
+        - Nama Lengkap
+        - NIM/NIDN
+        - Email
+        - Password
+        - Role (Mahasiswa/Dosen)
+        - Angkatan
+        - Program Studi
+        - Dosen Pembimbing
+    end note
+    :Submit Form;
+    
+    |Sistem|
+    :Validasi Input;
+    
+    if (Email/NIM Unik?) then (Ya)
+        :Hash Password;
+        :Simpan User dengan Status=Pending;
+        :Kirim Notifikasi ke Admin;
+        
+        |User|
+        :Registrasi Berhasil;
+        :Menunggu Persetujuan Admin;
+        
+        |Admin|
+        :Lihat Daftar Pending Users;
+        :Review Data User;
+        
+        if (Keputusan?) then (Approve)
+            :Set Status = Active;
+            |User|
+            :Dapat Login;
+        else (Reject)
+            :Set Status = Rejected;
+            |User|
+            :Tidak Dapat Login;
+        endif
+    else (Tidak)
+        :Tampilkan Error;
+        note right: "Email/NIM sudah terdaftar"
+        stop
+    endif
+endif
+
+stop
+
+@enduml

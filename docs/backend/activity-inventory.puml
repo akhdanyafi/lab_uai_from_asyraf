@@ -1,0 +1,84 @@
+@startuml Inventory
+
+title Activity Diagram: Manajemen Inventaris
+
+|Admin|
+start
+:Buka Halaman Inventaris;
+
+switch (Aksi?)
+
+case (Tambah Item)
+    :Klik Tambah Item Baru;
+    :Isi Form Item;
+    note right
+        - Nama Item
+        - Kategori
+        - Ruangan
+        - Deskripsi
+    end note
+    
+    |Sistem|
+    :Generate QR Code Unik;
+    :Simpan Data Item;
+    :Set Status = Tersedia;
+    
+    |Admin|
+    :Item Berhasil Ditambah;
+    :Download/Print QR Code;
+
+case (Edit Item)
+    :Pilih Item dari List;
+    :Edit Data Item;
+    
+    |Sistem|
+    :Update Data di Database;
+    
+    |Admin|
+    :Item Berhasil Diupdate;
+
+case (Hapus Item)
+    :Pilih Item dari List;
+    :Konfirmasi Hapus;
+    
+    |Sistem|
+    if (Item Sedang Dipinjam?) then (Ya)
+        :Tampilkan Error;
+        note right: "Tidak bisa hapus"
+    else (Tidak)
+        :Hapus Item dari Database;
+        |Admin|
+        :Item Berhasil Dihapus;
+    endif
+
+case (Ubah Status)
+    :Pilih Item dari List;
+    :Pilih Status Baru;
+    note right
+        - Tersedia
+        - Maintenance
+    end note
+    
+    |Sistem|
+    :Update Status Item;
+    
+    |Admin|
+    :Status Berhasil Diubah;
+
+case (Kelola Ruangan)
+    :Tambah/Edit/Hapus Ruangan;
+    
+    |Sistem|
+    :Update Database;
+
+case (Kelola Kategori)
+    :Tambah/Edit/Hapus Kategori;
+    
+    |Sistem|
+    :Update Database;
+
+endswitch
+
+stop
+
+@enduml

@@ -1,0 +1,83 @@
+@startuml Attendance
+
+title Activity Diagram: Absensi Lab (Check-in)
+
+|Mahasiswa/Dosen|
+start
+:Buka Halaman Absensi;
+:Input NIM/NIDN;
+
+|Sistem|
+:Cari User di Database;
+
+if (User Terdaftar?) then (Ya)
+    :Ambil Data User;
+    
+    |Mahasiswa/Dosen|
+    :Pilih Ruangan Lab;
+    
+    |Sistem|
+    :Tampilkan Daftar Ruangan Tersedia;
+    
+    |Mahasiswa/Dosen|
+    :Pilih Tujuan Kegiatan;
+    note right
+        Pilihan:
+        - Praktikum
+        - Penelitian
+        - Tugas Akhir
+        - Kerja Praktek
+        - Lainnya (custom)
+    end note
+    
+    |Sistem|
+    if (User adalah Dosen?) then (Ya)
+        :Skip Dosen Penanggung Jawab;
+    else (Tidak)
+        |Mahasiswa/Dosen|
+        :Pilih Dosen Penanggung Jawab;
+        note right
+            Default: Dosen Pembimbing dari profil
+            Atau pilih dari dropdown
+        end note
+    endif
+    
+    |Mahasiswa/Dosen|
+    :Klik Check-in;
+    
+    |Sistem|
+    :Simpan Record Absensi;
+    note right
+        Data yang disimpan:
+        - User ID
+        - Room ID
+        - Purpose
+        - Dosen Penanggung Jawab
+        - Check-in Time
+    end note
+    
+    :Tampilkan Konfirmasi;
+    
+    |Mahasiswa/Dosen|
+    :Check-in Berhasil;
+    :Lihat Detail Absensi;
+    note right
+        Tampilan:
+        - Nama User
+        - Ruangan
+        - Tujuan
+        - Waktu Check-in
+    end note
+    
+else (Tidak)
+    |Sistem|
+    :Tampilkan Error;
+    note right: "NIM/NIDN tidak terdaftar dalam sistem"
+    
+    |Mahasiswa/Dosen|
+    :Hubungi Admin untuk Registrasi;
+endif
+
+stop
+
+@enduml

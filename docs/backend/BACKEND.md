@@ -3,203 +3,218 @@
 Dokumentasi lengkap backend sistem LAB_UAI, mencakup Entity Relationship Diagram (ERD), relasi antar tabel, dan flowchart untuk setiap fitur utama.
 
 ## Entity Relationship Diagram (ERD)
-
-ERD dibagi menjadi beberapa diagram per domain agar lebih compact dan mudah di-screenshot.
-
----
-
-### ERD 1: User & Role Domain
+### ERD - Entitas dan Relasi
 
 ```mermaid
 erDiagram
-    ROLES {
-        int id PK
-        varchar name UK
-    }
-    USERS {
-        int id PK
-        int role_id FK
-        varchar full_name
-        varchar identifier UK
-        varchar email
-        varchar password_hash
-        enum status
-        int batch
-        enum study_type
-        varchar program_studi
-        varchar dosen_pembimbing
-        datetime created_at
-    }
     ROLES ||--o{ USERS : "memiliki"
-```
-
-> **Status**: `Active`, `Pending`, `Rejected`, `Pre-registered`  
-> **Study Type**: `Reguler`, `Hybrid`
-
----
-
-### ERD 2: Inventory & Item Loan Domain
-
-```mermaid
-erDiagram
-    ITEM_CATEGORIES {
-        int id PK
-        varchar name
-    }
-    ROOMS {
-        int id PK
-        varchar name
-        varchar location
-        int capacity
-        enum status
-    }
-    ITEMS {
-        int id PK
-        int category_id FK
-        int room_id FK
-        varchar name
-        text description
-        varchar qr_code UK
-        enum status
-    }
-    ITEM_LOANS {
-        int id PK
-        int student_id FK
-        int item_id FK
-        int validator_id FK
-        datetime request_date
-        datetime return_plan_date
-        enum status
-        enum return_status
-    }
-    ITEM_CATEGORIES ||--o{ ITEMS : "kategori"
-    ROOMS ||--o{ ITEMS : "lokasi"
-    ITEMS ||--o{ ITEM_LOANS : "dipinjam"
-```
-
-> **Item Status**: `Tersedia`, `Dipinjam`, `Maintenance`  
-> **Loan Status**: `Pending`, `Disetujui`, `Ditolak`, `Selesai`, `Terlambat`  
-> **Return Status**: `Belum`, `Pending`, `Dikembalikan`
-
----
-
-### ERD 3: Room Booking & Attendance Domain
-
-```mermaid
-erDiagram
-    ROOMS {
-        int id PK
-        varchar name
-        varchar location
-        int capacity
-        enum status
-    }
-    ROOM_BOOKINGS {
-        int id PK
-        int user_id FK
-        int room_id FK
-        int validator_id FK
-        datetime start_time
-        datetime end_time
-        text purpose
-        varchar organisasi
-        enum status
-    }
-    LAB_ATTENDANCE {
-        int id PK
-        int user_id FK
-        int room_id FK
-        varchar purpose
-        varchar dosen_penanggung_jawab
-        datetime check_in_time
-    }
-    ROOMS ||--o{ ROOM_BOOKINGS : "dipesan"
-    ROOMS ||--o{ LAB_ATTENDANCE : "lokasi"
-```
-
-> **Booking Status**: `Pending`, `Disetujui`, `Ditolak`  
-> **Room Status**: `Tersedia`, `Maintenance`
-
----
-
-### ERD 4: Publication Domain
-
-```mermaid
-erDiagram
-    PUBLICATIONS {
-        int id PK
-        int uploader_id FK
-        int submitter_id FK
-        varchar author_name
-        varchar title
-        text abstract
-        text keywords
-        varchar file_path
-        varchar link
-        int view_count
-        enum status
-        datetime publish_date
-    }
-    PUBLICATION_LIKES {
-        int id PK
-        int publication_id FK
-        int user_id FK
-        datetime created_at
-    }
-    PUBLICATIONS ||--o{ PUBLICATION_LIKES : "diberikan"
-```
-
-> **Publication Status**: `Pending`, `Published`, `Rejected`
-
----
-
-### ERD 5: Content Management Domain
-
-```mermaid
-erDiagram
-    GOVERNANCE_DOCS {
-        int id PK
-        int admin_id FK
-        varchar title
-        varchar file_path
-        varchar cover_path
-        enum type
-        datetime created_at
-    }
-    PRACTICUM_MODULES {
-        int id PK
-        varchar name
-        text description
-        varchar file_path
-        text subjects
-        datetime created_at
-        datetime updated_at
-    }
-    HERO_PHOTOS {
-        int id PK
-        varchar title
-        text description
-        text image_url
-        text link
-        datetime created_at
-    }
-```
-
-> **Doc Type**: `SOP`, `LPJ Bulanan`
-
----
-
-### ERD Lengkap (Relasi Antar Domain)
-
-```mermaid
-erDiagram
-    USERS ||--o{ ITEM_LOANS : "meminjam"
+    USERS ||--o{ ITEM_LOANS : "mengajukan"
+    USERS ||--o{ ITEM_LOANS : "memvalidasi"
     USERS ||--o{ ROOM_BOOKINGS : "memesan"
-    USERS ||--o{ LAB_ATTENDANCE : "absen"
-    USERS ||--o{ PUBLICATIONS : "submit"
-    USERS ||--o{ PUBLICATION_LIKES : "like"
-    USERS ||--o{ GOVERNANCE_DOCS : "upload"
+    USERS ||--o{ ROOM_BOOKINGS : "memvalidasi"
+    USERS ||--o{ LAB_ATTENDANCE : "mencatat"
+    USERS ||--o{ PUBLICATIONS : "mengirim"
+    USERS ||--o{ PUBLICATIONS : "mempublikasi"
+    USERS ||--o{ PUBLICATION_LIKES : "menyukai"
+    USERS ||--o{ GOVERNANCE_DOCS : "mengunggah"
+    
+    ITEM_CATEGORIES ||--o{ ITEMS : "mengkategorikan"
+    ROOMS ||--o{ ITEMS : "menyimpan"
+    ROOMS ||--o{ ROOM_BOOKINGS : "digunakan"
+    ROOMS ||--o{ LAB_ATTENDANCE : "dimasuki"
+    
+    ITEMS ||--o{ ITEM_LOANS : "dipinjam"
+    PUBLICATIONS ||--o{ PUBLICATION_LIKES : "menerima"
 ```
+
+---
+
+### Detail Entitas
+
+#### 1. ROLES
+
+| Kolom | Tipe | Keterangan |
+|-------|------|------------|
+| id | int | Primary Key |
+| name | varchar(50) | Nama role (Admin, Mahasiswa, Dosen) |
+
+---
+
+#### 2. USERS
+
+| Kolom | Tipe | Keterangan |
+|-------|------|------------|
+| id | int | Primary Key |
+| role_id | int | FK → ROLES |
+| full_name | varchar(255) | Nama lengkap |
+| identifier | varchar(50) | NIM/NIDN (Unique) |
+| email | varchar(255) | Email |
+| password_hash | varchar(255) | Password hash |
+| status | enum | Active, Pending, Rejected, Pre-registered |
+| batch | int | Angkatan (e.g. 2022) |
+| study_type | enum | Reguler, Hybrid |
+| program_studi | varchar(100) | Program studi |
+| dosen_pembimbing | varchar(255) | Nama dosen pembimbing |
+| created_at | datetime | Waktu dibuat |
+
+---
+
+#### 3. ROOMS
+
+| Kolom | Tipe | Keterangan |
+|-------|------|------------|
+| id | int | Primary Key |
+| name | varchar(100) | Nama ruangan |
+| location | varchar(255) | Lokasi |
+| capacity | int | Kapasitas |
+| status | enum | Tersedia, Maintenance |
+
+---
+
+#### 4. ITEM_CATEGORIES
+
+| Kolom | Tipe | Keterangan |
+|-------|------|------------|
+| id | int | Primary Key |
+| name | varchar(100) | Nama kategori |
+
+---
+
+#### 5. ITEMS
+
+| Kolom | Tipe | Keterangan |
+|-------|------|------------|
+| id | int | Primary Key |
+| category_id | int | FK → ITEM_CATEGORIES |
+| room_id | int | FK → ROOMS |
+| name | varchar(255) | Nama item |
+| description | text | Deskripsi |
+| qr_code | varchar(255) | QR Code (Unique) |
+| status | enum | Tersedia, Dipinjam, Maintenance |
+
+---
+
+#### 6. ITEM_LOANS
+
+| Kolom | Tipe | Keterangan |
+|-------|------|------------|
+| id | int | Primary Key |
+| student_id | int | FK → USERS (peminjam) |
+| item_id | int | FK → ITEMS |
+| validator_id | int | FK → USERS (admin) |
+| request_date | datetime | Tanggal request |
+| return_plan_date | datetime | Rencana pengembalian |
+| actual_return_date | datetime | Tanggal pengembalian aktual |
+| status | enum | Pending, Disetujui, Ditolak, Selesai, Terlambat |
+| organisasi | varchar(255) | Organisasi peminjam |
+| purpose | varchar(255) | Tujuan peminjaman |
+| surat_izin | varchar(255) | Path surat izin |
+| return_photo | varchar(255) | Foto bukti pengembalian |
+| return_status | enum | Belum, Pending, Dikembalikan |
+
+---
+
+#### 7. ROOM_BOOKINGS
+
+| Kolom | Tipe | Keterangan |
+|-------|------|------------|
+| id | int | Primary Key |
+| user_id | int | FK → USERS (pemesan) |
+| room_id | int | FK → ROOMS |
+| validator_id | int | FK → USERS (admin) |
+| start_time | datetime | Waktu mulai |
+| end_time | datetime | Waktu selesai |
+| purpose | text | Tujuan penggunaan |
+| organisasi | varchar(255) | Organisasi |
+| jumlah_peserta | int | Jumlah peserta |
+| surat_permohonan | varchar(255) | Path surat permohonan |
+| dosen_pembimbing | varchar(255) | Nama dosen pembimbing |
+| status | enum | Pending, Disetujui, Ditolak |
+
+---
+
+#### 8. LAB_ATTENDANCE
+
+| Kolom | Tipe | Keterangan |
+|-------|------|------------|
+| id | int | Primary Key |
+| user_id | int | FK → USERS |
+| room_id | int | FK → ROOMS |
+| purpose | varchar(255) | Tujuan kegiatan |
+| dosen_penanggung_jawab | varchar(255) | Nama dosen |
+| check_in_time | datetime | Waktu check-in |
+
+---
+
+#### 9. PUBLICATIONS
+
+| Kolom | Tipe | Keterangan |
+|-------|------|------------|
+| id | int | Primary Key |
+| uploader_id | int | FK → USERS (publisher) |
+| submitter_id | int | FK → USERS (submitter) |
+| author_name | varchar(255) | Nama penulis |
+| title | varchar(255) | Judul publikasi |
+| abstract | text | Abstrak |
+| keywords | text | Keywords (JSON array) |
+| file_path | varchar(255) | Path file |
+| link | varchar(255) | External link |
+| view_count | int | Jumlah view |
+| status | enum | Pending, Published, Rejected |
+| publish_date | datetime | Tanggal publish |
+| created_at | datetime | Waktu dibuat |
+
+---
+
+#### 10. PUBLICATION_LIKES
+
+| Kolom | Tipe | Keterangan |
+|-------|------|------------|
+| id | int | Primary Key |
+| publication_id | int | FK → PUBLICATIONS |
+| user_id | int | FK → USERS |
+| created_at | datetime | Waktu like |
+
+---
+
+#### 11. GOVERNANCE_DOCS
+
+| Kolom | Tipe | Keterangan |
+|-------|------|------------|
+| id | int | Primary Key |
+| admin_id | int | FK → USERS |
+| title | varchar(255) | Judul dokumen |
+| file_path | varchar(255) | Path file |
+| cover_path | varchar(255) | Path cover image |
+| type | enum | SOP, LPJ Bulanan |
+| created_at | datetime | Waktu dibuat |
+
+---
+
+#### 12. PRACTICUM_MODULES
+
+| Kolom | Tipe | Keterangan |
+|-------|------|------------|
+| id | int | Primary Key |
+| name | varchar(255) | Nama modul |
+| description | text | Deskripsi |
+| file_path | varchar(255) | Path file PDF |
+| subjects | text | Subject tags (JSON array) |
+| created_at | datetime | Waktu dibuat |
+| updated_at | datetime | Waktu update |
+
+---
+
+#### 13. HERO_PHOTOS
+
+| Kolom | Tipe | Keterangan |
+|-------|------|------------|
+| id | int | Primary Key |
+| title | varchar(255) | Judul foto |
+| description | text | Deskripsi |
+| image_url | text | URL gambar |
+| link | text | Link tujuan |
+| created_at | datetime | Waktu dibuat |
 
 ---
 
