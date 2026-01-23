@@ -1,8 +1,8 @@
 'use client';
 
 import { createRoom, deleteRoom, updateRoom } from '@/features/inventory/actions';
-import { Plus, Trash2, MapPin, Edit } from 'lucide-react';
-import { useState } from 'react';
+import { Plus, Trash2, MapPin, Edit, Search } from 'lucide-react';
+import { useState, useMemo } from 'react';
 import Modal from '@/components/shared/Modal';
 
 interface Room {
@@ -21,6 +21,38 @@ export default function RoomsView({ rooms }: RoomsViewProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [editingRoom, setEditingRoom] = useState<Room | null>(null);
 
+    // Search & Filter State
+    const [searchQuery, setSearchQuery] = useState('');
+    const [filterStatus, setFilterStatus] = useState('');
+
+    // Get unique locations for filter
+    const allLocations = useMemo(() => {
+        const locationSet = new Set<string>();
+        rooms.forEach(room => {
+            if (room.location) locationSet.add(room.location);
+        });
+        return Array.from(locationSet).sort();
+    }, [rooms]);
+
+    // Filtered rooms
+    const filteredRooms = useMemo(() => {
+        return rooms.filter(room => {
+            // Search filter
+            if (searchQuery) {
+                const query = searchQuery.toLowerCase();
+                if (!room.name.toLowerCase().includes(query) &&
+                    !room.location.toLowerCase().includes(query)) {
+                    return false;
+                }
+            }
+            // Status filter
+            if (filterStatus && room.status !== filterStatus) {
+                return false;
+            }
+            return true;
+        });
+    }, [rooms, searchQuery, filterStatus]);
+
     const handleEdit = async (formData: FormData) => {
         if (!editingRoom) return;
         setIsSubmitting(true);
@@ -34,9 +66,9 @@ export default function RoomsView({ rooms }: RoomsViewProps) {
     };
 
     return (
-        <div>
+        <div className="space-y-6">
             {/* Add Room Form */}
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-8">
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                 <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
                     <Plus className="w-5 h-5 text-primary" />
                     Tambah Ruangan Baru
@@ -74,6 +106,34 @@ export default function RoomsView({ rooms }: RoomsViewProps) {
                 </form>
             </div>
 
+            {/* Search & Filter Bar */}
+            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                <div className="flex flex-col md:flex-row gap-3">
+                    {/* Search */}
+                    <div className="flex-1 relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <input
+                            type="text"
+                            placeholder="Cari nama ruangan atau lokasi..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm"
+                        />
+                    </div>
+                    {/* Status Filter */}
+                    <select
+                        value={filterStatus}
+                        onChange={(e) => setFilterStatus(e.target.value)}
+                        className="px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    >
+                        <option value="">Semua Status</option>
+                        <option value="Tersedia">Tersedia</option>
+                        <option value="Maintenance">Maintenance</option>
+                    </select>
+                </div>
+                <p className="text-xs text-gray-500 mt-2">Menampilkan {filteredRooms.length} dari {rooms.length} ruangan</p>
+            </div>
+
             {/* Rooms List */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                 <table className="w-full text-left">
@@ -87,7 +147,7 @@ export default function RoomsView({ rooms }: RoomsViewProps) {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
-                        {rooms.map((room) => (
+                        {filteredRooms.map((room) => (
                             <tr key={room.id} className="hover:bg-gray-50 transition-colors">
                                 <td className="px-6 py-4 font-medium text-gray-900">{room.name}</td>
                                 <td className="px-6 py-4 text-gray-600 flex items-center gap-2">
@@ -138,10 +198,12 @@ export default function RoomsView({ rooms }: RoomsViewProps) {
                                 </td>
                             </tr>
                         ))}
-                        {rooms.length === 0 && (
+                        {filteredRooms.length === 0 && (
                             <tr>
                                 <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
-                                    Belum ada data ruangan. Silahkan tambahkan ruangan baru.
+                                    {rooms.length === 0
+                                        ? 'Belum ada data ruangan. Silahkan tambahkan ruangan baru.'
+                                        : 'Tidak ada ruangan yang sesuai filter.'}
                                 </td>
                             </tr>
                         )}

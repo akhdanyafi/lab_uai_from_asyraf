@@ -1,9 +1,9 @@
 'use client';
 
 import { createItem, deleteItem, updateItem } from '@/features/inventory/actions';
-import { Plus, Trash2, Box, Tag, MapPin, Settings, Edit } from 'lucide-react';
+import { Plus, Trash2, Box, Tag, MapPin, Settings, Edit, Search } from 'lucide-react';
 import QRCodeDisplay from '@/components/shared/QRCodeDisplay';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Modal from '@/components/shared/Modal';
 import CategoriesView from './CategoriesView';
 
@@ -38,6 +38,39 @@ export default function ItemsView({ items, rooms, categories }: ItemsViewProps) 
     const [showCategoryModal, setShowCategoryModal] = useState(false);
     const [editingItem, setEditingItem] = useState<Item | null>(null);
 
+    // Search & Filter State
+    const [searchQuery, setSearchQuery] = useState('');
+    const [filterCategory, setFilterCategory] = useState('');
+    const [filterRoom, setFilterRoom] = useState('');
+    const [filterStatus, setFilterStatus] = useState('');
+
+    // Filtered items
+    const filteredItems = useMemo(() => {
+        return items.filter(item => {
+            // Search filter
+            if (searchQuery) {
+                const query = searchQuery.toLowerCase();
+                if (!item.name.toLowerCase().includes(query) &&
+                    !item.description?.toLowerCase().includes(query)) {
+                    return false;
+                }
+            }
+            // Category filter
+            if (filterCategory && item.category.id !== parseInt(filterCategory)) {
+                return false;
+            }
+            // Room filter
+            if (filterRoom && item.room.id !== parseInt(filterRoom)) {
+                return false;
+            }
+            // Status filter
+            if (filterStatus && item.status !== filterStatus) {
+                return false;
+            }
+            return true;
+        });
+    }, [items, searchQuery, filterCategory, filterRoom, filterStatus]);
+
     const handleEdit = async (formData: FormData) => {
         if (!editingItem) return;
         setIsSubmitting(true);
@@ -58,9 +91,9 @@ export default function ItemsView({ items, rooms, categories }: ItemsViewProps) 
     };
 
     return (
-        <div>
+        <div className="space-y-6">
             {/* Add Item Form */}
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-8">
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                 <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-semibold flex items-center gap-2">
                         <Plus className="w-5 h-5 text-primary" />
@@ -134,6 +167,57 @@ export default function ItemsView({ items, rooms, categories }: ItemsViewProps) 
                 </form>
             </div>
 
+            {/* Search & Filter Bar */}
+            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                <div className="flex flex-col md:flex-row gap-3">
+                    {/* Search */}
+                    <div className="flex-1 relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <input
+                            type="text"
+                            placeholder="Cari nama alat..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm"
+                        />
+                    </div>
+                    {/* Category Filter */}
+                    <select
+                        value={filterCategory}
+                        onChange={(e) => setFilterCategory(e.target.value)}
+                        className="px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    >
+                        <option value="">Semua Kategori</option>
+                        {categories.map(cat => (
+                            <option key={cat.id} value={cat.id}>{cat.name}</option>
+                        ))}
+                    </select>
+                    {/* Room Filter */}
+                    <select
+                        value={filterRoom}
+                        onChange={(e) => setFilterRoom(e.target.value)}
+                        className="px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    >
+                        <option value="">Semua Ruangan</option>
+                        {rooms.map(room => (
+                            <option key={room.id} value={room.id}>{room.name}</option>
+                        ))}
+                    </select>
+                    {/* Status Filter */}
+                    <select
+                        value={filterStatus}
+                        onChange={(e) => setFilterStatus(e.target.value)}
+                        className="px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    >
+                        <option value="">Semua Status</option>
+                        <option value="Tersedia">Tersedia</option>
+                        <option value="Dipinjam">Dipinjam</option>
+                        <option value="Maintenance">Maintenance</option>
+                    </select>
+                </div>
+                <p className="text-xs text-gray-500 mt-2">Menampilkan {filteredItems.length} dari {items.length} alat</p>
+            </div>
+
             {/* Items List */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                 <table className="w-full text-left">
@@ -148,7 +232,7 @@ export default function ItemsView({ items, rooms, categories }: ItemsViewProps) 
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
-                        {items.map((item) => (
+                        {filteredItems.map((item) => (
                             <tr key={item.id} className="hover:bg-gray-50 transition-colors">
                                 <td className="px-6 py-4">
                                     <div className="flex items-center gap-3">
@@ -229,10 +313,12 @@ export default function ItemsView({ items, rooms, categories }: ItemsViewProps) 
                                 </td>
                             </tr>
                         ))}
-                        {items.length === 0 && (
+                        {filteredItems.length === 0 && (
                             <tr>
                                 <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
-                                    Belum ada data alat. Silahkan tambahkan alat baru.
+                                    {items.length === 0
+                                        ? 'Belum ada data alat. Silahkan tambahkan alat baru.'
+                                        : 'Tidak ada alat yang sesuai filter.'}
                                 </td>
                             </tr>
                         )}
