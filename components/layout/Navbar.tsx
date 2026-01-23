@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { LogIn } from 'lucide-react';
 import AttendanceButton from '@/features/attendance/components/AttendanceButton';
 
@@ -9,8 +10,14 @@ export default function Navbar() {
         <nav className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
             <div className="container mx-auto px-4 h-16 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-[#0F4C81] rounded-lg flex items-center justify-center shadow-sm">
-                        <span className="text-white font-bold text-lg">LF</span>
+                    <div className="w-28 h-11 rounded-lg overflow-hidden shadow-sm">
+                        <Image
+                            src="/lab-informatika-logo.png"
+                            alt="Logo Lab Informatika"
+                            width={40}
+                            height={40}
+                            className="object-cover w-full h-full"
+                        />
                     </div>
 
                     <div className="flex flex-col justify-center">

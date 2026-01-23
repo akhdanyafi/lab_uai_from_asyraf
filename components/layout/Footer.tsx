@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { MapPin, Mail, Phone, Globe, Instagram, Linkedin } from 'lucide-react';
 
 export default function Footer() {
@@ -13,8 +14,14 @@ export default function Footer() {
                     {/* Kolom 1: Identitas & Deskripsi */}
                     <div className="space-y-4">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center border border-white/20">
-                                <span className="font-bold text-lg text-white">LF</span>
+                            <div className="w-40 h-15 rounded-lg overflow-hidden border border-white/20 bg-white">
+                                <Image
+                                    src="/lab-informatika-logo.png"
+                                    alt="Logo Lab Informatika"
+                                    width={40}
+                                    height={40}
+                                    className="object-cover w-full h-full"
+                                />
                             </div>
                             <div>
                                 <h3 className="font-bold text-xl leading-none">Lab Informatika</h3>

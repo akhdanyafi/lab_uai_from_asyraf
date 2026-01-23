@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { User, Lock, Loader2, ArrowLeft, CheckCircle, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { login } from '@/features/auth/actions';
 
 export default function LoginPage() {
@@ -45,8 +46,14 @@ export default function LoginPage() {
                 {/* Header Section */}
                 <div className="p-8 pb-0 text-center">
                     {/* Logo Box (Branding) */}
-                    <div className="mx-auto w-14 h-14 bg-[#0F4C81] rounded-xl flex items-center justify-center shadow-md mb-4">
-                        <span className="text-white font-bold text-2xl">LF</span>
+                    <div className="mx-auto w-70 h-25 rounded-xl overflow-hidden shadow-md mb-4">
+                        <Image
+                            src="/lab-informatika-logo.png"
+                            alt="Logo Lab Informatika"
+                            width={80}
+                            height={80}
+                            className="object-cover w-full h-full"
+                        />
                     </div>
 
                     {/* Text Utama: #0F4C81 */}
