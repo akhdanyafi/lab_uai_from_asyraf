@@ -61,14 +61,36 @@ export async function createCategory(data: { name: string }) {
 
 export async function updateCategory(id: number, data: { name: string }) {
     await requireAdmin();
-    await InventoryService.updateCategory(id, data);
-    revalidatePath('/admin/inventory');
+    try {
+        await InventoryService.updateCategory(id, data);
+        revalidatePath('/admin/inventory');
+        return { success: true };
+    } catch (error) {
+        return {
+            success: false,
+            error: 'Gagal memperbarui kategori.'
+        };
+    }
 }
 
 export async function deleteCategory(id: number) {
     await requireAdmin();
-    await InventoryService.deleteCategory(id);
-    revalidatePath('/admin/inventory');
+    try {
+        await InventoryService.deleteCategory(id);
+        revalidatePath('/admin/inventory');
+        return { success: true };
+    } catch (error: any) {
+        if (error.code === 'ER_ROW_IS_REFERENCED_2') {
+            return {
+                success: false,
+                error: 'Kategori tidak dapat dihapus karena masih memiliki barang yang terdaftar.'
+            };
+        }
+        return {
+            success: false,
+            error: 'Gagal menghapus kategori. Silakan coba lagi.'
+        };
+    }
 }
 
 // --- Items ---

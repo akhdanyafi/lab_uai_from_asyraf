@@ -37,7 +37,7 @@ export default async function PengembalianPage() {
             {pendingReturns.length > 0 && (
                 <div className="mb-8">
                     <h2 className="text-lg font-semibold text-gray-900 mb-4">Pending Pengembalian</h2>
-                    <PendingReturnsList returns={pendingReturns} />
+                    <PendingReturnsList returns={pendingReturns} validatorId={session.userId} />
                 </div>
             )}
 

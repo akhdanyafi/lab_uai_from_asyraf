@@ -307,6 +307,34 @@ export class LoanService {
     }
 
     /**
+     * Admin directly returns an item (without requiring student to submit return first)
+     */
+    static async adminDirectReturn(loanId: number, validatorId: number) {
+        const loanResult = await db
+            .select()
+            .from(itemLoans)
+            .where(eq(itemLoans.id, loanId))
+            .limit(1);
+
+        const loan = loanResult[0];
+        if (!loan) throw new Error('Loan not found');
+        if (loan.status !== 'Disetujui') throw new Error('Loan is not active');
+
+        await db.update(itemLoans)
+            .set({
+                returnStatus: 'Dikembalikan',
+                status: 'Selesai',
+                actualReturnDate: new Date(),
+                validatorId,
+            })
+            .where(eq(itemLoans.id, loanId));
+
+        await db.update(items)
+            .set({ status: 'Tersedia' })
+            .where(eq(items.id, loan.itemId));
+    }
+
+    /**
      * Reject pending return (by admin)
      */
     static async rejectReturn(loanId: number) {

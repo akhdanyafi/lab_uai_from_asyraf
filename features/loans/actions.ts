@@ -116,6 +116,19 @@ export async function rejectReturn(loanId: number) {
 }
 
 /**
+ * Admin directly returns an item (without requiring student to submit return first)
+ */
+export async function adminDirectReturn(loanId: number, validatorId: number) {
+    await requireAdmin();
+    await LoanService.adminDirectReturn(loanId, validatorId);
+    revalidatePath('/admin/loans');
+    revalidatePath('/admin/validations');
+    revalidatePath('/admin/inventory');
+    revalidatePath('/admin/pengembalian');
+    revalidatePath('/student/loans');
+}
+
+/**
  * Get pending returns for admin
  */
 export async function getPendingReturns() {

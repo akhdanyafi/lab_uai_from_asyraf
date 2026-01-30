@@ -1,7 +1,7 @@
 'use client';
 
-import { createCategory, deleteCategory } from '@/features/inventory/actions';
-import { Plus, Trash2, Tags } from 'lucide-react';
+import { createCategory, deleteCategory, updateCategory } from '@/features/inventory/actions';
+import { Plus, Trash2, Tags, Pencil, X, Check } from 'lucide-react';
 import { useState } from 'react';
 
 interface Category {
@@ -15,6 +15,39 @@ interface CategoriesViewProps {
 
 export default function CategoriesView({ categories }: CategoriesViewProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [editingId, setEditingId] = useState<number | null>(null);
+    const [editName, setEditName] = useState('');
+
+    const handleEditClick = (category: Category) => {
+        setEditingId(category.id);
+        setEditName(category.name);
+    };
+
+    const handleCancelEdit = () => {
+        setEditingId(null);
+        setEditName('');
+    };
+
+    const handleSaveEdit = async (id: number) => {
+        if (!editName.trim()) return;
+
+        const result = await updateCategory(id, { name: editName });
+        if (result.success) {
+            setEditingId(null);
+            setEditName('');
+        } else {
+            alert(result.error);
+        }
+    };
+
+    const handleDelete = async (id: number) => {
+        if (confirm('Apakah Anda yakin ingin menghapus kategori ini?')) {
+            const result = await deleteCategory(id);
+            if (!result.success) {
+                alert(result.error);
+            }
+        }
+    };
 
     return (
         <div>
@@ -29,7 +62,6 @@ export default function CategoriesView({ categories }: CategoriesViewProps) {
                     const name = formData.get('name') as string;
                     await createCategory({ name });
                     setIsSubmitting(false);
-                    // Reset form manually or use ref if needed, but for now simple is fine
                     const form = document.getElementById('add-category-form') as HTMLFormElement;
                     form?.reset();
                 }} id="add-category-form" className="flex gap-4 items-end">
@@ -47,38 +79,72 @@ export default function CategoriesView({ categories }: CategoriesViewProps) {
                 </form>
             </div>
 
-            {/* Categories Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {categories.map((category) => (
-                    <div key={category.id} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-                        <div className="flex items-start justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                                    <Tags className="w-5 h-5 text-primary" />
+            {/* Categories List */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="divide-y divide-gray-100">
+                    {categories.map((category) => (
+                        <div key={category.id} className="px-4 py-3 hover:bg-gray-50 transition-colors">
+                            {editingId === category.id ? (
+                                /* Edit Mode */
+                                <div className="flex items-center gap-3">
+                                    <Tags className="w-5 h-5 text-primary shrink-0" />
+                                    <input
+                                        type="text"
+                                        value={editName}
+                                        onChange={(e) => setEditName(e.target.value)}
+                                        className="flex-1 px-3 py-1.5 text-sm rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                        autoFocus
+                                    />
+                                    <div className="flex items-center gap-2 shrink-0">
+                                        <button
+                                            onClick={handleCancelEdit}
+                                            className="px-3 py-1.5 text-xs text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+                                        >
+                                            Batal
+                                        </button>
+                                        <button
+                                            onClick={() => handleSaveEdit(category.id)}
+                                            className="px-3 py-1.5 text-xs text-white bg-green-600 hover:bg-green-700 rounded-md transition-colors"
+                                        >
+                                            Simpan
+                                        </button>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h3 className="font-semibold text-gray-900">{category.name}</h3>
-                                    <p className="text-xs text-gray-500 mt-1">ID: {category.id}</p>
+                            ) : (
+                                /* View Mode */
+                                <div className="flex items-center gap-3">
+                                    <Tags className="w-5 h-5 text-primary shrink-0" />
+                                    <div className="flex-1 min-w-0">
+                                        <span className="font-medium text-gray-900">{category.name}</span>
+                                        <span className="text-xs text-gray-400 ml-2">ID: {category.id}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1 shrink-0">
+                                        <button
+                                            onClick={() => handleEditClick(category)}
+                                            className="p-1.5 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-md transition-colors"
+                                            title="Edit"
+                                        >
+                                            <Pencil className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete(category.id)}
+                                            className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
+                                            title="Hapus"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
-                            <form action={async () => {
-                                if (confirm('Apakah Anda yakin ingin menghapus kategori ini?')) {
-                                    await deleteCategory(category.id);
-                                }
-                            }}>
-                                <button className="text-red-500 hover:text-red-700 p-2 hover:bg-red-50 rounded-lg transition-colors">
-                                    <Trash2 className="w-4 h-4" />
-                                </button>
-                            </form>
+                            )}
                         </div>
-                    </div>
-                ))}
-                {categories.length === 0 && (
-                    <div className="col-span-full bg-white p-12 rounded-xl shadow-sm border border-gray-100 text-center">
-                        <Tags className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                        <p className="text-gray-500">Belum ada kategori. Silahkan tambahkan kategori baru.</p>
-                    </div>
-                )}
+                    ))}
+                    {categories.length === 0 && (
+                        <div className="px-6 py-12 text-center">
+                            <Tags className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                            <p className="text-gray-500">Belum ada kategori. Silahkan tambahkan kategori baru.</p>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );

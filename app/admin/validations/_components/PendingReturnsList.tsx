@@ -6,16 +6,19 @@ import { approveReturn, rejectReturn } from '@/features/loans/actions';
 
 interface PendingReturn {
     id: number;
-    requestDate: string | null;
-    returnPlanDate: string;
+    requestDate: Date | null;
+    returnPlanDate: Date;
     purpose: string | null;
     student: {
         fullName: string;
-        nim: string | null;
+        identifier: string;
+        [key: string]: unknown; // Allow additional student fields
     };
     item: {
         name: string;
+        [key: string]: unknown; // Allow additional item fields
     };
+    [key: string]: unknown; // Allow additional loan fields
 }
 
 interface PendingReturnsListProps {
@@ -65,7 +68,7 @@ export default function PendingReturnsList({ returns, validatorId }: PendingRetu
                                     <p className="font-medium text-gray-900">{item.item.name}</p>
                                     <p className="text-sm text-gray-500">
                                         Dipinjam oleh: <span className="font-medium">{item.student.fullName}</span>
-                                        {item.student.nim && <span className="text-gray-400"> ({item.student.nim})</span>}
+                                        <span className="text-gray-400"> ({item.student.identifier})</span>
                                     </p>
                                     {item.purpose && (
                                         <p className="text-xs text-gray-400 mt-1">Tujuan: {item.purpose}</p>

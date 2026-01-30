@@ -1,4 +1,4 @@
-import { getLoanRequests, updateLoanStatus, deleteLoan, getPendingReturns, approveReturn, rejectReturn } from '@/features/loans/actions';
+import { getLoanRequests, updateLoanStatus, deleteLoan, getPendingReturns, approveReturn, rejectReturn, adminDirectReturn } from '@/features/loans/actions';
 import { getBookingRequests, updateBookingStatus, getAllRooms, getMonthBookings, deleteBooking } from '@/features/bookings/actions';
 import { getPendingUsers, updateUserStatus } from '@/features/users/actions';
 import { getSession } from '@/lib/auth';
@@ -141,7 +141,7 @@ export default async function AdminValidationsPage({
                                         </div>
                                     )}
                                     {loan.status === 'Disetujui' && (
-                                        <form action={approveReturn.bind(null, loan.id, session!.user.id)}>
+                                        <form action={adminDirectReturn.bind(null, loan.id, session!.user.id)}>
                                             <button className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition-colors" title="Konfirmasi Pengembalian">
                                                 <CheckCircle className="w-4 h-4" />
                                                 Kembalikan

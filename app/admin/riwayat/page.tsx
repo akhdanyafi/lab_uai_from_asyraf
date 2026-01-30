@@ -33,12 +33,12 @@ export default async function RiwayatPage({
     // Apply date filters
     if (startDate) {
         const start = new Date(startDate);
-        filteredLoans = filteredLoans.filter(l => new Date(l.borrowedAt) >= start);
+        filteredLoans = filteredLoans.filter(l => l.requestDate && new Date(l.requestDate) >= start);
         filteredBookings = filteredBookings.filter(b => new Date(b.startTime) >= start);
     }
     if (endDate) {
         const end = new Date(endDate);
-        filteredLoans = filteredLoans.filter(l => new Date(l.borrowedAt) <= end);
+        filteredLoans = filteredLoans.filter(l => l.requestDate && new Date(l.requestDate) <= end);
         filteredBookings = filteredBookings.filter(b => new Date(b.startTime) <= end);
     }
 
@@ -108,8 +108,8 @@ export default async function RiwayatPage({
                 <Link
                     href="/admin/riwayat?tab=loans"
                     className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${activeTab === 'loans'
-                            ? 'bg-[#0F4C81] text-white'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        ? 'bg-[#0F4C81] text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                         }`}
                 >
                     Riwayat Peminjaman
@@ -117,8 +117,8 @@ export default async function RiwayatPage({
                 <Link
                     href="/admin/riwayat?tab=bookings"
                     className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${activeTab === 'bookings'
-                            ? 'bg-[#0F4C81] text-white'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        ? 'bg-[#0F4C81] text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                         }`}
                 >
                     Riwayat Booking
@@ -190,17 +190,17 @@ export default async function RiwayatPage({
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 text-gray-600" suppressHydrationWarning>
-                                        {new Date(loan.borrowedAt).toLocaleDateString('id-ID')}
+                                        {loan.requestDate ? new Date(loan.requestDate).toLocaleDateString('id-ID') : '-'}
                                     </td>
                                     <td className="px-6 py-4">
                                         <span
                                             className={`text-xs px-2 py-1 rounded ${loan.status === 'Pending'
-                                                    ? 'bg-yellow-100 text-yellow-700'
-                                                    : loan.status === 'Disetujui'
-                                                        ? 'bg-green-100 text-green-700'
-                                                        : loan.status === 'Selesai'
-                                                            ? 'bg-blue-100 text-blue-700'
-                                                            : 'bg-red-100 text-red-700'
+                                                ? 'bg-yellow-100 text-yellow-700'
+                                                : loan.status === 'Disetujui'
+                                                    ? 'bg-green-100 text-green-700'
+                                                    : loan.status === 'Selesai'
+                                                        ? 'bg-blue-100 text-blue-700'
+                                                        : 'bg-red-100 text-red-700'
                                                 }`}
                                         >
                                             {loan.status}
@@ -253,10 +253,10 @@ export default async function RiwayatPage({
                                     <td className="px-6 py-4">
                                         <span
                                             className={`text-xs px-2 py-1 rounded ${booking.status === 'Pending'
-                                                    ? 'bg-yellow-100 text-yellow-700'
-                                                    : booking.status === 'Disetujui'
-                                                        ? 'bg-green-100 text-green-700'
-                                                        : 'bg-red-100 text-red-700'
+                                                ? 'bg-yellow-100 text-yellow-700'
+                                                : booking.status === 'Disetujui'
+                                                    ? 'bg-green-100 text-green-700'
+                                                    : 'bg-red-100 text-red-700'
                                                 }`}
                                         >
                                             {booking.status}

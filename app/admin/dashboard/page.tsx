@@ -63,7 +63,7 @@ export default async function AdminDashboard() {
                     </div>
                     <p className="text-3xl font-bold text-orange-500">{stats.pendingLoans}</p>
                     {stats.pendingLoans > 0 && (
-                        <Link href="/admin/validations" className="text-xs text-primary hover:underline mt-2 inline-block">
+                        <Link href="/admin/validations?tab=loans" className="text-xs text-primary hover:underline mt-2 inline-block">
                             Lihat semua →
                         </Link>
                     )}
@@ -76,7 +76,7 @@ export default async function AdminDashboard() {
                     </div>
                     <p className="text-3xl font-bold text-orange-500">{stats.pendingBookings}</p>
                     {stats.pendingBookings > 0 && (
-                        <Link href="/admin/validations" className="text-xs text-primary hover:underline mt-2 inline-block">
+                        <Link href="/admin/validations?tab=rooms" className="text-xs text-primary hover:underline mt-2 inline-block">
                             Lihat semua →
                         </Link>
                     )}
@@ -113,7 +113,7 @@ export default async function AdminDashboard() {
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="text-lg font-semibold">Peminjaman Aktif</h2>
-                        <Link href="/admin/validations" className="text-sm text-primary hover:underline flex items-center gap-1">
+                        <Link href="/admin/validations?tab=loans" className="text-sm text-primary hover:underline flex items-center gap-1">
                             Lihat semua <ArrowRight className="w-4 h-4" />
                         </Link>
                     </div>
@@ -139,7 +139,7 @@ export default async function AdminDashboard() {
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="text-lg font-semibold">Booking Ruangan Aktif</h2>
-                        <Link href="/admin/validations" className="text-sm text-primary hover:underline flex items-center gap-1">
+                        <Link href="/admin/validations?tab=rooms" className="text-sm text-primary hover:underline flex items-center gap-1">
                             Lihat semua <ArrowRight className="w-4 h-4" />
                         </Link>
                     </div>

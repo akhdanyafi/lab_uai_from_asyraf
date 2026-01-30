@@ -65,7 +65,7 @@ export default function DashboardNotifications({
                             </div>
                         </div>
                         <Link
-                            href="/admin/governance"
+                            href="/admin/validations?tab=users"
                             className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-md font-medium text-xs transition-colors shrink-0"
                         >
                             Validasi
@@ -86,7 +86,7 @@ export default function DashboardNotifications({
                             </div>
                         </div>
                         <Link
-                            href="/admin/validations"
+                            href="/admin/validations?tab=loans"
                             className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium text-xs transition-colors shrink-0"
                         >
                             Validasi
@@ -107,7 +107,7 @@ export default function DashboardNotifications({
                             </div>
                         </div>
                         <Link
-                            href="/admin/validations"
+                            href="/admin/validations?tab=rooms"
                             className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-md font-medium text-xs transition-colors shrink-0"
                         >
                             Validasi

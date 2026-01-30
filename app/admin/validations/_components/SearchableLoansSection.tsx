@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useTransition } from 'react';
 import { Box, User, CheckCircle, XCircle, Search, X } from 'lucide-react';
-import { updateLoanStatus, approveReturn as approveReturnAction, rejectReturn as rejectReturnAction } from '@/features/loans/actions';
+import { updateLoanStatus, approveReturn as approveReturnAction, rejectReturn as rejectReturnAction, adminDirectReturn } from '@/features/loans/actions';
 
 interface Loan {
     id: number;
@@ -84,9 +84,10 @@ export default function SearchableLoansSection({ loans, pendingReturns, sessionU
         });
     };
 
+    // Admin directly returns an active loan (no need for student to submit return first)
     const handleReturn = (loanId: number) => {
         startTransition(async () => {
-            await approveReturnAction(loanId, sessionUserId);
+            await adminDirectReturn(loanId, sessionUserId);
         });
     };
 
@@ -190,8 +191,8 @@ export default function SearchableLoansSection({ loans, pendingReturns, sessionU
                                 </td>
                                 <td className="px-6 py-4">
                                     <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${loan.status === 'Pending' ? 'bg-yellow-50 text-yellow-700' :
-                                            loan.status === 'Disetujui' ? 'bg-green-50 text-green-700' :
-                                                'bg-red-50 text-red-700'
+                                        loan.status === 'Disetujui' ? 'bg-green-50 text-green-700' :
+                                            'bg-red-50 text-red-700'
                                         }`}>
                                         {loan.status}
                                     </span>
