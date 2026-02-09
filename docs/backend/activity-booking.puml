@@ -14,13 +14,6 @@ start
 if (Ruangan Tersedia?) then (Ya)
     |Mahasiswa/Dosen|
     :Isi Form Booking;
-    note right
-        - Tujuan Penggunaan
-        - Organisasi
-        - Jumlah Peserta
-        - Dosen Pembimbing
-        - Surat Permohonan (opsional)
-    end note
     
     :Submit Request;
     
@@ -60,7 +53,6 @@ if (Ruangan Tersedia?) then (Ya)
 else (Tidak)
     |Sistem|
     :Tampilkan Pesan Error;
-    note right: "Jadwal bentrok dengan booking lain"
     
     |Mahasiswa/Dosen|
     :Pilih Waktu Lain;

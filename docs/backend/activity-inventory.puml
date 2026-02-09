@@ -11,12 +11,6 @@ switch (Aksi?)
 case (Tambah Item)
     :Klik Tambah Item Baru;
     :Isi Form Item;
-    note right
-        - Nama Item
-        - Kategori
-        - Ruangan
-        - Deskripsi
-    end note
     
     |Sistem|
     :Generate QR Code Unik;
@@ -43,8 +37,7 @@ case (Hapus Item)
     
     |Sistem|
     if (Item Sedang Dipinjam?) then (Ya)
-        :Tampilkan Error;
-        note right: "Tidak bisa hapus"
+        :Error;
     else (Tidak)
         :Hapus Item dari Database;
         |Admin|
@@ -54,10 +47,6 @@ case (Hapus Item)
 case (Ubah Status)
     :Pilih Item dari List;
     :Pilih Status Baru;
-    note right
-        - Tersedia
-        - Maintenance
-    end note
     
     |Sistem|
     :Update Status Item;
@@ -66,13 +55,13 @@ case (Ubah Status)
     :Status Berhasil Diubah;
 
 case (Kelola Ruangan)
-    :Tambah/Edit/Hapus Ruangan;
+    :CRUD Ruangan;
     
     |Sistem|
     :Update Database;
 
 case (Kelola Kategori)
-    :Tambah/Edit/Hapus Kategori;
+    :CRUD Kategori;
     
     |Sistem|
     :Update Database;

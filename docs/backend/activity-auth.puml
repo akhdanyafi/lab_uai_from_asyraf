@@ -30,18 +30,15 @@ if (Aksi?) then (Login)
                 :Login Berhasil;
             else (Tidak)
                 |Sistem|
-                :Tampilkan Error;
-                note right: "Akun Pending/Rejected"
+                :Error;
                 stop
             endif
         else (Tidak)
-            :Tampilkan Error;
-            note right: "Password salah"
+            :Error;
             stop
         endif
     else (Tidak)
-        :Tampilkan Error;
-        note right: "User tidak ditemukan"
+        :Error;
         stop
     endif
 
@@ -49,16 +46,6 @@ else (Register)
     |User|
     :Buka Halaman Register;
     :Isi Form Registrasi;
-    note right
-        - Nama Lengkap
-        - NIM/NIDN
-        - Email
-        - Password
-        - Role (Mahasiswa/Dosen)
-        - Angkatan
-        - Program Studi
-        - Dosen Pembimbing
-    end note
     :Submit Form;
     
     |Sistem|
@@ -66,8 +53,8 @@ else (Register)
     
     if (Email/NIM Unik?) then (Ya)
         :Hash Password;
-        :Simpan User dengan Status=Pending;
-        :Kirim Notifikasi ke Admin;
+        :User Status=Pending;
+        :Notifikasi ke Admin;
         
         |User|
         :Registrasi Berhasil;
@@ -87,8 +74,7 @@ else (Register)
             :Tidak Dapat Login;
         endif
     else (Tidak)
-        :Tampilkan Error;
-        note right: "Email/NIM sudah terdaftar"
+        :Error;
         stop
     endif
 endif

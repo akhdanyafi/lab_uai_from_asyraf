@@ -13,13 +13,6 @@ start
 if (Alat Tersedia?) then (Ya)
     |Mahasiswa|
     :Isi Form Peminjaman;
-    note right
-        - Tanggal Pengembalian
-        - Organisasi
-        - Tujuan Penggunaan
-        - Dosen Pembimbing
-        - Surat Izin (opsional)
-    end note
     :Submit Request;
     
     |Sistem|
@@ -76,8 +69,7 @@ if (Alat Tersedia?) then (Ya)
 
 else (Tidak)
     |Sistem|
-    :Tampilkan Error;
-    note right: "Alat tidak tersedia"
+    :Error;
     
     |Mahasiswa|
     :Pilih Alat Lain;
