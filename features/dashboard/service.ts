@@ -7,7 +7,7 @@
  */
 
 import { db } from '@/db';
-import { items, itemLoans, roomBookings, users, rooms, itemCategories } from '@/db/schema';
+import { items, itemLoans, roomBookings, users, rooms, itemCategories, governanceDocs } from '@/db/schema';
 import { eq, and, gte, desc, sql } from 'drizzle-orm';
 
 export class DashboardService {
@@ -240,8 +240,9 @@ export class DashboardService {
 
     /**
      * Get lecturer dashboard data
+     * Kaprodi & Kepala Lab also see latest LPJ documents
      */
-    static async getLecturerDashboard(userId: number) {
+    static async getLecturerDashboard(userId: number, role?: string) {
         const today = new Date();
 
         const upcomingBookingsRaw = await db
@@ -263,9 +264,29 @@ export class DashboardService {
             room: row.room!,
         }));
 
+        // Fetch LPJ documents for Kaprodi and Kepala Laboratorium
+        let latestLPJ: { id: number; title: string; filePath: string; coverPath: string | null; createdAt: Date | null; uploaderName: string | null }[] = [];
+        if (role === 'Kaprodi' || role === 'Kepala Laboratorium') {
+            latestLPJ = await db
+                .select({
+                    id: governanceDocs.id,
+                    title: governanceDocs.title,
+                    filePath: governanceDocs.filePath,
+                    coverPath: governanceDocs.coverPath,
+                    createdAt: governanceDocs.createdAt,
+                    uploaderName: users.fullName,
+                })
+                .from(governanceDocs)
+                .leftJoin(users, eq(governanceDocs.adminId, users.id))
+                .where(eq(governanceDocs.type, 'LPJ Bulanan'))
+                .orderBy(desc(governanceDocs.createdAt))
+                .limit(5);
+        }
+
         return {
             upcomingBookings,
             totalBookings: upcomingBookings.length,
+            latestLPJ,
         };
     }
 

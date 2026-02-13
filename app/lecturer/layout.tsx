@@ -9,7 +9,7 @@ export default async function LecturerLayout({
 }) {
     const session = await getSession();
 
-    if (!session || session.user.role !== 'Dosen') {
+    if (!session || !['Dosen', 'Kaprodi', 'Kepala Laboratorium'].includes(session.user.role)) {
         redirect('/login');
     }
 

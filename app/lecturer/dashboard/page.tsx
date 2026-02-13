@@ -1,18 +1,21 @@
 import { getLecturerDashboard } from '@/features/dashboard/actions';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
-import { Calendar, FileText, ArrowRight } from 'lucide-react';
+import { Calendar, FileText, ArrowRight, Download } from 'lucide-react';
 import Link from 'next/link';
 
 export default async function LecturerDashboard() {
     const session = await getSession();
     if (!session) redirect('/login');
 
-    const dashboard = await getLecturerDashboard(session.user.id);
+    const dashboard = await getLecturerDashboard(session.user.id, session.user.role);
+    const isLeadership = ['Kaprodi', 'Kepala Laboratorium'].includes(session.user.role);
 
     return (
         <div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-6">Dashboard Dosen</h1>
+            <h1 className="text-2xl font-bold text-gray-900 mb-6">
+                Dashboard {session.user.role === 'Kaprodi' ? 'Kaprodi' : session.user.role === 'Kepala Laboratorium' ? 'Kepala Laboratorium' : 'Dosen'}
+            </h1>
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -45,6 +48,67 @@ export default async function LecturerDashboard() {
             </div>
 
             <div className="grid grid-cols-1 gap-6">
+                {/* LPJ Section - Only for Kaprodi & Kepala Lab */}
+                {isLeadership && dashboard.latestLPJ && dashboard.latestLPJ.length > 0 && (
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-lg font-semibold flex items-center gap-2">
+                                <FileText className="w-5 h-5 text-orange-500" />
+                                Dokumen LPJ Terbaru
+                            </h2>
+                        </div>
+                        <div className="space-y-3">
+                            {dashboard.latestLPJ.map((doc) => (
+                                <div key={doc.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                                    <div className="flex items-start gap-3 flex-1 min-w-0">
+                                        <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                            <FileText className="w-5 h-5 text-orange-600" />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="font-medium text-gray-900 text-sm truncate">{doc.title}</p>
+                                            <div className="flex items-center gap-2 mt-1">
+                                                <span className="text-xs text-gray-500">
+                                                    {doc.createdAt ? new Date(doc.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}
+                                                </span>
+                                                {doc.uploaderName && (
+                                                    <>
+                                                        <span className="text-xs text-gray-300">•</span>
+                                                        <span className="text-xs text-gray-500">oleh {doc.uploaderName}</span>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <a
+                                        href={doc.filePath}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-orange-700 bg-orange-100 rounded-lg hover:bg-orange-200 transition-colors flex-shrink-0 ml-3"
+                                    >
+                                        <Download className="w-3.5 h-3.5" />
+                                        Unduh
+                                    </a>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {isLeadership && (!dashboard.latestLPJ || dashboard.latestLPJ.length === 0) && (
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-lg font-semibold flex items-center gap-2">
+                                <FileText className="w-5 h-5 text-orange-500" />
+                                Dokumen LPJ Terbaru
+                            </h2>
+                        </div>
+                        <div className="text-center py-8">
+                            <FileText className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+                            <p className="text-gray-500 text-sm">Belum ada dokumen LPJ</p>
+                        </div>
+                    </div>
+                )}
+
                 {/* Upcoming Bookings */}
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                     <div className="flex justify-between items-center mb-4">
@@ -83,3 +147,4 @@ export default async function LecturerDashboard() {
         </div>
     );
 }
+
