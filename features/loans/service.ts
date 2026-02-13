@@ -17,6 +17,7 @@ export interface CreateLoanInput {
     endTime?: Date;
     purpose?: string;
     suratIzin?: string;
+    suratVerified?: boolean;
     dosenPembimbing?: string;
     software?: string[]; // Array of selected software
 }
@@ -62,8 +63,8 @@ export class LoanService {
      * Lecturers (Dosen) will have null dosen pembimbing
      */
     static async create(data: CreateLoanInput) {
-        // Auto-validation: if surat izin provided, set status to Disetujui
-        const status = data.suratIzin ? 'Disetujui' : 'Pending';
+        // Auto-validation: if surat izin provided AND verified, set status to Disetujui
+        const status = data.suratIzin && data.suratVerified ? 'Disetujui' : 'Pending';
 
         // Get user's role to check if lecturer
         const user = await db

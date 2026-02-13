@@ -67,6 +67,7 @@ export default function RoomBookingClient({ rooms, calendarBookings, userId }: R
     const [jumlahPeserta, setJumlahPeserta] = useState('1');
     const [dosenPembimbing, setDosenPembimbing] = useState('');
     const [suratFile, setSuratFile] = useState<File | null>(null);
+    const [suratVerified, setSuratVerified] = useState<boolean | null>(null);
     const [lecturers, setLecturers] = useState<Lecturer[]>([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -93,7 +94,14 @@ export default function RoomBookingClient({ rooms, calendarBookings, userId }: R
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
-            setSuratFile(e.target.files[0]);
+            const file = e.target.files[0];
+            if (file.type !== 'application/pdf') {
+                alert('Surat permohonan harus dalam format PDF.');
+                e.target.value = '';
+                return;
+            }
+            setSuratFile(file);
+            setSuratVerified(null); // Reset verification state
         }
     };
 
@@ -113,13 +121,14 @@ export default function RoomBookingClient({ rooms, calendarBookings, userId }: R
 
             // Handle file upload if provided
             let suratPermohonanPath: string | undefined;
+            let isVerified = false;
             if (suratFile) {
                 // Create FormData for file upload
                 const uploadFormData = new FormData();
                 uploadFormData.append('file', suratFile);
                 uploadFormData.append('folder', 'surat-permohonan');
 
-                const uploadRes = await fetch('/api/upload', {
+                const uploadRes = await fetch('/api/upload?verify=true&type=suratPermohonan', {
                     method: 'POST',
                     body: uploadFormData,
                 });
@@ -127,6 +136,8 @@ export default function RoomBookingClient({ rooms, calendarBookings, userId }: R
                 if (uploadRes.ok) {
                     const uploadData = await uploadRes.json();
                     suratPermohonanPath = uploadData.path;
+                    isVerified = uploadData.verification?.valid === true;
+                    setSuratVerified(isVerified);
                 }
             }
 
@@ -145,13 +156,16 @@ export default function RoomBookingClient({ rooms, calendarBookings, userId }: R
                 organisasi: finalOrganisasi,
                 jumlahPeserta: parseInt(jumlahPeserta) || 1,
                 suratPermohonan: suratPermohonanPath,
+                suratVerified: isVerified,
                 dosenPembimbing: dosenPembimbing || undefined,
             });
 
             // Show success message
-            const statusMessage = suratPermohonanPath
-                ? 'Booking berhasil! Karena Anda melampirkan surat permohonan, pengajuan langsung disetujui.'
-                : 'Booking berhasil diajukan! Mohon tunggu validasi dari admin.';
+            const statusMessage = suratPermohonanPath && isVerified
+                ? 'Booking berhasil! Surat terverifikasi, pengajuan langsung disetujui.'
+                : suratPermohonanPath && !isVerified
+                    ? 'Booking berhasil diajukan! Surat perlu review manual oleh admin.'
+                    : 'Booking berhasil diajukan! Mohon tunggu validasi dari admin.';
             alert(statusMessage);
 
             // Reset form
@@ -164,6 +178,7 @@ export default function RoomBookingClient({ rooms, calendarBookings, userId }: R
             setJumlahPeserta('1');
             setDosenPembimbing('');
             setSuratFile(null);
+            setSuratVerified(null);
             // Reset file input
             const fileInput = document.getElementById('suratPermohonan') as HTMLInputElement;
             if (fileInput) fileInput.value = '';
@@ -350,13 +365,13 @@ export default function RoomBookingClient({ rooms, calendarBookings, userId }: R
                                     <input
                                         id="suratPermohonan"
                                         type="file"
-                                        accept=".pdf,.jpg,.jpeg,.png"
+                                        accept=".pdf"
                                         onChange={handleFileChange}
                                         className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#0F4C81] file:text-white hover:file:bg-[#0F4C81]/90"
                                     />
                                 </div>
                                 <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
-                                    <span className="text-lg">💡</span> Jika melampirkan surat, booking langsung disetujui otomatis
+                                    <span className="text-lg">💡</span> Upload surat permohonan PDF untuk auto-approval (akan diverifikasi otomatis)
                                 </p>
                             </div>
                         </div>

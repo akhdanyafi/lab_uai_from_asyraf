@@ -26,6 +26,7 @@ export async function createLoanRequest(data: {
     endTime?: Date;
     purpose?: string;
     suratIzin?: string;
+    suratVerified?: boolean;
     dosenPembimbing?: string;
     software?: string[];
 }) {
@@ -164,6 +165,7 @@ export async function requestItemLoan(data: {
     purpose: string;
     returnPlanDate: Date;
     permitLetter?: string;
+    permitVerified?: boolean;
 }) {
     await LoanService.create({
         itemId: data.itemId,
@@ -171,6 +173,7 @@ export async function requestItemLoan(data: {
         purpose: data.purpose,
         returnPlanDate: data.returnPlanDate,
         suratIzin: data.permitLetter,
+        suratVerified: data.permitVerified,
     });
     revalidatePath('/student/loans');
     revalidatePath('/admin/loans');

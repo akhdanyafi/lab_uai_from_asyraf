@@ -52,6 +52,7 @@ export async function createRoomBooking(data: {
     organisasi?: string;
     jumlahPeserta?: number;
     suratPermohonan?: string;
+    suratVerified?: boolean;
     dosenPembimbing?: string;
 }) {
     // Ideally check session.user.id === data.userId

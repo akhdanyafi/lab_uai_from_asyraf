@@ -61,6 +61,7 @@ export default function ItemCard({ item, userId }: { item: any; userId: number }
     const [customPurpose, setCustomPurpose] = useState('');
     const [dosenPembimbing, setDosenPembimbing] = useState('');
     const [suratFile, setSuratFile] = useState<File | null>(null);
+    const [suratVerified, setSuratVerified] = useState<boolean | null>(null);
     const [selectedSoftware, setSelectedSoftware] = useState<string[]>([]);
     const [customSoftware, setCustomSoftware] = useState('');
     const [hasCustomSoftware, setHasCustomSoftware] = useState(false);
@@ -87,18 +88,20 @@ export default function ItemCard({ item, userId }: { item: any; userId: number }
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            // Validate file type
-            const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
-            if (!allowedTypes.includes(file.type)) {
-                alert('Hanya file PDF atau gambar (JPG, PNG) yang diperbolehkan');
+            // Only allow PDF for surat izin
+            if (file.type !== 'application/pdf') {
+                alert('Surat izin harus dalam format PDF');
+                e.target.value = '';
                 return;
             }
             // Validate file size (10MB max)
             if (file.size > 10 * 1024 * 1024) {
                 alert('Ukuran file maksimal 10MB');
+                e.target.value = '';
                 return;
             }
             setSuratFile(file);
+            setSuratVerified(null);
         }
     };
 
@@ -109,12 +112,13 @@ export default function ItemCard({ item, userId }: { item: any; userId: number }
         try {
             // Handle file upload if provided
             let suratIzinPath: string | undefined;
+            let isVerified = false;
             if (suratFile) {
                 const uploadFormData = new FormData();
                 uploadFormData.append('file', suratFile);
-                uploadFormData.append('folder', 'surat-izin-peminjaman');
+                uploadFormData.append('folder', 'surat-izin');
 
-                const uploadRes = await fetch('/api/upload', {
+                const uploadRes = await fetch('/api/upload?verify=true&type=suratIzin', {
                     method: 'POST',
                     body: uploadFormData,
                 });
@@ -122,6 +126,8 @@ export default function ItemCard({ item, userId }: { item: any; userId: number }
                 if (uploadRes.ok) {
                     const uploadData = await uploadRes.json();
                     suratIzinPath = uploadData.path;
+                    isVerified = uploadData.verification?.valid === true;
+                    setSuratVerified(isVerified);
                 }
             }
 
@@ -152,14 +158,17 @@ export default function ItemCard({ item, userId }: { item: any; userId: number }
                 endTime: endDateTime,
                 purpose: finalPurpose,
                 suratIzin: suratIzinPath,
+                suratVerified: isVerified,
                 dosenPembimbing: dosenPembimbing || undefined,
                 software: isPCServerCategory && finalSoftware.length > 0 ? finalSoftware : undefined,
             });
 
             // Show success message
-            const statusMessage = suratIzinPath
-                ? 'Permintaan peminjaman berhasil! Karena Anda melampirkan surat izin, peminjaman langsung disetujui.'
-                : 'Permintaan peminjaman berhasil dikirim! Mohon tunggu validasi dari admin.';
+            const statusMessage = suratIzinPath && isVerified
+                ? 'Permintaan peminjaman berhasil! Surat izin terverifikasi, peminjaman langsung disetujui.'
+                : suratIzinPath && !isVerified
+                    ? 'Permintaan peminjaman berhasil dikirim! Surat izin perlu review manual oleh admin.'
+                    : 'Permintaan peminjaman berhasil dikirim! Mohon tunggu validasi dari admin.';
             alert(statusMessage);
 
             setShowModal(false);
@@ -184,6 +193,7 @@ export default function ItemCard({ item, userId }: { item: any; userId: number }
         setCustomPurpose('');
         setDosenPembimbing('');
         setSuratFile(null);
+        setSuratVerified(null);
         setSelectedSoftware([]);
         setCustomSoftware('');
         setHasCustomSoftware(false);
@@ -390,8 +400,8 @@ export default function ItemCard({ item, userId }: { item: any; userId: number }
                                             <label
                                                 key={software}
                                                 className={`flex items-center gap-2 p-2 rounded-lg border cursor-pointer transition-all ${selectedSoftware.includes(software)
-                                                        ? 'bg-[#0F4C81] text-white border-[#0F4C81]'
-                                                        : 'bg-white border-gray-200 hover:border-[#0F4C81]'
+                                                    ? 'bg-[#0F4C81] text-white border-[#0F4C81]'
+                                                    : 'bg-white border-gray-200 hover:border-[#0F4C81]'
                                                     }`}
                                             >
                                                 <input
@@ -410,8 +420,8 @@ export default function ItemCard({ item, userId }: { item: any; userId: number }
                                         {/* Lainnya checkbox */}
                                         <label
                                             className={`flex items-center gap-2 p-2 rounded-lg border cursor-pointer transition-all ${hasCustomSoftware
-                                                    ? 'bg-[#0F4C81] text-white border-[#0F4C81]'
-                                                    : 'bg-white border-gray-200 hover:border-[#0F4C81]'
+                                                ? 'bg-[#0F4C81] text-white border-[#0F4C81]'
+                                                : 'bg-white border-gray-200 hover:border-[#0F4C81]'
                                                 }`}
                                         >
                                             <input
@@ -439,7 +449,6 @@ export default function ItemCard({ item, userId }: { item: any; userId: number }
                                 </div>
                             )}
 
-                            {/* Surat Izin */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
                                     <Upload className="w-4 h-4" /> Surat Izin/Permohonan
@@ -448,13 +457,13 @@ export default function ItemCard({ item, userId }: { item: any; userId: number }
                                 <div className="flex items-center gap-4 p-3 border-2 border-dashed border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
                                     <input
                                         type="file"
-                                        accept=".pdf,.jpg,.jpeg,.png"
+                                        accept=".pdf"
                                         onChange={handleFileChange}
                                         className="w-full text-sm file:mr-3 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-[#0F4C81] file:text-white hover:file:bg-[#0F4C81]/90"
                                     />
                                 </div>
                                 <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
-                                    💡 Jika melampirkan surat, peminjaman langsung disetujui otomatis
+                                    💡 Upload surat izin PDF untuk auto-approval (akan diverifikasi otomatis)
                                 </p>
                             </div>
 

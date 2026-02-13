@@ -1,14 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
+import { DocumentVerifier, type DocumentType } from '@/lib/documentVerifier';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
+// Folders that require PDF-only uploads
+const PDF_ONLY_FOLDERS = ['surat-izin', 'surat-permohonan'];
 
 export async function POST(request: NextRequest) {
     try {
         const formData = await request.formData();
         const file = formData.get('file') as File;
         const folder = formData.get('folder') as string || 'general';
+
+        // Check query params for verification
+        const verify = request.nextUrl.searchParams.get('verify') === 'true';
+        const docType = request.nextUrl.searchParams.get('type') as DocumentType | null;
 
         if (!file) {
             return NextResponse.json({ error: 'No file provided' }, { status: 400 });
@@ -19,10 +27,20 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'File size exceeds 10MB limit' }, { status: 400 });
         }
 
-        // Validate file type
-        const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
-        if (!allowedTypes.includes(file.type)) {
-            return NextResponse.json({ error: 'Invalid file type. Only PDF and images allowed.' }, { status: 400 });
+        // For surat folders, enforce PDF-only
+        if (PDF_ONLY_FOLDERS.includes(folder)) {
+            if (file.type !== 'application/pdf') {
+                return NextResponse.json(
+                    { error: 'Surat harus dalam format PDF.' },
+                    { status: 400 }
+                );
+            }
+        } else {
+            // General folders: allow PDF and images
+            const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
+            if (!allowedTypes.includes(file.type)) {
+                return NextResponse.json({ error: 'Invalid file type. Only PDF and images allowed.' }, { status: 400 });
+            }
         }
 
         // Create upload directory if it doesn't exist
@@ -43,10 +61,49 @@ export async function POST(request: NextRequest) {
         // Return public URL path
         const publicPath = `/uploads/${folder}/${filename}`;
 
+        // Run document verification if requested
+        if (verify && docType) {
+            try {
+                const result = await DocumentVerifier.verify(publicPath, docType);
+
+                if (!result.fileValid) {
+                    // File saved but not a valid document
+                    return NextResponse.json({
+                        success: true,
+                        path: publicPath,
+                        filename,
+                        verification: {
+                            valid: false,
+                            score: 0,
+                            matchedKeywords: [],
+                            missingKeywords: [],
+                            reason: result.reason,
+                        },
+                    });
+                }
+
+                return NextResponse.json({
+                    success: true,
+                    path: publicPath,
+                    filename,
+                    verification: result.verification,
+                });
+            } catch (verifyError) {
+                console.error('Verification error:', verifyError);
+                // File saved, but verification failed — return without verification data
+                return NextResponse.json({
+                    success: true,
+                    path: publicPath,
+                    filename,
+                    verification: null,
+                });
+            }
+        }
+
         return NextResponse.json({
             success: true,
             path: publicPath,
-            filename
+            filename,
         });
 
     } catch (error) {

@@ -17,6 +17,7 @@ export interface CreateBookingInput {
     organisasi?: string;
     jumlahPeserta?: number;
     suratPermohonan?: string;
+    suratVerified?: boolean;
     dosenPembimbing?: string;
 }
 
@@ -80,8 +81,8 @@ export class BookingService {
             throw new Error('Ruangan tidak tersedia: sudah dijadwalkan untuk praktikum terjadwal pada waktu tersebut');
         }
 
-        // Auto-validate if surat permohonan is provided
-        const status = data.suratPermohonan ? 'Disetujui' : 'Pending';
+        // Auto-validate if surat permohonan is provided AND verified
+        const status = data.suratPermohonan && data.suratVerified ? 'Disetujui' : 'Pending';
 
         // Get user's dosenPembimbing and role
         const user = await db

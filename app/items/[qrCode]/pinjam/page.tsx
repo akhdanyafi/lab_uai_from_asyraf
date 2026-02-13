@@ -41,14 +41,19 @@ export default async function ItemLoanFormPage({ params }: Props) {
         const permitLetter = formData.get('permitLetter') as File | null;
 
         let permitPath: string | undefined;
+        let permitVerified = false;
 
-        // Upload permit letter if provided
+        // Upload permit letter if provided (PDF only)
         if (permitLetter && permitLetter.size > 0) {
+            if (permitLetter.type !== 'application/pdf') {
+                throw new Error('Surat izin harus dalam format PDF');
+            }
+
             const uploadFormData = new FormData();
             uploadFormData.append('file', permitLetter);
-            uploadFormData.append('folder', 'permits');
+            uploadFormData.append('folder', 'surat-izin');
 
-            const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/upload`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/upload?verify=true&type=suratIzin`, {
                 method: 'POST',
                 body: uploadFormData,
             });
@@ -56,6 +61,7 @@ export default async function ItemLoanFormPage({ params }: Props) {
             if (response.ok) {
                 const data = await response.json();
                 permitPath = data.path;
+                permitVerified = data.verification?.valid === true;
             }
         }
 
@@ -66,6 +72,7 @@ export default async function ItemLoanFormPage({ params }: Props) {
             purpose,
             returnPlanDate: new Date(returnPlanDate),
             permitLetter: permitPath,
+            permitVerified,
         });
 
         redirect('/student/loans');
@@ -144,10 +151,10 @@ export default async function ItemLoanFormPage({ params }: Props) {
                             <input
                                 type="file"
                                 name="permitLetter"
-                                accept=".pdf,.jpg,.jpeg,.png"
+                                accept=".pdf"
                                 className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#0F4C81]/20 focus:border-[#0F4C81] text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#0F4C81]/10 file:text-[#0F4C81] hover:file:bg-[#0F4C81]/20"
                             />
-                            <p className="text-xs text-gray-400 mt-1">PDF, JPG, PNG (Max 5MB). Upload surat izin untuk auto-approval</p>
+                            <p className="text-xs text-gray-400 mt-1">PDF (Max 10MB). Upload surat izin untuk auto-approval (akan diverifikasi otomatis)</p>
                         </div>
 
                         {/* Submit */}
