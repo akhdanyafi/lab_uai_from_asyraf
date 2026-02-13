@@ -66,3 +66,8 @@ export async function getRecentBookings(days?: number) {
     return DashboardService.getRecentBookings(days);
 }
 
+export async function getSmartAnalyticsData() {
+    await requireAdmin();
+    return DashboardService.getSmartAnalyticsData();
+}
+

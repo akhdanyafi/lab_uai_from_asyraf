@@ -454,5 +454,155 @@ export class DashboardService {
 
         return result;
     }
-}
 
+    /**
+     * Get overdue loans (past return plan date but still active)
+     */
+    static async getOverdueLoans() {
+        const now = new Date();
+        const result = await db
+            .select({
+                id: itemLoans.id,
+                studentName: users.fullName,
+                itemName: items.name,
+                returnPlanDate: itemLoans.returnPlanDate,
+            })
+            .from(itemLoans)
+            .leftJoin(users, eq(itemLoans.studentId, users.id))
+            .leftJoin(items, eq(itemLoans.itemId, items.id))
+            .where(and(
+                eq(itemLoans.status, 'Disetujui'),
+                sql`${itemLoans.returnPlanDate} < ${now}`
+            ));
+        return result;
+    }
+
+    /**
+     * Get loans with return deadlines in the next N days
+     */
+    static async getUpcomingDeadlines(days: number = 3) {
+        const now = new Date();
+        const deadline = new Date();
+        deadline.setDate(deadline.getDate() + days);
+        const result = await db
+            .select({ count: sql<number>`count(*)` })
+            .from(itemLoans)
+            .where(and(
+                eq(itemLoans.status, 'Disetujui'),
+                gte(itemLoans.returnPlanDate, now),
+                sql`${itemLoans.returnPlanDate} <= ${deadline}`
+            ));
+        return result[0]?.count || 0;
+    }
+
+    /**
+     * Get booking stats grouped by day of week (0=Sun..6=Sat)
+     */
+    static async getDayOfWeekStats() {
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const result = await db
+            .select({
+                dayOfWeek: sql<number>`DAYOFWEEK(${roomBookings.startTime})`,
+                count: sql<number>`count(*)`,
+            })
+            .from(roomBookings)
+            .where(gte(roomBookings.startTime, thirtyDaysAgo))
+            .groupBy(sql`DAYOFWEEK(${roomBookings.startTime})`);
+        return result;
+    }
+
+    /**
+     * Get room utilization: total bookings per room + item availability %
+     */
+    static async getRoomUtilization() {
+        const [totalItems, unavailableItems, totalRooms, bookingCounts] = await Promise.all([
+            db.select({ count: sql<number>`count(*)` }).from(items),
+            db.select({ count: sql<number>`count(*)` }).from(items).where(
+                sql`${items.status} != 'Tersedia'`
+            ),
+            db.select({ count: sql<number>`count(*)` }).from(rooms),
+            db.select({
+                roomName: rooms.name,
+                count: sql<number>`count(*)`,
+            })
+                .from(roomBookings)
+                .leftJoin(rooms, eq(roomBookings.roomId, rooms.id))
+                .where(eq(roomBookings.status, 'Disetujui'))
+                .groupBy(rooms.name)
+                .orderBy(sql`count(*) DESC`)
+                .limit(5),
+        ]);
+
+        const total = totalItems[0]?.count || 1;
+        const unavail = unavailableItems[0]?.count || 0;
+
+        return {
+            itemAvailabilityRate: Math.round(((total - unavail) / total) * 100),
+            unavailableItems: unavail,
+            totalItems: total,
+            totalRooms: totalRooms[0]?.count || 0,
+            topRooms: bookingCounts,
+        };
+    }
+
+    /**
+     * Get loan trend data for last 14 days (extended for comparison)
+     */
+    static async getLoanTrend14Days() {
+        const days = 14;
+        const data: { date: string; count: number }[] = [];
+        for (let i = days - 1; i >= 0; i--) {
+            const date = new Date();
+            date.setDate(date.getDate() - i);
+            date.setHours(0, 0, 0, 0);
+            const nextDate = new Date(date);
+            nextDate.setDate(nextDate.getDate() + 1);
+            const result = await db
+                .select({ count: sql<number>`count(*)` })
+                .from(itemLoans)
+                .where(and(
+                    gte(itemLoans.requestDate, date),
+                    sql`${itemLoans.requestDate} < ${nextDate}`
+                ));
+            data.push({ date: date.toISOString(), count: result[0]?.count || 0 });
+        }
+        return data;
+    }
+
+    /**
+     * Aggregate all smart analytics data in one call
+     */
+    static async getSmartAnalyticsData() {
+        const [
+            overdueLoans,
+            upcomingDeadlines,
+            dayOfWeekStats,
+            roomUtilization,
+            trendData14,
+            idleItems,
+            pendingCounts,
+            recentBookings,
+        ] = await Promise.all([
+            this.getOverdueLoans(),
+            this.getUpcomingDeadlines(3),
+            this.getDayOfWeekStats(),
+            this.getRoomUtilization(),
+            this.getLoanTrend14Days(),
+            this.getIdleItemsCount(),
+            this.getPendingCounts(),
+            this.getRecentBookings(30),
+        ]);
+
+        return {
+            overdueLoans,
+            upcomingDeadlines,
+            dayOfWeekStats,
+            roomUtilization,
+            trendData14,
+            idleItems,
+            pendingCounts,
+            recentBookings,
+        };
+    }
+}

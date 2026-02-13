@@ -8,9 +8,25 @@ Dashboard adalah halaman utama yang menampilkan ringkasan statistik dan aktivita
 
 | Role | Akses |
 |------|-------|
-| **Admin** | Statistik lengkap, notifikasi, insights, dan analytics |
-| **Dosen** | Booking ruangan mendatang |
+| **Admin** | Statistik lengkap, notifikasi, insights, analytics, dan kehadiran |
+| **Dosen** | Booking ruangan mendatang, insight cepat |
 | **Mahasiswa** | Pinjaman aktif, booking mendatang, request pending |
+
+## Routing
+
+| Route | Deskripsi |
+|-------|-----------|
+| `/dashboard` | Redirect otomatis berdasarkan role user |
+| `/admin/dashboard` | Dashboard admin dengan statistik lengkap |
+| `/student/dashboard` | Dashboard mahasiswa |
+| `/lecturer/dashboard` | Dashboard dosen |
+
+Halaman `/dashboard` memanggil `getSession()` lalu redirect ke dashboard sesuai role:
+- `Admin` → `/admin/dashboard`
+- `Mahasiswa` → `/student/dashboard`
+- `Dosen` → `/lecturer/dashboard`
+
+---
 
 ## Fitur per Role
 
@@ -18,31 +34,39 @@ Dashboard adalah halaman utama yang menampilkan ringkasan statistik dan aktivita
 
 ```
 ┌───────────────────────────────────────────────────────────────┐
-│                     ADMIN DASHBOARD                            │
+│                     ADMIN DASHBOARD                           │
 ├───────────────────────────────────────────────────────────────┤
-│  📊 Statistik Utama                                            │
-│  ├── Total Alat                                                │
-│  ├── Pinjaman Aktif                                            │
-│  ├── Pending Pinjaman                                          │
-│  ├── Pending Booking                                           │
-│  └── Pending Pengembalian                                      │
+│  🔔 Notifikasi (DashboardNotifications)                       │
+│  ├── Pending User (registrasi baru)                          │
+│  ├── Pending Peminjaman                                       │
+│  ├── Pending Booking Ruangan                                  │
+│  ├── Pinjaman Auto-Approved (dengan Surat Izin)              │
+│  ├── Booking Auto-Approved (dengan Surat Permohonan)         │
+│  └── Pengembalian Auto-Verified (dengan Foto Bukti)          │
 ├───────────────────────────────────────────────────────────────┤
-│  🔔 Notifikasi Auto-Approved                                   │
-│  ├── Pinjaman dengan Surat Izin (auto-approved)               │
-│  ├── Booking dengan Surat Permohonan (auto-approved)          │
-│  └── Pengembalian dengan Foto Bukti (auto-returned)           │
+│  📈 Analytics (DashboardAnalytics) — client-side              │
+│  ├── 💡 Insights (rule-based, max 4)                          │
+│  ├── Tren Peminjaman (chart line, 7 hari terakhir)           │
+│  └── Booking per Ruangan (bar chart, top 5)                  │
 ├───────────────────────────────────────────────────────────────┤
-│  📈 Analytics & Charts                                         │
-│  ├── Tren Peminjaman (7 hari terakhir)                        │
-│  ├── Booking per Ruangan                                       │
-│  └── Pinjaman per Kategori                                     │
+│  📋 Kehadiran                                                  │
+│  ├── Kehadiran Hari Ini (TodayAttendance)                    │
+│  └── Statistik Kehadiran per Ruangan (RoomAttendanceChart)   │
 ├───────────────────────────────────────────────────────────────┤
-│  💡 Insights                                                    │
-│  ├── Tren naik/turun peminjaman                                │
-│  ├── Item menunggu validasi                                    │
-│  ├── Alat tidak aktif (>60 hari)                               │
-│  ├── Jam sibuk booking                                         │
-│  └── Publikasi pending                                         │
+│  📊 Statistik Utama (4 kartu)                                 │
+│  ├── Total Alat                                               │
+│  ├── Peminjaman Aktif                                         │
+│  ├── Pending Peminjaman (link ke /admin/validations?tab=loans)│
+│  └── Pending Booking (link ke /admin/validations?tab=rooms)  │
+├───────────────────────────────────────────────────────────────┤
+│  📦 Status Alat (progress bar per status)                     │
+│  ├── Tersedia (hijau)                                         │
+│  ├── Dipinjam (oranye)                                        │
+│  └── Lainnya (abu-abu)                                        │
+├───────────────────────────────────────────────────────────────┤
+│  📝 2 Kolom: Peminjaman Aktif + Booking Ruangan Aktif         │
+│  ├── 5 peminjaman terbaru (status Disetujui)                 │
+│  └── 5 booking terbaru (status Disetujui)                    │
 └───────────────────────────────────────────────────────────────┘
 ```
 
@@ -53,13 +77,14 @@ Dashboard adalah halaman utama yang menampilkan ringkasan statistik dan aktivita
 │                    STUDENT DASHBOARD                           │
 ├───────────────────────────────────────────────────────────────┤
 │  📦 Pinjaman Aktif                                             │
-│  └── Alat yang sedang dipinjam + info pengembalian            │
+│  └── Alat yang sedang dipinjam + info item, kategori, ruangan│
+│      + tanggal rencana pengembalian                           │
 ├───────────────────────────────────────────────────────────────┤
 │  📅 Booking Mendatang                                          │
-│  └── Ruangan yang sudah di-booking (max 5)                    │
+│  └── Booking ruangan yang disetujui & akan datang (max 5)    │
 ├───────────────────────────────────────────────────────────────┤
 │  ⏳ Request Pending                                            │
-│  └── Pengajuan pinjaman yang belum divalidasi                 │
+│  └── Pengajuan pinjaman yang belum divalidasi                │
 └───────────────────────────────────────────────────────────────┘
 ```
 
@@ -69,115 +94,213 @@ Dashboard adalah halaman utama yang menampilkan ringkasan statistik dan aktivita
 ┌───────────────────────────────────────────────────────────────┐
 │                   LECTURER DASHBOARD                           │
 ├───────────────────────────────────────────────────────────────┤
-│  📅 Booking Mendatang                                          │
-│  └── Ruangan yang sudah di-booking (max 10)                   │
+│  📊 Statistik (2 kartu)                                        │
+│  ├── Booking Mendatang (jumlah)                               │
+│  └── Quick Insight (info kontekstual)                         │
 ├───────────────────────────────────────────────────────────────┤
-│  📊 Total Bookings                                             │
-│  └── Jumlah booking yang sudah dilakukan                      │
+│  📅 Booking Ruangan Saya                                       │
+│  └── 5 booking mendatang (nama ruangan, tanggal, jam, tujuan)│
+│  └── Link ke /lecturer/rooms untuk lihat semua               │
 └───────────────────────────────────────────────────────────────┘
 ```
 
-## Data Model
+---
 
-### Service Class: `DashboardService`
+## Arsitektur & File
 
-Service utama yang menangani logika bisnis dashboard.
+### Service Layer
 
-| Method | Deskripsi |
-|--------|-----------|
-| `getAdminStats()` | Statistik admin (total, pending, recent) |
-| `getStudentDashboard(userId)` | Data dashboard mahasiswa |
-| `getLecturerDashboard(userId)` | Data dashboard dosen |
-| `markLoanNotificationRead(loanId)` | Tandai notifikasi pinjaman sudah dibaca |
-| `markBookingNotificationRead(bookingId)` | Tandai notifikasi booking sudah dibaca |
-| `markAllNotificationsRead()` | Tandai semua notifikasi sudah dibaca |
-| `getLoanTrendData()` | Data tren peminjaman 7 hari |
-| `getBookingsByRoom()` | Statistik booking per ruangan |
-| `getLoansByCategory()` | Statistik pinjaman per kategori |
-| `getIdleItemsCount()` | Jumlah alat tidak aktif >60 hari |
-| `getPendingCounts()` | Semua pending counts untuk insights |
-| `getRecentBookings(days)` | Booking terbaru untuk deteksi jam sibuk |
+**File**: `features/dashboard/service.ts`
+
+| Method | Deskripsi | Auth |
+|--------|-----------|------|
+| `getAdminStats()` | Statistik lengkap: total items, active/pending loans, pending bookings, pending returns, item stats, recent loans/bookings, auto-approved loans/bookings, auto-returned loans | Admin |
+| `getStudentDashboard(userId)` | Active loans (dengan item, kategori, ruangan), upcoming bookings, pending requests | Student |
+| `getLecturerDashboard(userId)` | Upcoming bookings (max 10), total bookings count | Lecturer |
+| `markLoanNotificationRead(loanId)` | Set `notificationRead = '1'` pada loan | Admin |
+| `markBookingNotificationRead(bookingId)` | Set `notificationRead = '1'` pada booking | Admin |
+| `markAllNotificationsRead()` | Mark semua notifikasi (loan, booking, return) sebagai dibaca | Admin |
+| `getLoanTrendData()` | Data jumlah pinjaman per hari (7 hari terakhir) | Admin |
+| `getBookingsByRoom()` | Booking count per ruangan, top 5, untuk chart | Admin |
+| `getLoansByCategory()` | Pinjaman count per kategori, top 5, untuk chart | Admin |
+| `getIdleItemsCount()` | Jumlah alat berstatus "Tersedia" yang tidak dipinjam >60 hari | Admin |
+| `getPendingCounts()` | Pending loans, bookings, users, publications | Admin |
+| `getRecentBookings(days)` | Booking terbaru (default 30 hari) untuk deteksi jam sibuk | Admin |
+| `getOverdueLoans()` | Pinjaman aktif yang melewati `returnPlanDate` (overdue) | Admin |
+| `getUpcomingDeadlines(days)` | Jumlah pinjaman yang jatuh tempo dalam N hari (default 3) | Admin |
+| `getDayOfWeekStats()` | Statistik booking per hari dalam seminggu (30 hari terakhir) | Admin |
+| `getRoomUtilization()` | Tingkat ketersediaan alat, jumlah ruangan, top 5 ruangan terpopuler | Admin |
+| `getLoanTrend14Days()` | Data tren pinjaman 14 hari untuk perbandingan week-over-week | Admin |
+| `getSmartAnalyticsData()` | Aggregate: semua data smart analytics dalam 1 panggilan paralel | Admin |
 
 ### Analytics Utilities
 
-| Function | Deskripsi |
-|----------|-----------|
-| `calculateTrend(current, previous)` | Hitung tren persentase naik/turun |
-| `detectPeakHours(bookings)` | Deteksi jam sibuk dari data booking |
-| `generateInsights(data)` | Generate insights berdasarkan rule |
-| `formatChartData(data, format)` | Format data untuk chart display |
+**File**: `features/dashboard/analytics.ts`
 
-## Server Actions
+| Function | Signature | Deskripsi |
+|----------|-----------|-----------|
+| `calculateTrend` | `(current, previous) → TrendResult` | Hitung persentase naik/turun (threshold ±5%) |
+| `detectPeakHours` | `(bookings) → { hour, count }[]` | Deteksi 3 jam tersibuk dari data booking |
+| `detectBusiestDay` | `(dayStats) → { dayName, count }` | Deteksi hari tersibuk dalam seminggu |
+| `generateSmartInsights` | `(SmartInsightData) → Insight[]` | Generate max **6** insights, diurutkan berdasarkan prioritas |
+| `formatChartData` | `(data, format) → ChartDataPoint[]` | Format data untuk chart (day/week/month label) |
 
-Action file: `features/dashboard/actions.ts`
+### Server Actions
 
-| Action | Deskripsi |
-|--------|-----------|
-| `getAdminStats()` | Ambil statistik admin |
-| `getStudentDashboard(userId)` | Ambil data dashboard mahasiswa |
-| `getLecturerDashboard(userId)` | Ambil data dashboard dosen |
-| `markLoanNotificationRead(loanId)` | Mark notifikasi loan dibaca |
-| `markBookingNotificationRead(bookingId)` | Mark notifikasi booking dibaca |
-| `markAllNotificationsRead()` | Mark semua notifikasi dibaca |
-| `getLoanTrendData()` | Data tren peminjaman |
-| `getBookingsByRoom()` | Statistik booking per ruangan |
-| `getLoansByCategory()` | Statistik pinjaman per kategori |
-| `getIdleItemsCount()` | Jumlah alat idle |
-| `getPendingCounts()` | Semua pending counts |
-| `getRecentBookings(days)` | Booking terbaru |
+**File**: `features/dashboard/actions.ts`
+
+| Action | Auth | Deskripsi |
+|--------|------|-----------|
+| `getAdminStats()` | `requireAdmin()` | Ambil statistik admin |
+| `getStudentDashboard(userId)` | — | Ambil data dashboard mahasiswa |
+| `getLecturerDashboard(userId)` | — | Ambil data dashboard dosen |
+| `markLoanNotificationRead(loanId)` | `requireAdmin()` | Mark notifikasi loan dibaca |
+| `markBookingNotificationRead(bookingId)` | `requireAdmin()` | Mark notifikasi booking dibaca |
+| `markAllNotificationsRead()` | `requireAdmin()` | Mark semua notifikasi dibaca |
+| `getLoanTrendData()` | `requireAdmin()` | Data tren peminjaman |
+| `getBookingsByRoom()` | `requireAdmin()` | Statistik booking per ruangan |
+| `getLoansByCategory()` | `requireAdmin()` | Statistik pinjaman per kategori |
+| `getIdleItemsCount()` | `requireAdmin()` | Jumlah alat idle |
+| `getPendingCounts()` | `requireAdmin()` | Semua pending counts |
+| `getRecentBookings(days)` | `requireAdmin()` | Booking terbaru |
+| `getSmartAnalyticsData()` | `requireAdmin()` | Aggregate data untuk smart insights |
+
+---
 
 ## UI Components
 
-| Component | Deskripsi |
-|-----------|-----------|
-| `StatCard` | Kartu statistik dengan animasi dan tren |
-| `TrendChart` | Chart line untuk data tren |
-| `CategoryBarChart` | Bar chart untuk kategori |
-| `InsightCard` | Kartu insight dengan ikon dan deskripsi |
+### Shared Components (`features/dashboard/components/`)
 
-## Halaman Terkait
+| Component | Props | Deskripsi |
+|-----------|-------|-----------|
+| `StatCard` | `label, value, trend?, icon, color?` | Kartu statistik, warna: primary/green/yellow/red. Mendukung ikon tren (naik/turun/stabil) |
+| `TrendChart` | `data: ChartDataPoint[], title, color` | Line chart untuk visualisasi tren data (pure CSS) |
+| `CategoryBarChart` | `data: ChartDataPoint[], title, color` | Bar chart horizontal untuk perbandingan kategori |
+| `InsightCard` | `insight: Insight` | Kartu insight: ikon emoji, judul, deskripsi, badge prioritas, action link. Tipe: info/warning/success/danger |
 
-| Route | Deskripsi |
-|-------|-----------|
-| `/admin/dashboard` | Dashboard admin dengan statistik lengkap |
-| `/student/dashboard` | Dashboard mahasiswa |
-| `/lecturer/dashboard` | Dashboard dosen |
-| `/dashboard` | Redirect berdasarkan role |
+### Admin Page Components (`app/admin/dashboard/_components/`)
 
-## Insights (Rule-Based)
+| Component | Tipe | Deskripsi |
+|-----------|------|-----------|
+| `DashboardNotifications` | Client | Menampilkan 6 jenis notifikasi: pending users/loans/bookings + auto-approved loans/bookings/returns. Setiap item bisa di-dismiss. |
+| `DashboardAnalytics` | Client | Fetch smart analytics via `getSmartAnalyticsData()`, generate prioritized insights, chart 7-hari, booking per ruangan. |
+| `MarkAllReadButton` | Client | Tombol untuk tandai semua notifikasi sebagai dibaca |
+| `PendingLoansAlert` | — | Alert untuk pending peminjaman |
+| `PendingBookingsAlert` | — | Alert untuk pending booking ruangan |
+| `PendingUserAlert` | — | Alert untuk registrasi user baru |
+| `TodayAttendance` | Client | Kehadiran hari ini |
+| `RoomAttendanceChart` | Client | Chart statistik kehadiran per ruangan |
 
-Dashboard admin menampilkan insights berdasarkan kondisi berikut:
+---
 
-| Kondisi | Insight |
-|---------|---------|
-| Tren pinjaman naik >20% | 📈 Info tentang kenaikan |
-| Total pending >5 | ⏳ Warning validasi tertunda |
-| Publikasi pending >3 | 📝 Info publikasi pending |
-| Alat idle >0 | ⚠️ Warning alat tidak aktif |
-| Peak hours terdeteksi | ⏰ Info jam sibuk |
-| Kehadiran rendah | 📉 Warning kehadiran |
-| Semua baik | ✅ Success message |
+## Smart Insights (Prioritized)
 
-## Notifikasi Auto-Approved
+Dashboard admin menampilkan maksimal **6 insights**, diurutkan berdasarkan prioritas.
 
-Admin akan menerima notifikasi untuk:
+### Prioritas Insight
 
-1. **Pinjaman Auto-Approved**: Request dengan upload Surat Izin
-2. **Booking Auto-Approved**: Request dengan upload Surat Permohonan
-3. **Pengembalian Auto-Verified**: Pengembalian dengan upload Foto Bukti
+| Level | Badge | Warna |
+|-------|-------|-------|
+| `critical` | Kritis | Merah |
+| `high` | Penting | Amber |
+| `medium` | Sedang | Biru |
+| `low` | Info | Abu-abu |
 
-Notifikasi ini ditandai dengan flag `notificationRead` yang bisa di-dismiss.
+### Daftar Insight Rules
+
+| # | Kondisi | Prioritas | Tipe | Insight |
+|---|---------|-----------|------|---------|
+| 1 | Pinjaman overdue (lewat `returnPlanDate`) | `critical` | `danger` | 🚨 N peminjaman melewati batas waktu — terlambat X hari |
+| 2 | Pengembalian dalam 3 hari | `high` | `warning` | ⏰ N pengembalian dalam 3 hari |
+| 3 | Total pending > 0 (breakdown per jenis) | `high`/`medium` | `warning`/`info` | 📋 N menunggu validasi: X pinjaman, Y booking, Z registrasi |
+| 4 | Tren pinjaman naik >15% week-over-week | `medium` | `info` | 📈 Peminjaman naik X% — lonjakan/mulai meningkat |
+| 4b | Tren pinjaman turun >30% | `low` | `info` | 📉 Peminjaman turun X% — bisa jadi libur/ujian |
+| 5 | Ketersediaan alat <50% | `high` | `danger` | 📦 Hanya X% alat tersedia |
+| 5b | Ketersediaan alat <75% | `medium` | `warning` | 📦 Ketersediaan alat X% |
+| 6 | Alat idle >0 (>60 hari tanpa pinjaman) | `medium` | `warning` | 💤 N alat tidak pernah digunakan |
+| 7 | Hari tersibuk terdeteksi (>3 booking) | `low` | `info` | 📅 Hari tersibuk: Senin/Selasa/... |
+| 8 | Jam tersibuk terdeteksi | `low` | `info` | 🕐 Jam tersibuk: HH:00 – HH+1:00 |
+| 9 | Publikasi pending >3 | `low` | `info` | 📝 N publikasi menunggu review |
+| 10 | Ruangan terpopuler (>5 booking) | `low` | `info` | 🏠 Ruangan terpopuler: Nama |
+| — | Tidak ada isu | `low` | `success` | ✅ Semua berjalan baik! |
+
+### Fitur InsightCard
+
+- **Priority badge** — label warna sesuai level (kecuali `low`)
+- **Action link** — beberapa insight memiliki tombol aksi (contoh: "Lihat Validasi →" yang mengarah ke halaman terkait)
+- **Hover effect** — shadow saat mouse hover
+- **Danger styling** — latar merah untuk isu kritis
+
+---
+
+## Notifikasi Admin
+
+Admin menerima notifikasi otomatis untuk:
+
+| Jenis | Trigger | Dismiss |
+|-------|---------|---------|
+| **Pending User** | Registrasi user baru (status Pending) | Link ke halaman validasi |
+| **Pending Peminjaman** | Pengajuan pinjaman baru (status Pending) | Link ke halaman validasi |
+| **Pending Booking** | Pengajuan booking baru (status Pending) | Link ke halaman validasi |
+| **Auto-Approved Loan** | Pinjaman dengan Surat Izin (auto-approved) | `notificationRead` flag |
+| **Auto-Approved Booking** | Booking dengan Surat Permohonan (auto-approved) | `notificationRead` flag |
+| **Auto-Returned Loan** | Pengembalian dengan Foto Bukti (auto-verified) | `returnNotificationRead` flag |
+
+Notifikasi auto-approved/auto-returned hanya muncul jika flag `notificationRead`/`returnNotificationRead` bernilai `'0'`. Admin dapat mendismiss satu per satu atau menggunakan tombol "Tandai Semua Dibaca".
+
+---
+
+## Data yang Di-query
+
+### Admin Stats (`getAdminStats`)
+
+```
+totalItems        → COUNT(*) dari items
+activeLoans       → COUNT(*) dari itemLoans WHERE status = 'Disetujui'
+pendingLoans      → COUNT(*) dari itemLoans WHERE status = 'Pending'
+pendingBookings   → COUNT(*) dari roomBookings WHERE status = 'Pending'
+pendingReturns    → COUNT(*) dari itemLoans WHERE returnStatus = 'Pending'
+itemStats         → GROUP BY items.status → [{status, count}]
+recentLoans       → 5 loan terbaru (JOIN users + items)
+recentBookings    → 5 booking terbaru (JOIN users + rooms)
+autoApprovedLoans → max 10, status=Disetujui, notificationRead='0', suratIzin != null
+autoApprovedBookings → max 10, status=Disetujui, notificationRead='0', suratPermohonan != null
+autoReturnedLoans → max 10, returnStatus=Dikembalikan, returnNotificationRead='0', returnPhoto != null
+```
+
+### Student Dashboard (`getStudentDashboard`)
+
+```
+activeLoans       → Loans WHERE studentId=userId AND status='Disetujui'
+                    JOIN items → categories → rooms
+upcomingBookings  → Bookings WHERE userId AND status='Disetujui' AND startTime >= today
+                    ORDER BY startTime, LIMIT 5
+pendingRequests   → Loans WHERE studentId=userId AND status='Pending'
+```
+
+### Lecturer Dashboard (`getLecturerDashboard`)
+
+```
+upcomingBookings  → Bookings WHERE userId AND startTime >= today
+                    ORDER BY startTime, LIMIT 10
+totalBookings     → upcomingBookings.length
+```
+
+---
 
 ## Security
 
-- Student hanya bisa akses data milik sendiri
-- Lecturer hanya bisa akses data milik sendiri
-- Admin bisa akses semua statistik dan data
+- **Admin**: Full akses ke semua statistik, analytics, dan notifikasi. Diproteksi `requireAdmin()`.
+- **Student**: Hanya data milik sendiri (filter by `userId`).
+- **Lecturer**: Hanya data milik sendiri (filter by `userId`).
 
-## Relasi
+## Relasi Fitur
 
-- **Inventory**: Statistik alat dan peminjaman
-- **Loans**: Data peminjaman aktif dan pending
-- **Bookings**: Data booking ruangan
-- **Users**: Data user untuk validasi role
-- **Publications**: Pending publikasi (admin only)
+| Fitur | Digunakan Untuk |
+|-------|-----------------|
+| **Inventory** (`items`, `itemCategories`) | Total alat, status distribusi, idle items |
+| **Loans** (`itemLoans`) | Pinjaman aktif, pending, tren, auto-approved |
+| **Bookings** (`roomBookings`, `rooms`) | Booking pending, per ruangan, peak hours |
+| **Users** (`users`) | Validasi role, pending registrasi |
+| **Publications** (`publications`) | Pending count untuk insights |
+| **Attendance** | Kehadiran hari ini, statistik per ruangan |

@@ -5,19 +5,14 @@ import TrendChart from '@/features/dashboard/components/TrendChart';
 import CategoryBarChart from '@/features/dashboard/components/CategoryBarChart';
 import InsightCard from '@/features/dashboard/components/InsightCard';
 import {
-    getLoanTrendData,
+    getSmartAnalyticsData,
     getBookingsByRoom,
-    getIdleItemsCount,
-    getPendingCounts,
-    getRecentBookings
 } from '@/features/dashboard/actions';
 import {
-    calculateTrend,
-    generateInsights,
+    generateSmartInsights,
     formatChartData,
-    detectPeakHours,
     type Insight,
-    type ChartDataPoint
+    type ChartDataPoint,
 } from '@/features/dashboard/analytics';
 
 export default function DashboardAnalytics() {
@@ -29,35 +24,29 @@ export default function DashboardAnalytics() {
     useEffect(() => {
         async function fetchAnalytics() {
             try {
-                const [trendData, roomData, idleCount, pendingCounts, recentBookings] = await Promise.all([
-                    getLoanTrendData(),
+                const [smartData, roomData] = await Promise.all([
+                    getSmartAnalyticsData(),
                     getBookingsByRoom(),
-                    getIdleItemsCount(),
-                    getPendingCounts(),
-                    getRecentBookings(30)
                 ]);
 
-                // Format trend data for chart
-                setLoanTrendData(formatChartData(trendData));
+                // Format 7-day trend for chart (last 7 of 14 days)
+                const last7 = smartData.trendData14.slice(-7).map(d => ({
+                    date: new Date(d.date),
+                    count: d.count,
+                }));
+                setLoanTrendData(formatChartData(last7));
                 setBookingsByRoom(roomData);
 
-                // Calculate loan trend
-                const thisWeek = trendData.slice(-7).reduce((sum, d) => sum + d.count, 0);
-                const prevWeek = trendData.slice(-14, -7).reduce((sum, d) => sum + d.count, 0);
-                const loansTrend = calculateTrend(thisWeek, prevWeek);
-
-                // Detect peak hours
-                const peakHours = detectPeakHours(recentBookings);
-
-                // Generate insights
-                const generatedInsights = generateInsights({
-                    loansTrend,
-                    pendingLoans: pendingCounts.pendingLoans,
-                    pendingBookings: pendingCounts.pendingBookings,
-                    pendingUsers: pendingCounts.pendingUsers,
-                    pendingPublications: pendingCounts.pendingPublications,
-                    idleItems: idleCount,
-                    peakHours
+                // Generate smart insights from all data
+                const generatedInsights = generateSmartInsights({
+                    trendData14: smartData.trendData14,
+                    pendingCounts: smartData.pendingCounts,
+                    overdueLoans: smartData.overdueLoans,
+                    upcomingDeadlines: smartData.upcomingDeadlines,
+                    dayOfWeekStats: smartData.dayOfWeekStats,
+                    roomUtilization: smartData.roomUtilization,
+                    idleItems: smartData.idleItems,
+                    recentBookings: smartData.recentBookings,
                 });
 
                 setInsights(generatedInsights);
@@ -74,8 +63,8 @@ export default function DashboardAnalytics() {
     if (loading) {
         return (
             <div className="space-y-6 mb-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {[1, 2, 3, 4].map(i => (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {[1, 2, 3].map(i => (
                         <div key={i} className="bg-gray-100 animate-pulse h-24 rounded-xl" />
                     ))}
                 </div>
@@ -89,11 +78,11 @@ export default function DashboardAnalytics() {
 
     return (
         <div className="space-y-6 mb-8">
-            {/* Insights Section */}
+            {/* Smart Insights Section */}
             {insights.length > 0 && (
                 <div>
-                    <h2 className="text-lg font-semibold text-gray-800 mb-3">💡 Insights</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <h2 className="text-lg font-semibold text-gray-800 mb-3">🧠 Smart Insights</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {insights.map((insight, idx) => (
                             <InsightCard key={idx} insight={insight} />
                         ))}
