@@ -1,13 +1,14 @@
-import { getModules, getAllSubjects } from '@/features/practicum/actions';
+import { getModules } from '@/features/practicum/actions';
+import { getCourses } from '@/features/courses/actions';
 import ModuleList from '@/features/practicum/components/ModuleList';
 
 export default async function StudentPracticumPage() {
-    const [modules, subjects] = await Promise.all([
+    const [modules, courses] = await Promise.all([
         getModules(),
-        getAllSubjects()
+        getCourses()
     ]);
 
     return (
-        <ModuleList modules={modules} allSubjects={subjects} />
+        <ModuleList modules={modules} courses={courses} />
     );
 }

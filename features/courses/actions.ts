@@ -1,0 +1,74 @@
+'use server';
+
+import { CourseService } from './service';
+import { revalidatePath } from 'next/cache';
+import { requireLabStaff } from '@/lib/auth';
+import type { CreateCourseInput, UpdateCourseInput } from './types';
+
+/**
+ * Get all courses
+ */
+export async function getCourses() {
+    return CourseService.getAll();
+}
+
+/**
+ * Get course by ID
+ */
+export async function getCourseById(id: number) {
+    return CourseService.getById(id);
+}
+
+/**
+ * Search courses
+ */
+export async function searchCourses(query: string) {
+    return CourseService.search(query);
+}
+
+/**
+ * Get all semesters
+ */
+export async function getAllSemesters() {
+    return CourseService.getAllSemesters();
+}
+
+/**
+ * Create new course (Admin / Kepala Lab only)
+ */
+export async function createCourse(data: CreateCourseInput) {
+    await requireLabStaff();
+    await CourseService.create(data);
+    revalidatePath('/admin/courses');
+    revalidatePath('/lecturer/courses');
+}
+
+/**
+ * Update course (Admin / Kepala Lab only)
+ */
+export async function updateCourse(id: number, data: UpdateCourseInput) {
+    await requireLabStaff();
+    await CourseService.update(id, data);
+    revalidatePath('/admin/courses');
+    revalidatePath('/lecturer/courses');
+}
+
+/**
+ * Assign lecturer to course (Admin / Kepala Lab only)
+ */
+export async function assignLecturerToCourse(courseId: number, lecturerId: number | null) {
+    await requireLabStaff();
+    await CourseService.assignLecturer(courseId, lecturerId);
+    revalidatePath('/admin/courses');
+    revalidatePath('/lecturer/courses');
+}
+
+/**
+ * Delete course (Admin / Kepala Lab only)
+ */
+export async function deleteCourse(id: number) {
+    await requireLabStaff();
+    await CourseService.delete(id);
+    revalidatePath('/admin/courses');
+    revalidatePath('/lecturer/courses');
+}

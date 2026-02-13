@@ -28,7 +28,7 @@ export async function middleware(request: NextRequest) {
             return NextResponse.redirect(new URL('/dashboard', request.url));
         }
 
-        if (isLecturerRoute && role !== 'Dosen') {
+        if (isLecturerRoute && !['Dosen', 'Kaprodi', 'Kepala Laboratorium'].includes(role)) {
             return NextResponse.redirect(new URL('/dashboard', request.url));
         }
     }

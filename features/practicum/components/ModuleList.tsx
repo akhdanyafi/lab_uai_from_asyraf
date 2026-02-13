@@ -2,49 +2,36 @@
 
 import { useState, useMemo } from 'react';
 import { BookOpen, Search, ExternalLink, FileText } from 'lucide-react';
-import type { PracticumModule } from '@/features/practicum/types';
+import type { PracticumModuleWithCourse } from '@/features/practicum/types';
+import type { CourseWithLecturer } from '@/features/courses/types';
 
 interface ModuleListProps {
-    modules: PracticumModule[];
-    allSubjects: string[];
+    modules: PracticumModuleWithCourse[];
+    courses: CourseWithLecturer[];
 }
 
-export default function ModuleList({ modules, allSubjects }: ModuleListProps) {
+export default function ModuleList({ modules, courses }: ModuleListProps) {
     // Search & Filter
     const [searchQuery, setSearchQuery] = useState('');
-    const [filterSubject, setFilterSubject] = useState('');
+    const [filterCourseId, setFilterCourseId] = useState('');
 
     // Filtered modules
     const filteredModules = useMemo(() => {
         return modules.filter(m => {
-            // Search filter
             if (searchQuery) {
                 const query = searchQuery.toLowerCase();
                 if (!m.name.toLowerCase().includes(query)) {
                     return false;
                 }
             }
-            // Subject filter
-            if (filterSubject && m.subjects) {
-                if (!m.subjects.includes(filterSubject)) {
+            if (filterCourseId) {
+                if (m.courseId !== parseInt(filterCourseId)) {
                     return false;
                 }
-            } else if (filterSubject && !m.subjects) {
-                return false;
             }
             return true;
         });
-    }, [modules, searchQuery, filterSubject]);
-
-    const parseSubjects = (subjects: string | null): string[] => {
-        if (!subjects) return [];
-        try {
-            const parsed = JSON.parse(subjects);
-            return Array.isArray(parsed) ? parsed : [];
-        } catch {
-            return [];
-        }
-    };
+    }, [modules, searchQuery, filterCourseId]);
 
     return (
         <div className="space-y-6">
@@ -68,13 +55,13 @@ export default function ModuleList({ modules, allSubjects }: ModuleListProps) {
                         />
                     </div>
                     <select
-                        value={filterSubject}
-                        onChange={(e) => setFilterSubject(e.target.value)}
+                        value={filterCourseId}
+                        onChange={(e) => setFilterCourseId(e.target.value)}
                         className="px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 min-w-[180px]"
                     >
-                        <option value="">Semua Matakuliah</option>
-                        {allSubjects.map(subject => (
-                            <option key={subject} value={subject}>{subject}</option>
+                        <option value="">Semua Mata Kuliah</option>
+                        {courses.map(course => (
+                            <option key={course.id} value={course.id}>{course.code} - {course.name}</option>
                         ))}
                     </select>
                 </div>
@@ -94,13 +81,11 @@ export default function ModuleList({ modules, allSubjects }: ModuleListProps) {
                         {module.description && (
                             <p className="text-sm text-gray-600 mb-3 line-clamp-2">{module.description}</p>
                         )}
-                        {module.subjects && (
-                            <div className="flex flex-wrap gap-1 mb-3">
-                                {parseSubjects(module.subjects).map((subject, idx) => (
-                                    <span key={idx} className="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700">
-                                        {subject}
-                                    </span>
-                                ))}
+                        {module.courseName && (
+                            <div className="mb-3">
+                                <span className="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700">
+                                    {module.courseCode} - {module.courseName}
+                                </span>
                             </div>
                         )}
                         {module.filePath ? (
@@ -125,7 +110,7 @@ export default function ModuleList({ modules, allSubjects }: ModuleListProps) {
 
             {filteredModules.length === 0 && (
                 <div className="text-center py-12 text-gray-500">
-                    {searchQuery || filterSubject ? 'Tidak ada modul yang sesuai filter.' : 'Belum ada modul praktikum.'}
+                    {searchQuery || filterCourseId ? 'Tidak ada modul yang sesuai filter.' : 'Belum ada modul praktikum.'}
                 </div>
             )}
         </div>

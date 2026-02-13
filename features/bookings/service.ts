@@ -4,7 +4,7 @@
  */
 
 import { db } from '@/db';
-import { roomBookings, rooms, users, roles } from '@/db/schema';
+import { roomBookings, rooms, users, roles, scheduledPracticums, courses } from '@/db/schema';
 import { eq, and, desc, gte, lte } from 'drizzle-orm';
 
 export interface CreateBookingInput {
@@ -56,6 +56,30 @@ export class BookingService {
      * Uses user's dosenPembimbing as fallback if not provided (only for students)
      */
     static async create(data: CreateBookingInput) {
+        // Check for conflicts with scheduled practicums
+        const bookingDay = data.startTime.getDay();
+        // Convert JS day (0=Sunday) to our format (0=Senin)
+        const dayOfWeek = bookingDay === 0 ? 6 : bookingDay - 1;
+        const bookingStartStr = `${String(data.startTime.getHours()).padStart(2, '0')}:${String(data.startTime.getMinutes()).padStart(2, '0')}`;
+        const bookingEndStr = `${String(data.endTime.getHours()).padStart(2, '0')}:${String(data.endTime.getMinutes()).padStart(2, '0')}`;
+
+        const conflictingSchedules = await db
+            .select({ id: scheduledPracticums.id, startTime: scheduledPracticums.startTime, endTime: scheduledPracticums.endTime })
+            .from(scheduledPracticums)
+            .where(and(
+                eq(scheduledPracticums.roomId, data.roomId),
+                eq(scheduledPracticums.dayOfWeek, dayOfWeek),
+                eq(scheduledPracticums.status, 'Aktif')
+            ));
+
+        const hasConflict = conflictingSchedules.some(s =>
+            bookingStartStr < s.endTime && bookingEndStr > s.startTime
+        );
+
+        if (hasConflict) {
+            throw new Error('Ruangan tidak tersedia: sudah dijadwalkan untuk praktikum terjadwal pada waktu tersebut');
+        }
+
         // Auto-validate if surat permohonan is provided
         const status = data.suratPermohonan ? 'Disetujui' : 'Pending';
 
@@ -207,5 +231,38 @@ export class BookingService {
      */
     static async getMaintenanceRooms() {
         return await db.select().from(rooms).where(eq(rooms.status, 'Maintenance'));
+    }
+
+    /**
+     * Get scheduled practicums for a room (for calendar display)
+     */
+    static async getScheduledPracticumsForCalendar(roomId?: number) {
+        const conditions = [
+            eq(scheduledPracticums.status, 'Aktif'),
+        ];
+
+        if (roomId) {
+            conditions.push(eq(scheduledPracticums.roomId, roomId));
+        }
+
+        const results = await db
+            .select({
+                id: scheduledPracticums.id,
+                roomId: scheduledPracticums.roomId,
+                roomName: rooms.name,
+                courseName: courses.name,
+                courseCode: courses.code,
+                dayOfWeek: scheduledPracticums.dayOfWeek,
+                startTime: scheduledPracticums.startTime,
+                endTime: scheduledPracticums.endTime,
+                scheduledDate: scheduledPracticums.scheduledDate,
+            })
+            .from(scheduledPracticums)
+            .leftJoin(rooms, eq(scheduledPracticums.roomId, rooms.id))
+            .leftJoin(courses, eq(scheduledPracticums.courseId, courses.id))
+            .where(and(...conditions))
+            .orderBy(scheduledPracticums.dayOfWeek, scheduledPracticums.startTime);
+
+        return results;
     }
 }

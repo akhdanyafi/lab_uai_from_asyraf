@@ -26,10 +26,10 @@ export async function searchModules(query: string) {
 }
 
 /**
- * Get all unique subjects
+ * Get modules by course
  */
-export async function getAllSubjects() {
-    return PracticumService.getAllSubjects();
+export async function getModulesByCourse(courseId: number) {
+    return PracticumService.getByCourseId(courseId);
 }
 
 /**

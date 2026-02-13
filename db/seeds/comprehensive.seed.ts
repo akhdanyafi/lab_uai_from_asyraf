@@ -10,7 +10,7 @@
 import { db } from '@/db';
 import {
     roles, users,
-    practicumModules,
+    courses, practicumModules,
     rooms, roomBookings,
     itemCategories, items, itemLoans,
     labAttendance,
@@ -59,6 +59,8 @@ export async function seedRoles() {
         { name: 'Admin' },
         { name: 'Dosen' },
         { name: 'Mahasiswa' },
+        { name: 'Kaprodi' },
+        { name: 'Kepala Laboratorium' },
     ];
 
     await db.insert(roles).values(roleData);
@@ -83,7 +85,7 @@ export async function seedUsers() {
     const mahasiswaPassword = await bcrypt.hash('mahasiswa', 10);
 
     // Lecturer names for reference
-    const lecturerNames = ['Dr. Ahmad Fauzi', 'Dr. Siti Rahayu', 'Dr. Budi Santoso'];
+    const lecturerNames = ['Dr. Ir Winangsari Pradani, M.T.', 'Andi Arniaty, Ph.D', 'Ir. Endang Ripmiatin, M.T.', 'Dr. Ir. Ade Jamal, M.T.', 'Denny Hermawan S.T., M.Kom.', 'Riri Safitri, S.Si., M.T.', 'Doddy Haryadi, S.T., M.T.I.'];
 
     const existingAdmin = await db.query.users.findFirst({
         where: (users, { eq }) => eq(users.email, 'admin@lab.ac.id')
@@ -152,7 +154,42 @@ export async function seedUsers() {
 }
 
 /**
- * 3. Seed Practicum Modules (NEW - Simple)
+ * 3. Seed Courses
+ */
+export async function seedCourses() {
+    console.log('\n🎓 Seeding courses...');
+
+    const existingCourses = await db.select().from(courses);
+    if (existingCourses.length > 0) {
+        console.log('   ⏭️  Courses already exist, skipping...');
+        return existingCourses;
+    }
+
+    const allUsers = await db.select().from(users);
+    const allRoles = await db.select().from(roles);
+    const dosenRole = allRoles.find(r => r.name === 'Dosen')!;
+    const lecturers = allUsers.filter(u => u.roleId === dosenRole.id);
+
+    const courseData = [
+        { code: 'IF101', name: 'Algoritma Pemrograman', description: 'Dasar-dasar algoritma dan pemrograman komputer.', sks: 3, semester: 'Ganjil 2024/2025', lecturerId: lecturers[0]?.id || null },
+        { code: 'IF102', name: 'Struktur Data', description: 'Konsep dan implementasi struktur data: array, linked list, tree, graph.', sks: 3, semester: 'Ganjil 2024/2025', lecturerId: lecturers[1]?.id || null },
+        { code: 'IF201', name: 'Basis Data', description: 'Perancangan dan implementasi basis data relasional.', sks: 3, semester: 'Ganjil 2024/2025', lecturerId: lecturers[2]?.id || null },
+        { code: 'IF202', name: 'Jaringan Komputer', description: 'Konsep jaringan komputer, protokol, dan implementasi.', sks: 3, semester: 'Ganjil 2024/2025', lecturerId: lecturers[0]?.id || null },
+        { code: 'IF301', name: 'Rekayasa Perangkat Lunak', description: 'Metodologi pengembangan perangkat lunak dan software engineering.', sks: 3, semester: 'Genap 2024/2025', lecturerId: lecturers[1]?.id || null },
+        { code: 'IF302', name: 'Kriptografi', description: 'Konsep dan implementasi algoritma kriptografi modern.', sks: 3, semester: 'Genap 2024/2025', lecturerId: lecturers[2]?.id || null },
+        { code: 'IF303', name: 'Keamanan Komputer', description: 'Prinsip keamanan komputer, ethical hacking, dan cyber security.', sks: 3, semester: 'Genap 2024/2025', lecturerId: lecturers[0]?.id || null },
+        { code: 'IF401', name: 'Komputasi Awan', description: 'Cloud computing: IaaS, PaaS, SaaS, dan deployment.', sks: 3, semester: 'Ganjil 2024/2025', lecturerId: lecturers[1]?.id || null },
+        { code: 'IF402', name: 'Web Dinamis', description: 'Pengembangan aplikasi web dinamis dengan framework modern.', sks: 3, semester: 'Genap 2024/2025', lecturerId: lecturers[2]?.id || null },
+        { code: 'IF403', name: 'Web Semantik', description: 'Konsep semantic web, ontologi, dan linked data.', sks: 3, semester: 'Genap 2024/2025', lecturerId: lecturers[0]?.id || null },
+    ];
+
+    await db.insert(courses).values(courseData);
+    console.log(`   ✅ Created ${courseData.length} courses`);
+    return await db.select().from(courses);
+}
+
+/**
+ * 4. Seed Practicum Modules
  */
 export async function seedPracticumModules() {
     console.log('\n📚 Seeding practicum modules...');
@@ -163,24 +200,35 @@ export async function seedPracticumModules() {
         return existingModules;
     }
 
+    const allCourses = await db.select().from(courses);
+    const kriptografi = allCourses.find(c => c.code === 'IF302');
+    const komputasiAwan = allCourses.find(c => c.code === 'IF401');
+    const basisData = allCourses.find(c => c.code === 'IF201');
+
     const moduleData = [
         {
             name: 'Modul 1 - Pengenalan Kriptografi',
             description: 'Mempelajari dasar-dasar kriptografi, termasuk enkripsi simetris dan asimetris.',
-            subjects: JSON.stringify(['Kriptografi', 'Keamanan Informasi']),
+            courseId: kriptografi?.id || null,
             filePath: '/uploads/assignments/praktikum1.pdf',
         },
         {
             name: 'Modul 2 - Implementasi AES dan RSA',
             description: 'Praktikum implementasi algoritma AES dan RSA menggunakan Python.',
-            subjects: JSON.stringify(['Kriptografi']),
+            courseId: kriptografi?.id || null,
             filePath: '/uploads/assignments/praktikum2.pdf',
         },
         {
             name: 'Modul 3 - Pengenalan Cloud Computing',
             description: 'Pengenalan konsep cloud computing, IaaS, PaaS, SaaS.',
-            subjects: JSON.stringify(['Komputasi Awan', 'Infrastruktur IT']),
+            courseId: komputasiAwan?.id || null,
             filePath: '/uploads/assignments/praktikum3.pdf',
+        },
+        {
+            name: 'Modul 4 - SQL dan Query Optimization',
+            description: 'Praktikum query SQL dasar hingga lanjut dan teknik optimasi.',
+            courseId: basisData?.id || null,
+            filePath: '/uploads/assignments/praktikum4.pdf',
         },
     ];
 
@@ -202,11 +250,9 @@ export async function seedRooms() {
     }
 
     const roomData = [
-        { name: 'Lab Komputer 1', location: 'Gedung Informatika Lt. 1', capacity: 40, status: 'Tersedia' as const },
-        { name: 'Lab Komputer 2', location: 'Gedung Informatika Lt. 1', capacity: 35, status: 'Tersedia' as const },
-        { name: 'Lab Jaringan', location: 'Gedung Informatika Lt. 2', capacity: 30, status: 'Tersedia' as const },
-        { name: 'Lab Multimedia', location: 'Gedung Informatika Lt. 2', capacity: 25, status: 'Tersedia' as const },
-        { name: 'Ruang Seminar', location: 'Gedung Informatika Lt. 3', capacity: 100, status: 'Tersedia' as const },
+        { name: 'Laboratorium Server & Database (614)', location: 'Lantai 6', capacity: 30, status: 'Tersedia' as const },
+        { name: 'Laboratorium Data Science & Software Engineering (613B)', location: 'Lantai 6', capacity: 35, status: 'Tersedia' as const },
+        { name: 'Laboratorium Komputer Vision (613A)', location: 'Lantai 6', capacity: 40, status: 'Tersedia' as const },
     ];
 
     await db.insert(rooms).values(roomData);
@@ -258,12 +304,12 @@ export async function seedItems() {
         { name: 'Laptop ASUS ROG', categoryId: allCategories[0].id, roomId: allRooms[0].id, qrCode: 'ITEM-LAP-001', status: 'Tersedia' as const },
         { name: 'Laptop HP EliteBook', categoryId: allCategories[0].id, roomId: allRooms[0].id, qrCode: 'ITEM-LAP-002', status: 'Tersedia' as const },
         { name: 'Laptop Dell XPS', categoryId: allCategories[0].id, roomId: allRooms[1].id, qrCode: 'ITEM-LAP-003', status: 'Tersedia' as const },
-        { name: 'Proyektor Epson EB-X51', categoryId: allCategories[1].id, roomId: allRooms[3].id, qrCode: 'ITEM-PRO-001', status: 'Tersedia' as const },
-        { name: 'Proyektor BenQ MH733', categoryId: allCategories[1].id, roomId: allRooms[4].id, qrCode: 'ITEM-PRO-002', status: 'Tersedia' as const },
-        { name: 'Kamera Sony A7III', categoryId: allCategories[2].id, roomId: allRooms[3].id, qrCode: 'ITEM-CAM-001', status: 'Tersedia' as const },
-        { name: 'Mikrofon Blue Yeti', categoryId: allCategories[3].id, roomId: allRooms[3].id, qrCode: 'ITEM-MIC-001', status: 'Tersedia' as const },
-        { name: 'Router Cisco 2901', categoryId: allCategories[4].id, roomId: allRooms[2].id, qrCode: 'ITEM-NET-001', status: 'Tersedia' as const },
-        { name: 'Switch Cisco 2960', categoryId: allCategories[4].id, roomId: allRooms[2].id, qrCode: 'ITEM-NET-002', status: 'Tersedia' as const },
+        { name: 'Proyektor Epson EB-X51', categoryId: allCategories[1].id, roomId: allRooms[2].id, qrCode: 'ITEM-PRO-001', status: 'Tersedia' as const },
+        { name: 'Proyektor BenQ MH733', categoryId: allCategories[1].id, roomId: allRooms[1].id, qrCode: 'ITEM-PRO-002', status: 'Tersedia' as const },
+        { name: 'Kamera Sony A7III', categoryId: allCategories[2].id, roomId: allRooms[1].id, qrCode: 'ITEM-CAM-001', status: 'Tersedia' as const },
+        { name: 'Mikrofon Blue Yeti', categoryId: allCategories[3].id, roomId: allRooms[2].id, qrCode: 'ITEM-MIC-001', status: 'Tersedia' as const },
+        { name: 'Router Cisco 2901', categoryId: allCategories[4].id, roomId: allRooms[0].id, qrCode: 'ITEM-NET-001', status: 'Tersedia' as const },
+        { name: 'Switch Cisco 2960', categoryId: allCategories[4].id, roomId: allRooms[0].id, qrCode: 'ITEM-NET-002', status: 'Tersedia' as const },
     ];
 
     await db.insert(items).values(itemData);
@@ -504,6 +550,7 @@ export async function runComprehensiveSeed() {
     try {
         await seedRoles();
         await seedUsers();
+        await seedCourses();
         await seedPracticumModules();
         await seedRooms();
         await seedItemCategories();

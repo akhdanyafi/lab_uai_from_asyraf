@@ -34,6 +34,33 @@ export async function requireAdmin() {
     return session;
 }
 
+export async function requireKepalaLab() {
+    const session = await getSession();
+    if (!session || session.user.role !== 'Kepala Laboratorium') {
+        throw new Error('Unauthorized: Kepala Laboratorium access required');
+    }
+    return session;
+}
+
+export async function requireKaprodi() {
+    const session = await getSession();
+    if (!session || session.user.role !== 'Kaprodi') {
+        throw new Error('Unauthorized: Kaprodi access required');
+    }
+    return session;
+}
+
+/**
+ * Requires Admin or Kepala Laboratorium role
+ */
+export async function requireLabStaff() {
+    const session = await getSession();
+    if (!session || !['Admin', 'Kepala Laboratorium'].includes(session.user.role)) {
+        throw new Error('Unauthorized: Admin or Kepala Laboratorium access required');
+    }
+    return session;
+}
+
 export async function updateSession(request: NextRequest) {
     const session = request.cookies.get('session')?.value;
     if (!session) return;

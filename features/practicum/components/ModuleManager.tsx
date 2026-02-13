@@ -3,23 +3,24 @@
 import { useState, useTransition, useMemo } from 'react';
 import { BookOpen, Plus, Trash2, Edit, Upload, X, Search, FileText, ExternalLink } from 'lucide-react';
 import { createModule, updateModule, deleteModule } from '@/features/practicum/actions';
-import type { PracticumModule } from '@/features/practicum/types';
+import type { PracticumModuleWithCourse } from '@/features/practicum/types';
+import type { CourseWithLecturer } from '@/features/courses/types';
 
 interface ModuleManagerProps {
-    modules: PracticumModule[];
-    allSubjects: string[];
+    modules: PracticumModuleWithCourse[];
+    courses: CourseWithLecturer[];
 }
 
-export default function ModuleManager({ modules, allSubjects }: ModuleManagerProps) {
+export default function ModuleManager({ modules, courses }: ModuleManagerProps) {
     const [isPending, startTransition] = useTransition();
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
     const [showForm, setShowForm] = useState(false);
-    const [editingModule, setEditingModule] = useState<PracticumModule | null>(null);
+    const [editingModule, setEditingModule] = useState<PracticumModuleWithCourse | null>(null);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
     // Search & Filter
     const [searchQuery, setSearchQuery] = useState('');
-    const [filterSubject, setFilterSubject] = useState('');
+    const [filterCourseId, setFilterCourseId] = useState('');
 
     // Filtered modules
     const filteredModules = useMemo(() => {
@@ -31,17 +32,15 @@ export default function ModuleManager({ modules, allSubjects }: ModuleManagerPro
                     return false;
                 }
             }
-            // Subject filter
-            if (filterSubject && m.subjects) {
-                if (!m.subjects.includes(filterSubject)) {
+            // Course filter
+            if (filterCourseId) {
+                if (m.courseId !== parseInt(filterCourseId)) {
                     return false;
                 }
-            } else if (filterSubject && !m.subjects) {
-                return false;
             }
             return true;
         });
-    }, [modules, searchQuery, filterSubject]);
+    }, [modules, searchQuery, filterCourseId]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -55,12 +54,7 @@ export default function ModuleManager({ modules, allSubjects }: ModuleManagerPro
         const formData = new FormData(e.currentTarget);
         const name = formData.get('name') as string;
         const description = formData.get('description') as string;
-        const subjectsRaw = formData.get('subjects') as string;
-
-        // Parse subjects
-        const subjects = subjectsRaw
-            ? subjectsRaw.split(',').map(s => s.trim()).filter(Boolean)
-            : [];
+        const courseId = formData.get('courseId') as string;
 
         startTransition(async () => {
             try {
@@ -89,7 +83,7 @@ export default function ModuleManager({ modules, allSubjects }: ModuleManagerPro
                     await updateModule(editingModule.id, {
                         name,
                         description: description || undefined,
-                        subjects: subjects.length > 0 ? subjects : undefined,
+                        courseId: courseId ? parseInt(courseId) : undefined,
                         filePath: filePath || undefined,
                     });
                     setMessage({ type: 'success', text: 'Modul berhasil diperbarui!' });
@@ -97,7 +91,7 @@ export default function ModuleManager({ modules, allSubjects }: ModuleManagerPro
                     await createModule({
                         name,
                         description: description || undefined,
-                        subjects: subjects.length > 0 ? subjects : undefined,
+                        courseId: courseId ? parseInt(courseId) : undefined,
                         filePath,
                     });
                     setMessage({ type: 'success', text: 'Modul berhasil ditambahkan!' });
@@ -124,20 +118,10 @@ export default function ModuleManager({ modules, allSubjects }: ModuleManagerPro
         });
     };
 
-    const handleEdit = (module: PracticumModule) => {
+    const handleEdit = (module: PracticumModuleWithCourse) => {
         setEditingModule(module);
         setShowForm(true);
         setSelectedFile(null);
-    };
-
-    const parseSubjects = (subjects: string | null): string[] => {
-        if (!subjects) return [];
-        try {
-            const parsed = JSON.parse(subjects);
-            return Array.isArray(parsed) ? parsed : [];
-        } catch {
-            return [];
-        }
     };
 
     return (
@@ -188,14 +172,19 @@ export default function ModuleManager({ modules, allSubjects }: ModuleManagerPro
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Matakuliah</label>
-                                <input
-                                    name="subjects"
-                                    defaultValue={parseSubjects(editingModule?.subjects || null).join(', ')}
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Mata Kuliah</label>
+                                <select
+                                    name="courseId"
+                                    defaultValue={editingModule?.courseId || ''}
                                     className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20"
-                                    placeholder="Kriptografi, Komputasi Awan (pisahkan dengan koma)"
-                                />
-                                <p className="text-xs text-gray-500 mt-1">Pisahkan dengan koma jika lebih dari satu</p>
+                                >
+                                    <option value="">-- Pilih Mata Kuliah --</option>
+                                    {courses.map(course => (
+                                        <option key={course.id} value={course.id}>
+                                            {course.code} - {course.name}
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -273,13 +262,13 @@ export default function ModuleManager({ modules, allSubjects }: ModuleManagerPro
                         />
                     </div>
                     <select
-                        value={filterSubject}
-                        onChange={(e) => setFilterSubject(e.target.value)}
+                        value={filterCourseId}
+                        onChange={(e) => setFilterCourseId(e.target.value)}
                         className="px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 min-w-[180px]"
                     >
-                        <option value="">Semua Matakuliah</option>
-                        {allSubjects.map(subject => (
-                            <option key={subject} value={subject}>{subject}</option>
+                        <option value="">Semua Mata Kuliah</option>
+                        {courses.map(course => (
+                            <option key={course.id} value={course.id}>{course.code} - {course.name}</option>
                         ))}
                     </select>
                 </div>
@@ -317,13 +306,11 @@ export default function ModuleManager({ modules, allSubjects }: ModuleManagerPro
                         {module.description && (
                             <p className="text-sm text-gray-600 mb-3 line-clamp-2">{module.description}</p>
                         )}
-                        {module.subjects && (
-                            <div className="flex flex-wrap gap-1 mb-3">
-                                {parseSubjects(module.subjects).map((subject, idx) => (
-                                    <span key={idx} className="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700">
-                                        {subject}
-                                    </span>
-                                ))}
+                        {module.courseName && (
+                            <div className="mb-3">
+                                <span className="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700">
+                                    {module.courseCode} - {module.courseName}
+                                </span>
                             </div>
                         )}
                         {module.filePath && (
@@ -343,7 +330,7 @@ export default function ModuleManager({ modules, allSubjects }: ModuleManagerPro
 
             {filteredModules.length === 0 && (
                 <div className="text-center py-12 text-gray-500">
-                    {searchQuery || filterSubject ? 'Tidak ada modul yang sesuai filter.' : 'Belum ada modul praktikum.'}
+                    {searchQuery || filterCourseId ? 'Tidak ada modul yang sesuai filter.' : 'Belum ada modul praktikum.'}
                 </div>
             )}
         </div>

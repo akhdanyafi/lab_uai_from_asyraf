@@ -18,6 +18,8 @@ export default async function AdminLayout({
         { name: 'Validasi', href: '/admin/validations', iconName: 'ClipboardList' },
         { name: 'Manajemen Aset', href: '/admin/inventory', iconName: 'Box' },
         { name: 'Praktikum', href: '/admin/practicum', iconName: 'ClipboardList' },
+        { name: 'Mata Kuliah', href: '/admin/courses', iconName: 'GraduationCap' },
+        { name: 'Jadwal Praktikum', href: '/admin/scheduled-practicum', iconName: 'Calendar' },
         { name: 'Jurnal Publikasi', href: '/admin/publications', iconName: 'BookOpen' },
         { name: 'Tata Kelola', href: '/admin/governance', iconName: 'FileText' },
     ];

@@ -4,41 +4,88 @@
  */
 
 import { db } from '@/db';
-import { practicumModules } from '@/db/schema';
+import { practicumModules, courses } from '@/db/schema';
 import { eq, desc, like, or } from 'drizzle-orm';
 import type { CreateModuleInput, UpdateModuleInput } from './types';
 
 export class PracticumService {
     /**
-     * Get all modules
+     * Get all modules with course info
      */
     static async getAll() {
-        return await db.select().from(practicumModules).orderBy(desc(practicumModules.createdAt));
+        return await db
+            .select({
+                id: practicumModules.id,
+                courseId: practicumModules.courseId,
+                name: practicumModules.name,
+                description: practicumModules.description,
+                filePath: practicumModules.filePath,
+                createdAt: practicumModules.createdAt,
+                updatedAt: practicumModules.updatedAt,
+                courseName: courses.name,
+                courseCode: courses.code,
+            })
+            .from(practicumModules)
+            .leftJoin(courses, eq(practicumModules.courseId, courses.id))
+            .orderBy(desc(practicumModules.createdAt));
     }
 
     /**
-     * Get module by ID
+     * Get module by ID with course info
      */
     static async getById(id: number) {
-        const results = await db.select().from(practicumModules).where(eq(practicumModules.id, id)).limit(1);
+        const results = await db
+            .select({
+                id: practicumModules.id,
+                courseId: practicumModules.courseId,
+                name: practicumModules.name,
+                description: practicumModules.description,
+                filePath: practicumModules.filePath,
+                createdAt: practicumModules.createdAt,
+                updatedAt: practicumModules.updatedAt,
+                courseName: courses.name,
+                courseCode: courses.code,
+            })
+            .from(practicumModules)
+            .leftJoin(courses, eq(practicumModules.courseId, courses.id))
+            .where(eq(practicumModules.id, id))
+            .limit(1);
+
         return results[0] || null;
     }
 
     /**
-     * Search modules by name or subject
+     * Search modules by name
      */
     static async search(query: string) {
         const searchTerm = `%${query}%`;
         return await db
+            .select({
+                id: practicumModules.id,
+                courseId: practicumModules.courseId,
+                name: practicumModules.name,
+                description: practicumModules.description,
+                filePath: practicumModules.filePath,
+                createdAt: practicumModules.createdAt,
+                updatedAt: practicumModules.updatedAt,
+                courseName: courses.name,
+                courseCode: courses.code,
+            })
+            .from(practicumModules)
+            .leftJoin(courses, eq(practicumModules.courseId, courses.id))
+            .where(like(practicumModules.name, searchTerm))
+            .orderBy(desc(practicumModules.createdAt));
+    }
+
+    /**
+     * Get modules by course ID
+     */
+    static async getByCourseId(courseId: number) {
+        return await db
             .select()
             .from(practicumModules)
-            .where(
-                or(
-                    like(practicumModules.name, searchTerm),
-                    like(practicumModules.subjects, searchTerm)
-                )
-            )
-            .orderBy(desc(practicumModules.createdAt));
+            .where(eq(practicumModules.courseId, courseId))
+            .orderBy(practicumModules.name);
     }
 
     /**
@@ -46,10 +93,10 @@ export class PracticumService {
      */
     static async create(data: CreateModuleInput) {
         await db.insert(practicumModules).values({
+            courseId: data.courseId || null,
             name: data.name,
             description: data.description || null,
             filePath: data.filePath || null,
-            subjects: data.subjects ? JSON.stringify(data.subjects) : null,
         });
     }
 
@@ -61,10 +108,10 @@ export class PracticumService {
             updatedAt: new Date(),
         };
 
+        if (data.courseId !== undefined) updateData.courseId = data.courseId;
         if (data.name !== undefined) updateData.name = data.name;
         if (data.description !== undefined) updateData.description = data.description;
         if (data.filePath !== undefined) updateData.filePath = data.filePath;
-        if (data.subjects !== undefined) updateData.subjects = JSON.stringify(data.subjects);
 
         await db.update(practicumModules).set(updateData).where(eq(practicumModules.id, id));
     }
@@ -74,26 +121,5 @@ export class PracticumService {
      */
     static async delete(id: number) {
         await db.delete(practicumModules).where(eq(practicumModules.id, id));
-    }
-
-    /**
-     * Get all unique subjects from modules
-     */
-    static async getAllSubjects(): Promise<string[]> {
-        const modules = await db.select({ subjects: practicumModules.subjects }).from(practicumModules);
-        const subjectSet = new Set<string>();
-
-        modules.forEach(m => {
-            if (m.subjects) {
-                try {
-                    const parsed = JSON.parse(m.subjects);
-                    if (Array.isArray(parsed)) {
-                        parsed.forEach(s => subjectSet.add(s));
-                    }
-                } catch { }
-            }
-        });
-
-        return Array.from(subjectSet).sort();
     }
 }
