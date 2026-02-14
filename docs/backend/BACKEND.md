@@ -17,14 +17,21 @@ erDiagram
     USERS ||--o{ PUBLICATIONS : "mempublikasi"
     USERS ||--o{ PUBLICATION_LIKES : "menyukai"
     USERS ||--o{ GOVERNANCE_DOCS : "mengunggah"
+    USERS ||--o{ COURSES : "mengajar"
+    USERS ||--o{ SCHEDULED_PRACTICUMS : "membuat"
     
     ITEM_CATEGORIES ||--o{ ITEMS : "mengkategorikan"
     ROOMS ||--o{ ITEMS : "menyimpan"
     ROOMS ||--o{ ROOM_BOOKINGS : "digunakan"
     ROOMS ||--o{ LAB_ATTENDANCE : "dimasuki"
+    ROOMS ||--o{ SCHEDULED_PRACTICUMS : "digunakan"
     
     ITEMS ||--o{ ITEM_LOANS : "dipinjam"
     PUBLICATIONS ||--o{ PUBLICATION_LIKES : "menerima"
+    
+    COURSES ||--o{ PRACTICUM_MODULES : "memiliki"
+    COURSES ||--o{ SCHEDULED_PRACTICUMS : "dijadwalkan"
+    PRACTICUM_MODULES ||--o{ SCHEDULED_PRACTICUMS : "digunakan"
 ```
 
 ---
@@ -107,10 +114,16 @@ erDiagram
 | actual_return_date | datetime | Tanggal pengembalian aktual |
 | status | enum | Pending, Disetujui, Ditolak, Selesai, Terlambat |
 | organisasi | varchar(255) | Organisasi peminjam |
+| start_time | datetime | Waktu mulai penggunaan |
+| end_time | datetime | Waktu selesai penggunaan |
 | purpose | varchar(255) | Tujuan peminjaman |
-| surat_izin | varchar(255) | Path surat izin |
+| surat_izin | varchar(255) | Path surat izin (PDF) |
+| dosen_pembimbing | varchar(255) | Nama dosen pembimbing |
+| software | text | Software yang dibutuhkan (JSON array) |
+| notification_read | enum | '0', '1' — notifikasi auto-approve dibaca admin |
 | return_photo | varchar(255) | Foto bukti pengembalian |
 | return_status | enum | Belum, Pending, Dikembalikan |
+| return_notification_read | enum | '0', '1' — notifikasi auto-return dibaca admin |
 
 ---
 
@@ -127,9 +140,10 @@ erDiagram
 | purpose | text | Tujuan penggunaan |
 | organisasi | varchar(255) | Organisasi |
 | jumlah_peserta | int | Jumlah peserta |
-| surat_permohonan | varchar(255) | Path surat permohonan |
+| surat_permohonan | varchar(255) | Path surat permohonan (PDF) |
 | dosen_pembimbing | varchar(255) | Nama dosen pembimbing |
 | status | enum | Pending, Disetujui, Ditolak |
+| notification_read | enum | '0', '1' — notifikasi auto-approve dibaca admin |
 
 ---
 
@@ -191,21 +205,55 @@ erDiagram
 
 ---
 
-#### 12. PRACTICUM_MODULES
+#### 12. COURSES
 
 | Kolom | Tipe | Keterangan |
 |-------|------|------------|
 | id | int | Primary Key |
+| code | varchar(20) | Kode mata kuliah (Unique, e.g. "IF201") |
+| name | varchar(255) | Nama mata kuliah (e.g. "Basis Data") |
+| description | text | Deskripsi |
+| sks | int | Jumlah SKS (default: 3) |
+| semester | varchar(50) | Semester (e.g. "Ganjil 2024/2025") |
+| lecturer_id | int | FK → USERS (dosen pengajar) |
+| created_at | datetime | Waktu dibuat |
+
+---
+
+#### 13. PRACTICUM_MODULES
+
+| Kolom | Tipe | Keterangan |
+|-------|------|------------|
+| id | int | Primary Key |
+| course_id | int | FK → COURSES |
 | name | varchar(255) | Nama modul |
 | description | text | Deskripsi |
 | file_path | varchar(255) | Path file PDF |
-| subjects | text | Subject tags (JSON array) |
 | created_at | datetime | Waktu dibuat |
 | updated_at | datetime | Waktu update |
 
 ---
 
-#### 13. HERO_PHOTOS
+#### 14. SCHEDULED_PRACTICUMS
+
+| Kolom | Tipe | Keterangan |
+|-------|------|------------|
+| id | int | Primary Key |
+| course_id | int | FK → COURSES |
+| room_id | int | FK → ROOMS |
+| module_id | int | FK → PRACTICUM_MODULES |
+| created_by | int | FK → USERS (pembuat jadwal) |
+| semester | varchar(50) | Semester (e.g. "Ganjil 2024/2025") |
+| day_of_week | int | Hari (0=Senin, 1=Selasa, ..., 6=Minggu) |
+| start_time | varchar(5) | Jam mulai (e.g. "08:00") |
+| end_time | varchar(5) | Jam selesai (e.g. "10:00") |
+| scheduled_date | datetime | Tanggal praktikum |
+| status | enum | Aktif, Dibatalkan |
+| created_at | datetime | Waktu dibuat |
+
+---
+
+#### 15. HERO_PHOTOS
 
 | Kolom | Tipe | Keterangan |
 |-------|------|------------|
@@ -240,6 +288,12 @@ erDiagram
 | `publications` | Many-to-One | `users` | User yang submit draft |
 | `publication_likes` | Many-to-One | `publications` | Publikasi yang di-like |
 | `publication_likes` | Many-to-One | `users` | User yang like |
+| `courses` | Many-to-One | `users` | Dosen pengajar |
+| `practicum_modules` | Many-to-One | `courses` | Modul milik mata kuliah |
+| `scheduled_practicums` | Many-to-One | `courses` | Jadwal untuk mata kuliah |
+| `scheduled_practicums` | Many-to-One | `rooms` | Ruangan yang digunakan |
+| `scheduled_practicums` | Many-to-One | `practicum_modules` | Modul yang dijalankan |
+| `scheduled_practicums` | Many-to-One | `users` | User pembuat jadwal |
 
 ### Diagram Relasi Tingkat Tinggi
 
@@ -262,8 +316,13 @@ graph TB
         ATTENDANCE[("✅ LAB_ATTENDANCE")]
     end
     
-    subgraph "Content Management"
+    subgraph "Academic"
+        COURSES[("🎓 COURSES")]
         MODULES[("📚 PRACTICUM_MODULES")]
+        SCHEDULES[("🗓️ SCHEDULED_PRACTICUMS")]
+    end
+    
+    subgraph "Content Management"
         DOCS[("📄 GOVERNANCE_DOCS")]
         PUBS[("📰 PUBLICATIONS")]
         LIKES[("❤️ PUBLICATION_LIKES")]
@@ -278,14 +337,20 @@ graph TB
     USERS --> DOCS
     USERS --> PUBS
     USERS --> LIKES
+    USERS --> COURSES
+    USERS --> SCHEDULES
     
     CATEGORIES --> ITEMS
     ROOMS --> ITEMS
     ROOMS --> BOOKINGS
     ROOMS --> ATTENDANCE
+    ROOMS --> SCHEDULES
     
     ITEMS --> LOANS
     PUBS --> LIKES
+    COURSES --> MODULES
+    COURSES --> SCHEDULES
+    MODULES --> SCHEDULES
 ```
 
 ---
@@ -685,6 +750,13 @@ flowchart LR
 | `publication_likes` | `publication_idx` | `publication_id` |
 | `publication_likes` | `user_idx` | `user_id` |
 | `publication_likes` | `unique_like` | `publication_id, user_id` |
+| `courses` | `lecturer_idx` | `lecturer_id` |
+| `practicum_modules` | `course_idx` | `course_id` |
+| `scheduled_practicums` | `sp_course_idx` | `course_id` |
+| `scheduled_practicums` | `sp_room_idx` | `room_id` |
+| `scheduled_practicums` | `sp_module_idx` | `module_id` |
+| `scheduled_practicums` | `sp_created_by_idx` | `created_by` |
+| `scheduled_practicums` | `sp_semester_idx` | `semester` |
 
 ---
 
@@ -697,7 +769,9 @@ flowchart LR
 | Bookings | `db/schema/bookings.ts` | `features/bookings/actions.ts` | `features/bookings/service.ts` |
 | Loans | `db/schema/inventory.ts` | `features/loans/actions.ts` | `features/loans/service.ts` |
 | Attendance | `db/schema/attendance.ts` | `features/attendance/actions.ts` | `features/attendance/service.ts` |
-| Practicum | `db/schema/practicum.ts` | `features/practicum/actions.ts` | `features/practicum/service.ts` |
+| Courses | `db/schema/practicum.ts` | `features/courses/actions.ts` | `features/courses/service.ts` |
+| Practicum Modules | `db/schema/practicum.ts` | `features/practicum/actions.ts` | `features/practicum/service.ts` |
+| Scheduled Practicums | `db/schema/practicum.ts` | `features/scheduled-practicum/actions.ts` | `features/scheduled-practicum/service.ts` |
 | Governance | `db/schema/others.ts` | `features/governance/actions.ts` | - |
 | Publications | `db/schema/others.ts` | `features/publications/actions.ts` | `features/publications/service.ts` |
 | Hero Photos | `db/schema/others.ts` | `features/hero-photos/actions.ts` | `features/hero-photos/service.ts` |
