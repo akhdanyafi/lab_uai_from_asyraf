@@ -1,0 +1,162 @@
+@startuml class-diagram-flat
+
+'--- PENGATURAN TAMPILAN ---
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+skinparam classFontStyle bold
+skinparam linetype ortho
+skinparam nodesep 50
+skinparam ranksep 60
+hide circle
+
+'======================================================
+' ENTITAS UTAMA (Main Entities)
+'======================================================
+
+class User {
+    +id : int
+    +full_name : string
+    +identifier : string
+    +role_id : int
+    +status : string
+    +login()
+    +logout()
+}
+
+class Role {
+    +id : int
+    +name : string
+}
+
+class Item {
+    +id : int
+    +name : string
+    +qr_code : string
+    +status : ItemStatus
+    +room_id : int
+    +category_id : int
+    +scanQR()
+}
+
+class Category {
+    +id : int
+    +name : string
+}
+
+class Room {
+    +id : int
+    +name : string
+    +capacity : int
+    +status : RoomStatus
+}
+
+'======================================================
+' ENTITAS TRANSAKSI (Transactions)
+'======================================================
+
+class ItemLoan {
+    +id : int
+    +borrow_date : datetime
+    +return_date : datetime
+    +status : LoanStatus
+    +purpose : string
+    +createLoan()
+    +validateLoan()
+    +returnItem()
+}
+
+class RoomBooking {
+    +id : int
+    +start_time : datetime
+    +end_time : datetime
+    +purpose : string
+    +status : BookingStatus
+    +submitBooking()
+    +checkConflict()
+}
+
+class LabAttendance {
+    +id : int
+    +check_in_time : datetime
+    +purpose : string
+    +submitAttendance()
+}
+
+'======================================================
+' ENTITAS AKADEMIK (Academic & Schedule)
+'======================================================
+
+class Course {
+    +id : int
+    +code : string
+    +name : string
+    +sks : int
+}
+
+class PracticumModule {
+    +id : int
+    +title : string
+    +file_path : string
+    +upload()
+    +download()
+}
+
+class ScheduledPracticum {
+    +id : int
+    +day_of_week : int
+    +start_time : time
+    +end_time : time
+    +status : ScheduleStatus
+    +setSchedule()
+}
+
+class GovernanceDoc {
+    +id : int
+    +title : string
+    +type : DocType
+    +file_url : string
+}
+
+class Publication {
+    +id : int
+    +title : string
+    +author : string
+    +status : PubStatus
+}
+
+'======================================================
+' RELASI ANTAR KELAS (Relationships)
+'======================================================
+
+'-- User & Role --
+User "1" -up- "1" Role : has role >
+
+'-- Inventory Relationships --
+Item "0..*" -- "1" Category : categorized by >
+Item "0..*" -- "1" Room : located at >
+
+'-- Transaction Relationships --
+User "1" -- "0..*" ItemLoan : requests >
+ItemLoan "0..*" -left- "1" Item : borrows >
+
+User "1" -- "0..*" RoomBooking : books >
+RoomBooking "0..*" -- "1" Room : occupies >
+
+User "1" -- "0..*" LabAttendance : attends >
+LabAttendance "0..*" -- "1" Room : at >
+
+'-- Academic Relationships --
+Course "1" -- "0..*" PracticumModule : has modules >
+User "1" ..> PracticumModule : downloads >
+
+'-- Scheduled Practicum (Fitur Khusus) --
+Course "1" -- "0..*" ScheduledPracticum : has schedule >
+ScheduledPracticum "0..*" -- "1" Room : uses >
+ScheduledPracticum "0..*" -- "0..1" PracticumModule : uses module >
+User "1" -- "0..*" ScheduledPracticum : manages (Laboran) >
+
+'-- Content Management --
+User "1" -right- "0..*" GovernanceDoc : uploads >
+User "1" -- "0..*" Publication : submits >
+
+@enduml

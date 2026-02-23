@@ -1,0 +1,88 @@
+@startuml activity-scheduled-practicum-refined
+
+'--- PENGATURAN TAMPILAN ---
+skinparam activityFontSize 12
+skinparam activityDiamondFontSize 11
+skinparam arrowFontSize 11
+skinparam noteFontSize 10
+skinparam style strictuml
+skinparam shadow false
+
+title Activity Diagram — Manajemen Jadwal Praktikum
+
+|#E8F5E9| Admin / Kepala Lab |
+|#E3F2FD| Sistem |
+|#FFF3E0| Database |
+
+' =============================================
+' BAGIAN 1: INPUT DATA
+' =============================================
+
+|#E8F5E9| Admin / Kepala Lab |
+start
+:Buka Halaman Praktikum Terjadwal;
+:Klik "Tambah Jadwal Baru";
+:Isi Form Jadwal Praktikum;
+
+note right
+  Input meliputi:
+  • Mata Kuliah & Modul
+  • Ruangan & Semester
+  • Hari, Jam Mulai, & Selesai
+end note
+
+:Klik "Simpan";
+
+|#E3F2FD| Sistem |
+:Validasi Hak Akses & Input Data;
+
+if (Data Valid & Otoritas Sesuai?) then (Tidak)
+  :Tampilkan Pesan Error Validasi;
+  |#E8F5E9| Admin / Kepala Lab |
+  :Perbaiki Inputan;
+  stop
+else (Ya)
+endif
+
+' =============================================
+' BAGIAN 2: LOGIKA CEK BENTROK (CRITICAL)
+' =============================================
+
+|#E3F2FD| Sistem |
+:Request Data Jadwal Existing;
+
+|#FFF3E0| Database |
+:Cek Jadwal pada Ruangan & Hari yang sama;
+
+|#E3F2FD| Sistem |
+:Kalkulasi Bentrok Waktu (Time Overlap);
+
+if (Terdeteksi Bentrok Jadwal?) then (Ya)
+  :Tampilkan Error:
+  "Jadwal bentrok dengan praktikum lain";
+  
+  |#E8F5E9| Admin / Kepala Lab |
+  :Revisi Waktu atau Ruangan;
+  stop
+else (Tidak)
+endif
+
+' =============================================
+' BAGIAN 3: PENYIMPANAN
+' =============================================
+
+|#E3F2FD| Sistem |
+:Proses Penyimpanan Data;
+
+|#FFF3E0| Database |
+:Simpan Data Jadwal Baru;
+
+|#E3F2FD| Sistem |
+:Perbarui Tampilan Jadwal;
+
+|#E8F5E9| Admin / Kepala Lab |
+:Terima Notifikasi Berhasil;
+
+stop
+
+@enduml

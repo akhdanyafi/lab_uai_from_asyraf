@@ -1,0 +1,118 @@
+@startuml erd-database
+
+'--- PENGATURAN TAMPILAN ---
+hide circle
+skinparam linetype ortho
+
+'--- ENTITAS (TABLES) ---
+
+entity "users" as users {
+  *id : INT <<PK>>
+  --
+  full_name : VARCHAR
+  identifier : VARCHAR (NIM/NIDN)
+  password : VARCHAR
+  role_id : INT <<FK>>
+  created_at : DATETIME
+}
+
+entity "roles" as roles {
+  *id : INT <<PK>>
+  --
+  name : VARCHAR
+}
+
+entity "items" as items {
+  *id : INT <<PK>>
+  --
+  name : VARCHAR
+  qr_code : VARCHAR <<Unique>>
+  status : ENUM
+  room_id : INT <<FK>>
+  category_id : INT <<FK>>
+  image_url : VARCHAR
+}
+
+entity "categories" as categories {
+  *id : INT <<PK>>
+  --
+  name : VARCHAR
+}
+
+entity "rooms" as rooms {
+  *id : INT <<PK>>
+  --
+  name : VARCHAR
+  capacity : INT
+  status : ENUM
+}
+
+entity "item_loans" as loans {
+  *id : INT <<PK>>
+  --
+  user_id : INT <<FK>>
+  item_id : INT <<FK>>
+  borrow_date : DATETIME
+  return_plan_date : DATETIME
+  actual_return_date : DATETIME
+  status : ENUM (Pending, Approved, Returned)
+}
+
+entity "room_bookings" as bookings {
+  *id : INT <<PK>>
+  --
+  user_id : INT <<FK>>
+  room_id : INT <<FK>>
+  start_time : DATETIME
+  end_time : DATETIME
+  purpose : TEXT
+  status : ENUM
+}
+
+'--- ENTITAS AKADEMIK (BARU) ---
+
+entity "courses" as courses {
+  *id : INT <<PK>>
+  --
+  code : VARCHAR
+  name : VARCHAR
+  lecturer_id : INT <<FK>>
+  semester : INT
+}
+
+entity "practicum_modules" as modules {
+  *id : INT <<PK>>
+  --
+  course_id : INT <<FK>>
+  title : VARCHAR
+  file_path : VARCHAR
+}
+
+entity "scheduled_practicums" as schedules {
+  *id : INT <<PK>>
+  --
+  module_id : INT <<FK>>
+  room_id : INT <<FK>>
+  day_of_week : INT (1-7)
+  start_time : TIME
+  end_time : TIME
+}
+
+'--- RELASI (RELATIONSHIPS) ---
+
+roles ||..|{ users : "has"
+users ||..|{ loans : "requests"
+items ||..|{ loans : "is borrowed"
+categories ||..|{ items : "categorizes"
+rooms ||..|{ items : "stores"
+
+users ||..|{ bookings : "books"
+rooms ||..|{ bookings : "occupied by"
+
+'Relasi Akademik
+users ||..|{ courses : "teaches (Dosen)"
+courses ||..|{ modules : "has"
+modules ||..|{ schedules : "has schedule"
+rooms ||..|{ schedules : "hosted in"
+
+@enduml
