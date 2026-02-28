@@ -14,8 +14,21 @@ interface Booking {
     };
 }
 
+interface PracticumSchedule {
+    id: number;
+    roomId: number;
+    roomName: string | null;
+    courseName: string | null;
+    courseCode: string | null;
+    dayOfWeek: number;
+    startTime: string;
+    endTime: string;
+    scheduledDate: Date;
+}
+
 interface CustomCalendarProps {
     bookings: Booking[];
+    practicumSchedules?: PracticumSchedule[];
     onDateSelect?: (date: Date) => void;
     selectedRoomId?: number | null;
 }
@@ -26,7 +39,7 @@ const MONTHS = [
     'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
 ];
 
-export default function CustomCalendar({ bookings, onDateSelect, selectedRoomId }: CustomCalendarProps) {
+export default function CustomCalendar({ bookings, practicumSchedules = [], onDateSelect, selectedRoomId }: CustomCalendarProps) {
     const [currentDate, setCurrentDate] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
@@ -39,6 +52,16 @@ export default function CustomCalendar({ bookings, onDateSelect, selectedRoomId 
             return true;
         });
     }, [bookings, selectedRoomId]);
+
+    // Filter practicum schedules by room
+    const filteredPracticums = useMemo(() => {
+        return practicumSchedules.filter(p => {
+            if (selectedRoomId) {
+                return p.roomId === selectedRoomId;
+            }
+            return true;
+        });
+    }, [practicumSchedules, selectedRoomId]);
 
     // Get days in month
     const getDaysInMonth = (date: Date) => {
@@ -55,14 +78,22 @@ export default function CustomCalendar({ bookings, onDateSelect, selectedRoomId 
         return { daysInMonth, startDay };
     };
 
-    // Check if date has bookings
+    // Check if date has bookings or practicum schedules
     const hasBooking = (day: number) => {
         const checkDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-        return filteredBookings.some(b => {
+        const hasRegularBooking = filteredBookings.some(b => {
             const bookingDate = new Date(b.startTime);
             return bookingDate.getDate() === checkDate.getDate() &&
                 bookingDate.getMonth() === checkDate.getMonth() &&
                 bookingDate.getFullYear() === checkDate.getFullYear();
+        });
+        if (hasRegularBooking) return true;
+
+        return filteredPracticums.some(p => {
+            const pDate = new Date(p.scheduledDate);
+            return pDate.getDate() === checkDate.getDate() &&
+                pDate.getMonth() === checkDate.getMonth() &&
+                pDate.getFullYear() === checkDate.getFullYear();
         });
     };
 
@@ -73,6 +104,16 @@ export default function CustomCalendar({ bookings, onDateSelect, selectedRoomId 
             return bookingDate.getDate() === date.getDate() &&
                 bookingDate.getMonth() === date.getMonth() &&
                 bookingDate.getFullYear() === date.getFullYear();
+        });
+    };
+
+    // Get practicum schedules for selected date
+    const getPracticumsForDay = (date: Date) => {
+        return filteredPracticums.filter(p => {
+            const pDate = new Date(p.scheduledDate);
+            return pDate.getDate() === date.getDate() &&
+                pDate.getMonth() === date.getMonth() &&
+                pDate.getFullYear() === date.getFullYear();
         });
     };
 
@@ -109,6 +150,7 @@ export default function CustomCalendar({ bookings, onDateSelect, selectedRoomId 
 
     const { daysInMonth, startDay } = getDaysInMonth(currentDate);
     const selectedBookings = getBookingsForDay(selectedDate);
+    const selectedPracticums = getPracticumsForDay(selectedDate);
 
     return (
         <div className="flex flex-col h-full w-full">
@@ -169,9 +211,10 @@ export default function CustomCalendar({ bookings, onDateSelect, selectedRoomId 
                             `}
                         >
                             {day}
-                            {/* Booking indicator dot */}
                             {hasBookingToday && !isSelectedDate && (
-                                <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-[#0F4C81] rounded-full" />
+                                <span className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-0.5">
+                                    <span className="w-1 h-1 bg-[#0F4C81] rounded-full" />
+                                </span>
                             )}
                         </button>
                     );
@@ -185,6 +228,29 @@ export default function CustomCalendar({ bookings, onDateSelect, selectedRoomId 
                 </h4>
 
                 <div className="space-y-2">
+                    {/* Practicum schedules first (higher priority) */}
+                    {selectedPracticums.length > 0 && selectedPracticums.map(practicum => (
+                        <div
+                            key={`p-${practicum.id}`}
+                            className="bg-green-50 p-2.5 rounded-lg border border-green-200"
+                        >
+                            <div className="flex justify-between items-start mb-1">
+                                <span className="text-xs font-bold text-green-700 flex items-center gap-1">
+                                    <Clock className="w-3 h-3" />
+                                    {practicum.startTime} - {practicum.endTime}
+                                </span>
+                                <span className="text-[10px] bg-green-100 border border-green-300 px-1.5 py-0.5 rounded text-green-700 font-medium">
+                                    {practicum.roomName}
+                                </span>
+                            </div>
+                            <p className="text-xs text-green-800 font-semibold">
+                                🎓 Praktikum: {practicum.courseName} ({practicum.courseCode})
+                            </p>
+                            <p className="text-[10px] text-green-600 mt-0.5">Ruangan tidak tersedia untuk booking</p>
+                        </div>
+                    ))}
+
+                    {/* Regular bookings */}
                     {selectedBookings.length > 0 ? (
                         selectedBookings.map(booking => (
                             <div
@@ -206,9 +272,11 @@ export default function CustomCalendar({ bookings, onDateSelect, selectedRoomId 
                             </div>
                         ))
                     ) : (
-                        <div className="text-center py-4 text-gray-400">
-                            <p className="text-xs">Tidak ada jadwal</p>
-                        </div>
+                        selectedPracticums.length === 0 && (
+                            <div className="text-center py-4 text-gray-400">
+                                <p className="text-xs">Tidak ada jadwal</p>
+                            </div>
+                        )
                     )}
                 </div>
             </div>

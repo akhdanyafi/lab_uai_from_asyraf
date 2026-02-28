@@ -1,4 +1,4 @@
-import { getAllRooms, getMyBookings, getMonthBookings } from '@/features/bookings/actions';
+import { getAllRooms, getMyBookings, getMonthBookings, getScheduledPracticumsForCalendar } from '@/features/bookings/actions';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { MapPin, CheckCircle, XCircle, Clock } from 'lucide-react';
@@ -13,12 +13,13 @@ export default async function RoomBookingPage() {
     const currentYear = today.getFullYear();
 
     // Fetch bookings for current month and next 2 months
-    const [rooms, myBookings, currentMonthBookings, nextMonthBookings, nextNextMonthBookings] = await Promise.all([
+    const [rooms, myBookings, currentMonthBookings, nextMonthBookings, nextNextMonthBookings, practicumSchedules] = await Promise.all([
         getAllRooms(),
         getMyBookings(session.user.id),
         getMonthBookings(currentMonth, currentYear),
         getMonthBookings((currentMonth + 1) % 12, currentMonth + 1 > 11 ? currentYear + 1 : currentYear),
         getMonthBookings((currentMonth + 2) % 12, currentMonth + 2 > 11 ? currentYear + 1 : currentYear),
+        getScheduledPracticumsForCalendar(),
     ]);
 
     const calendarBookings = [
@@ -55,6 +56,7 @@ export default async function RoomBookingPage() {
             <RoomBookingClient
                 rooms={rooms}
                 calendarBookings={calendarBookings}
+                practicumSchedules={practicumSchedules}
                 userId={session.user.id}
             />
 

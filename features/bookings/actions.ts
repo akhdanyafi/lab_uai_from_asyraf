@@ -114,3 +114,10 @@ export async function getMonthBookings(month: number, year: number) {
 export async function getMaintenanceRooms() {
     return BookingService.getMaintenanceRooms();
 }
+
+/**
+ * Get scheduled practicums for calendar display
+ */
+export async function getScheduledPracticumsForCalendar() {
+    return BookingService.getScheduledPracticumsForCalendar();
+}

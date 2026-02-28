@@ -21,9 +21,22 @@ interface Booking {
     };
 }
 
+interface PracticumSchedule {
+    id: number;
+    roomId: number;
+    roomName: string | null;
+    courseName: string | null;
+    courseCode: string | null;
+    dayOfWeek: number;
+    startTime: string;
+    endTime: string;
+    scheduledDate: Date;
+}
+
 interface CalendarViewProps {
     rooms: Room[];
     bookings: Booking[];
+    practicumSchedules?: PracticumSchedule[];
     title?: string;
     onDateSelect?: (date: Date) => void;
     className?: string;
@@ -33,6 +46,7 @@ interface CalendarViewProps {
 export default function CalendarView({
     rooms,
     bookings,
+    practicumSchedules = [],
     title = "Jadwal Pemakaian Ruangan",
     onDateSelect,
     className = "",
@@ -87,6 +101,7 @@ export default function CalendarView({
             <div className="flex-1 p-4 bg-white overflow-hidden flex flex-col">
                 <CustomCalendar
                     bookings={bookings}
+                    practicumSchedules={practicumSchedules}
                     selectedRoomId={selectedRoomId ? parseInt(selectedRoomId) : null}
                     onDateSelect={onDateSelect}
                 />

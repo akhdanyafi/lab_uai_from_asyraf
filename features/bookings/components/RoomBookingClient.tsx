@@ -29,9 +29,22 @@ interface Lecturer {
     fullName: string;
 }
 
+interface PracticumSchedule {
+    id: number;
+    roomId: number;
+    roomName: string | null;
+    courseName: string | null;
+    courseCode: string | null;
+    dayOfWeek: number;
+    startTime: string;
+    endTime: string;
+    scheduledDate: Date;
+}
+
 interface RoomBookingClientProps {
     rooms: Room[];
     calendarBookings: Booking[];
+    practicumSchedules?: PracticumSchedule[];
     userId: number;
 }
 
@@ -54,7 +67,7 @@ const PURPOSE_TEMPLATES = [
     'Lainnya',
 ];
 
-export default function RoomBookingClient({ rooms, calendarBookings, userId }: RoomBookingClientProps) {
+export default function RoomBookingClient({ rooms, calendarBookings, practicumSchedules = [], userId }: RoomBookingClientProps) {
     const [selectedDate, setSelectedDate] = useState<string>('');
     const [selectedRoomId, setSelectedRoomId] = useState<string>('');
     const [startTime, setStartTime] = useState('');
@@ -198,6 +211,7 @@ export default function RoomBookingClient({ rooms, calendarBookings, userId }: R
                     <CalendarView
                         rooms={rooms}
                         bookings={calendarBookings}
+                        practicumSchedules={practicumSchedules}
                         title="Cek Ketersediaan"
                         onDateSelect={handleDateSelect}
                         className="w-full min-h-[600px]"

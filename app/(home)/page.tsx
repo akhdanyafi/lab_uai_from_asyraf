@@ -8,7 +8,7 @@ import AnnouncementSection from './_components/AnnouncementSection';
 import HomeCalendar from './_components/HomeCalendar';
 import PublicationSection from './_components/PublicationSection';
 import Footer from '@/components/layout/Footer';
-import { getAllRooms, getMonthBookings, getMaintenanceRooms } from '@/features/bookings/actions';
+import { getAllRooms, getMonthBookings, getMaintenanceRooms, getScheduledPracticumsForCalendar } from '@/features/bookings/actions';
 import { getGovernanceDocs } from '@/features/governance/actions';
 import { getTopPublications } from '@/features/publications/actions';
 import { getMaintenanceItems, getAvailableItems, getHomepageStats } from '@/features/inventory/actions';
@@ -30,7 +30,8 @@ export default async function Home() {
         maintenanceItems,
         availableItems,
         homepageStats,
-        modules
+        modules,
+        practicumSchedules
     ] = await Promise.all([
         getAllRooms(),
         getMonthBookings(currentMonth, currentYear),
@@ -42,7 +43,8 @@ export default async function Home() {
         getMaintenanceItems(),
         getAvailableItems(),
         getHomepageStats(),
-        getModules()
+        getModules(),
+        getScheduledPracticumsForCalendar()
     ]);
 
     const calendarBookings = [
@@ -84,6 +86,7 @@ export default async function Home() {
                             <HomeCalendar
                                 rooms={rooms}
                                 bookings={calendarBookings}
+                                practicumSchedules={practicumSchedules}
                                 title="Kalender Ruangan"
                             />
                         </div>

@@ -1,4 +1,4 @@
-import { writeFile, unlink } from 'fs/promises';
+import { writeFile, unlink, mkdir } from 'fs/promises';
 import path from 'path';
 
 const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads');
@@ -21,6 +21,7 @@ export async function saveFile(file: File): Promise<string> {
     const buffer = Buffer.from(bytes);
 
     // Save file
+    await mkdir(UPLOAD_DIR, { recursive: true });
     await writeFile(filepath, buffer);
 
     // Return public URL path

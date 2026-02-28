@@ -14,6 +14,18 @@ interface Booking {
     };
 }
 
+interface PracticumSchedule {
+    id: number;
+    roomId: number;
+    roomName: string | null;
+    courseName: string | null;
+    courseCode: string | null;
+    dayOfWeek: number;
+    startTime: string;
+    endTime: string;
+    scheduledDate: Date;
+}
+
 interface Room {
     id: number;
     name: string;
@@ -23,6 +35,7 @@ interface Room {
 interface HomeCalendarProps {
     rooms: Room[];
     bookings: Booking[];
+    practicumSchedules?: PracticumSchedule[];
     title?: string;
     className?: string;
 }
@@ -36,6 +49,7 @@ const MONTHS = [
 export default function HomeCalendar({
     rooms,
     bookings,
+    practicumSchedules = [],
     title = "Jadwal Pemakaian Ruangan",
     className = ""
 }: HomeCalendarProps) {
@@ -53,6 +67,16 @@ export default function HomeCalendar({
         });
     }, [bookings, selectedRoomId]);
 
+    // Filter practicum schedules by room
+    const filteredPracticums = useMemo(() => {
+        return practicumSchedules.filter(p => {
+            if (selectedRoomId) {
+                return p.roomId.toString() === selectedRoomId;
+            }
+            return true;
+        });
+    }, [practicumSchedules, selectedRoomId]);
+
     // Get days in month
     const getDaysInMonth = (date: Date) => {
         const year = date.getFullYear();
@@ -67,14 +91,22 @@ export default function HomeCalendar({
         return { daysInMonth, startDay };
     };
 
-    // Check if date has bookings
+    // Check if date has bookings or practicums
     const hasBooking = (day: number) => {
         const checkDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-        return filteredBookings.some(b => {
+        const hasRegularBooking = filteredBookings.some(b => {
             const bookingDate = new Date(b.startTime);
             return bookingDate.getDate() === checkDate.getDate() &&
                 bookingDate.getMonth() === checkDate.getMonth() &&
                 bookingDate.getFullYear() === checkDate.getFullYear();
+        });
+        if (hasRegularBooking) return true;
+
+        return filteredPracticums.some(p => {
+            const pDate = new Date(p.scheduledDate);
+            return pDate.getDate() === checkDate.getDate() &&
+                pDate.getMonth() === checkDate.getMonth() &&
+                pDate.getFullYear() === checkDate.getFullYear();
         });
     };
 
@@ -85,6 +117,16 @@ export default function HomeCalendar({
             return bookingDate.getDate() === date.getDate() &&
                 bookingDate.getMonth() === date.getMonth() &&
                 bookingDate.getFullYear() === date.getFullYear();
+        });
+    };
+
+    // Get practicum schedules for selected date
+    const getPracticumsForDay = (date: Date) => {
+        return filteredPracticums.filter(p => {
+            const pDate = new Date(p.scheduledDate);
+            return pDate.getDate() === date.getDate() &&
+                pDate.getMonth() === date.getMonth() &&
+                pDate.getFullYear() === date.getFullYear();
         });
     };
 
@@ -121,6 +163,8 @@ export default function HomeCalendar({
 
     const { daysInMonth, startDay } = getDaysInMonth(currentDate);
     const selectedDayBookings = selectedDate ? getBookingsForDay(selectedDate) : [];
+    const selectedDayPracticums = selectedDate ? getPracticumsForDay(selectedDate) : [];
+    const hasAnyEvents = selectedDayBookings.length > 0 || selectedDayPracticums.length > 0;
 
     return (
         <div className={`bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden ${className}`}>
@@ -224,14 +268,37 @@ export default function HomeCalendar({
                 </div>
             </div>
 
-            {/* Booking List Below Calendar */}
-            {selectedDate && selectedDayBookings.length > 0 && (
+            {/* Events List Below Calendar */}
+            {selectedDate && hasAnyEvents && (
                 <div className="border-t border-gray-100 bg-gray-50/50 p-4 animate-in slide-in-from-top-2">
                     <h4 className="font-semibold text-gray-900 flex items-center gap-2 mb-3 text-sm">
                         <CalendarDays className="w-4 h-4 text-[#0F4C81]" />
                         {selectedDate.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long' })}
                     </h4>
                     <div className="space-y-2">
+                        {/* Practicum schedules first */}
+                        {selectedDayPracticums.map(practicum => (
+                            <div key={`p-${practicum.id}`} className="bg-green-50 p-3 rounded-lg border border-green-200 shadow-sm">
+                                <div className="flex items-center justify-between gap-2 mb-1">
+                                    <div className="flex items-center gap-2 text-sm font-bold text-green-800">
+                                        <Clock className="w-3.5 h-3.5 text-green-600" />
+                                        {practicum.startTime}
+                                        <span className="text-green-400">-</span>
+                                        {practicum.endTime}
+                                    </div>
+                                    <span className="px-2 py-0.5 rounded-full bg-green-100 text-xs font-medium text-green-700 flex items-center gap-1">
+                                        <MapPin className="w-3 h-3" />
+                                        {practicum.roomName}
+                                    </span>
+                                </div>
+                                <p className="text-sm text-green-800 font-semibold pl-5">
+                                    🎓 Praktikum: {practicum.courseName} ({practicum.courseCode})
+                                </p>
+                                <p className="text-xs text-green-600 pl-5 mt-0.5">Ruangan tidak tersedia untuk booking</p>
+                            </div>
+                        ))}
+
+                        {/* Regular bookings */}
                         {selectedDayBookings.map(booking => (
                             <div key={booking.id} className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
                                 <div className="flex items-center justify-between gap-2 mb-1">

@@ -4,9 +4,9 @@
  */
 
 import { db } from '@/db';
-import { scheduledPracticums, courses, practicumModules, users } from '@/db/schema';
+import { scheduledPracticums, courses, practicumModules, users, roomBookings } from '@/db/schema';
 import { rooms } from '@/db/schema';
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, and, desc, gte, lte } from 'drizzle-orm';
 import type { CreateScheduledPracticumInput, UpdateScheduledPracticumInput } from './types';
 
 export class ScheduledPracticumService {
@@ -131,8 +131,10 @@ export class ScheduledPracticumService {
         startTime: string,
         endTime: string,
         semester: string,
+        scheduledDate: Date,
         excludeId?: number
     ): Promise<boolean> {
+        // 1. Check conflict with other scheduled practicums
         const conditions = [
             eq(scheduledPracticums.roomId, roomId),
             eq(scheduledPracticums.dayOfWeek, dayOfWeek),
@@ -149,28 +151,58 @@ export class ScheduledPracticumService {
             .from(scheduledPracticums)
             .where(and(...conditions));
 
-        // Check time overlap
-        return schedules.some(s => {
+        const practicumConflict = schedules.some(s => {
             if (excludeId && s.id === excludeId) return false;
             return startTime < s.endTime && endTime > s.startTime;
         });
+
+        if (practicumConflict) return true;
+
+        // 2. Check conflict with approved room bookings on that date
+        const startOfDay = new Date(scheduledDate);
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date(scheduledDate);
+        endOfDay.setHours(23, 59, 59, 999);
+
+        const approvedBookings = await db
+            .select({
+                id: roomBookings.id,
+                startTime: roomBookings.startTime,
+                endTime: roomBookings.endTime,
+            })
+            .from(roomBookings)
+            .where(and(
+                eq(roomBookings.roomId, roomId),
+                eq(roomBookings.status, 'Disetujui'),
+                gte(roomBookings.startTime, startOfDay),
+                lte(roomBookings.endTime, endOfDay)
+            ));
+
+        const bookingConflict = approvedBookings.some(b => {
+            const bStart = `${String(new Date(b.startTime).getHours()).padStart(2, '0')}:${String(new Date(b.startTime).getMinutes()).padStart(2, '0')}`;
+            const bEnd = `${String(new Date(b.endTime).getHours()).padStart(2, '0')}:${String(new Date(b.endTime).getMinutes()).padStart(2, '0')}`;
+            return startTime < bEnd && endTime > bStart;
+        });
+
+        return bookingConflict;
     }
 
     /**
      * Create a new scheduled practicum
      */
     static async create(data: CreateScheduledPracticumInput, createdBy: number) {
-        // Check for conflicts first
+        // Check for conflicts first (practicums + approved bookings)
         const hasConflict = await this.hasConflict(
             data.roomId,
             data.dayOfWeek,
             data.startTime,
             data.endTime,
-            data.semester
+            data.semester,
+            data.scheduledDate
         );
 
         if (hasConflict) {
-            throw new Error('Jadwal bentrok dengan praktikum lain di ruangan yang sama');
+            throw new Error('Jadwal bentrok dengan praktikum lain atau booking ruangan yang sudah disetujui pada waktu tersebut');
         }
 
         await db.insert(scheduledPracticums).values({

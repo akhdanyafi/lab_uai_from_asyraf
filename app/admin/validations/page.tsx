@@ -1,5 +1,5 @@
 import { getLoanRequests, updateLoanStatus, deleteLoan, getPendingReturns, approveReturn, rejectReturn, adminDirectReturn } from '@/features/loans/actions';
-import { getBookingRequests, updateBookingStatus, getAllRooms, getMonthBookings, deleteBooking } from '@/features/bookings/actions';
+import { getBookingRequests, updateBookingStatus, getAllRooms, getMonthBookings, deleteBooking, getScheduledPracticumsForCalendar } from '@/features/bookings/actions';
 import { getPendingUsers, updateUserStatus } from '@/features/users/actions';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
@@ -30,12 +30,13 @@ export default async function AdminValidationsPage({
     const currentMonth = today.getMonth();
     const currentYear = today.getFullYear();
 
-    const [bookings, rooms, currentMonthBookings, nextMonthBookings, nextNextMonthBookings] = await Promise.all([
+    const [bookings, rooms, currentMonthBookings, nextMonthBookings, nextNextMonthBookings, practicumSchedules] = await Promise.all([
         getBookingRequests(),
         getAllRooms(),
         getMonthBookings(currentMonth, currentYear),
         getMonthBookings((currentMonth + 1) % 12, currentMonth + 1 > 11 ? currentYear + 1 : currentYear),
         getMonthBookings((currentMonth + 2) % 12, currentMonth + 2 > 11 ? currentYear + 1 : currentYear),
+        getScheduledPracticumsForCalendar(),
     ]);
 
     const calendarBookings = [
@@ -267,6 +268,7 @@ export default async function AdminValidationsPage({
             <CalendarView
                 rooms={rooms}
                 bookings={calendarBookings}
+                practicumSchedules={practicumSchedules}
                 title="Kalender Jadwal Ruangan"
                 className="mb-8"
             />
