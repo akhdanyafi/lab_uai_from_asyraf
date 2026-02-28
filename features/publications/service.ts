@@ -1,6 +1,6 @@
 /**
  * Publication Service
- * Business logic for publications management with submission workflow
+ * Business logic for publications management (admin/dosen only)
  */
 
 import { db } from '@/db';
@@ -8,75 +8,51 @@ import { publications, users, publicationLikes } from '@/db/schema';
 import { eq, desc, sql, like, or, and, count } from 'drizzle-orm';
 
 export interface CreatePublicationInput {
-    uploaderId?: number; // Admin who publishes
-    submitterId?: number; // User who submits
+    uploaderId?: number;
     authorName: string;
     title: string;
     abstract?: string;
     keywords?: string; // JSON string array
     link?: string;
     filePath?: string;
-    publishDate?: Date;
-    status?: 'Pending' | 'Published' | 'Rejected';
+    publishYear?: number;
+    publishMonth?: number;
+    publishDay?: number;
 }
 
 export interface PublicationFilters {
     search?: string;
     keyword?: string;
-    status?: 'Pending' | 'Published' | 'Rejected';
+    year?: number;
+    month?: number;
+    page?: number;
+    perPage?: number; // 10 | 20 | 50 | 100
+}
+
+export interface PaginatedResult<T> {
+    data: T[];
+    totalCount: number;
+    totalPages: number;
+    currentPage: number;
 }
 
 export class PublicationService {
     /**
-     * Create a new publication (Admin direct publish)
+     * Create a new publication (Admin/Dosen direct publish)
      */
     static async create(data: CreatePublicationInput) {
         await db.insert(publications).values({
-            ...data,
-            status: data.status || 'Published',
-            publishDate: data.publishDate || new Date(),
+            uploaderId: data.uploaderId,
+            authorName: data.authorName,
+            title: data.title,
+            abstract: data.abstract,
+            keywords: data.keywords,
+            link: data.link,
+            filePath: data.filePath,
+            publishYear: data.publishYear,
+            publishMonth: data.publishMonth,
+            publishDay: data.publishDay,
         });
-    }
-
-    /**
-     * Submit publication draft (User submission - status: Pending)
-     */
-    static async submit(data: {
-        submitterId: number;
-        authorName: string;
-        title: string;
-        abstract?: string;
-        keywords?: string;
-        link?: string;
-        filePath?: string;
-    }) {
-        await db.insert(publications).values({
-            ...data,
-            status: 'Pending',
-        });
-    }
-
-    /**
-     * Approve and publish a pending submission
-     */
-    static async approve(id: number, uploaderId: number, updates?: Partial<CreatePublicationInput>) {
-        await db.update(publications)
-            .set({
-                status: 'Published',
-                uploaderId,
-                publishDate: new Date(),
-                ...updates,
-            })
-            .where(eq(publications.id, id));
-    }
-
-    /**
-     * Reject a pending submission
-     */
-    static async reject(id: number) {
-        await db.update(publications)
-            .set({ status: 'Rejected' })
-            .where(eq(publications.id, id));
     }
 
     /**
@@ -89,7 +65,9 @@ export class PublicationService {
         keywords?: string;
         link?: string;
         filePath?: string;
-        publishDate?: Date;
+        publishYear?: number;
+        publishMonth?: number | null;
+        publishDay?: number | null;
     }) {
         await db.update(publications)
             .set(data)
@@ -97,40 +75,22 @@ export class PublicationService {
     }
 
     /**
-     * Get all publications (admin view)
+     * Get all publications (admin/dosen view) with pagination
      */
-    static async getAll(filters?: PublicationFilters) {
-        let query = db.select({
-            publication: publications,
-            uploaderName: users.fullName,
-        })
-            .from(publications)
-            .leftJoin(users, eq(publications.uploaderId, users.id))
-            .orderBy(desc(publications.createdAt));
+    static async getAll(filters?: PublicationFilters): Promise<PaginatedResult<any>> {
+        const page = filters?.page || 1;
+        const perPage = filters?.perPage || 20;
+        const offset = (page - 1) * perPage;
 
-        if (filters?.status) {
-            query = query.where(eq(publications.status, filters.status)) as any;
-        }
-
-        const results = await query;
-        return results.map(r => ({
-            ...r.publication,
-            uploaderName: r.uploaderName,
-        }));
-    }
-
-    /**
-     * Get published publications for public view with search/filter
-     */
-    static async getPublished(filters?: PublicationFilters) {
-        const conditions = [eq(publications.status, 'Published')];
+        // Build conditions
+        const conditions: any[] = [];
 
         if (filters?.search) {
             conditions.push(
                 or(
                     like(publications.title, `%${filters.search}%`),
                     like(publications.authorName, `%${filters.search}%`)
-                ) as any
+                )
             );
         }
 
@@ -138,35 +98,98 @@ export class PublicationService {
             conditions.push(like(publications.keywords, `%${filters.keyword}%`));
         }
 
-        return await db.select()
-            .from(publications)
-            .where(and(...conditions))
-            .orderBy(desc(publications.publishDate));
-    }
+        if (filters?.year) {
+            conditions.push(eq(publications.publishYear, filters.year));
+        }
 
-    /**
-     * Get publications by submitter (user's submissions)
-     */
-    static async getBySubmitter(submitterId: number) {
-        return await db.select()
-            .from(publications)
-            .where(eq(publications.submitterId, submitterId))
-            .orderBy(desc(publications.createdAt));
-    }
+        if (filters?.month) {
+            conditions.push(eq(publications.publishMonth, filters.month));
+        }
 
-    /**
-     * Get pending submissions for review
-     */
-    static async getPending() {
-        return await db.select({
+        const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+        // Get total count
+        const countResult = await db.select({ count: count() })
+            .from(publications)
+            .where(whereClause);
+        const totalCount = countResult[0]?.count || 0;
+
+        // Get data
+        const results = await db.select({
             publication: publications,
-            submitterName: users.fullName,
-            submitterIdentifier: users.identifier,
+            uploaderName: users.fullName,
         })
             .from(publications)
-            .leftJoin(users, eq(publications.submitterId, users.id))
-            .where(eq(publications.status, 'Pending'))
-            .orderBy(desc(publications.createdAt));
+            .leftJoin(users, eq(publications.uploaderId, users.id))
+            .where(whereClause)
+            .orderBy(desc(publications.createdAt))
+            .limit(perPage)
+            .offset(offset);
+
+        return {
+            data: results.map(r => ({
+                ...r.publication,
+                uploaderName: r.uploaderName,
+            })),
+            totalCount,
+            totalPages: Math.ceil(totalCount / perPage),
+            currentPage: page,
+        };
+    }
+
+    /**
+     * Get published publications for public view with search/filter/pagination
+     */
+    static async getPublished(filters?: PublicationFilters): Promise<PaginatedResult<any>> {
+        const page = filters?.page || 1;
+        const perPage = filters?.perPage || 20;
+        const offset = (page - 1) * perPage;
+
+        const conditions: any[] = [];
+
+        if (filters?.search) {
+            conditions.push(
+                or(
+                    like(publications.title, `%${filters.search}%`),
+                    like(publications.authorName, `%${filters.search}%`)
+                )
+            );
+        }
+
+        if (filters?.keyword) {
+            conditions.push(like(publications.keywords, `%${filters.keyword}%`));
+        }
+
+        if (filters?.year) {
+            conditions.push(eq(publications.publishYear, filters.year));
+        }
+
+        if (filters?.month) {
+            conditions.push(eq(publications.publishMonth, filters.month));
+        }
+
+        const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+        // Get total count
+        const countResult = await db.select({ count: count() })
+            .from(publications)
+            .where(whereClause);
+        const totalCount = countResult[0]?.count || 0;
+
+        // Get data
+        const data = await db.select()
+            .from(publications)
+            .where(whereClause)
+            .orderBy(desc(publications.publishYear), desc(publications.publishMonth), desc(publications.publishDay))
+            .limit(perPage)
+            .offset(offset);
+
+        return {
+            data,
+            totalCount,
+            totalPages: Math.ceil(totalCount / perPage),
+            currentPage: page,
+        };
     }
 
     /**
@@ -197,23 +220,21 @@ export class PublicationService {
     }
 
     /**
-     * Get top publications by view count (only published)
+     * Get top publications by view count
      */
     static async getTop(limit: number = 5) {
         return await db.select()
             .from(publications)
-            .where(eq(publications.status, 'Published'))
             .orderBy(desc(publications.viewCount))
             .limit(limit);
     }
 
     /**
-     * Get all unique keywords from published publications
+     * Get all unique keywords from publications
      */
     static async getAllKeywords(): Promise<string[]> {
         const results = await db.select({ keywords: publications.keywords })
-            .from(publications)
-            .where(eq(publications.status, 'Published'));
+            .from(publications);
 
         const keywordSet = new Set<string>();
         for (const row of results) {
@@ -230,11 +251,21 @@ export class PublicationService {
     }
 
     /**
+     * Get all unique publish years
+     */
+    static async getAllYears(): Promise<number[]> {
+        const results = await db.selectDistinct({ year: publications.publishYear })
+            .from(publications)
+            .where(sql`${publications.publishYear} IS NOT NULL`)
+            .orderBy(desc(publications.publishYear));
+
+        return results.map(r => r.year!).filter(Boolean);
+    }
+
+    /**
      * Toggle like for a publication
-     * Returns: { liked: boolean, likeCount: number }
      */
     static async toggleLike(publicationId: number, userId: number) {
-        // Check if already liked
         const existingLike = await db.select()
             .from(publicationLikes)
             .where(and(
@@ -244,12 +275,10 @@ export class PublicationService {
             .limit(1);
 
         if (existingLike.length > 0) {
-            // Unlike
             await db.delete(publicationLikes).where(eq(publicationLikes.id, existingLike[0].id));
             const likeCount = await this.getLikeCount(publicationId);
             return { liked: false, likeCount };
         } else {
-            // Like
             await db.insert(publicationLikes).values({
                 publicationId,
                 userId,
@@ -320,4 +349,3 @@ export class PublicationService {
         return results.map(r => r.publicationId);
     }
 }
-

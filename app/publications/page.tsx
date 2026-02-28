@@ -1,6 +1,6 @@
-import { getPublicPublications, getPublicationKeywords, getPublicationLikeCounts, getUserLikedPublicationIds } from '@/features/publications/actions';
+import { getPublicPublications, getPublicationKeywords, getPublicationLikeCounts, getUserLikedPublicationIds, getPublicationYears } from '@/features/publications/actions';
 import { getSession } from '@/lib/auth';
-import { BookOpen, ExternalLink, User, Search, Tag, LogIn, ArrowLeft, Eye } from 'lucide-react';
+import { BookOpen, ExternalLink, User, Search, Tag, ArrowLeft, Eye, LayoutGrid, List } from 'lucide-react';
 import PublicationLink from '@/features/publications/components/PublicationLink';
 import LikeButton from '@/features/publications/components/LikeButton';
 import Link from 'next/link';
@@ -8,6 +8,35 @@ import Link from 'next/link';
 interface SearchParams {
     search?: string;
     keyword?: string;
+    year?: string;
+    month?: string;
+    page?: string;
+    perPage?: string;
+    view?: string;
+}
+
+const MONTHS = [
+    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+];
+
+function formatPublishDate(year?: number | null, month?: number | null, day?: number | null): string {
+    if (!year) return '';
+    let str = String(year);
+    if (month) {
+        str = MONTHS[month - 1] + ' ' + str;
+        if (day) str = day + ' ' + str;
+    }
+    return str;
+}
+
+function buildUrl(base: string, params: Record<string, string | undefined>): string {
+    const searchParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+        if (value) searchParams.set(key, value);
+    });
+    const qs = searchParams.toString();
+    return qs ? `${base}?${qs}` : base;
 }
 
 export default async function PublicationsPage({
@@ -17,16 +46,35 @@ export default async function PublicationsPage({
 }) {
     const params = await searchParams;
     const session = await getSession();
-    const publications = await getPublicPublications({
+
+    const currentPage = Number(params.page) || 1;
+    const perPage = Number(params.perPage) || 20;
+    const viewMode = params.view || 'grid';
+
+    const result = await getPublicPublications({
         search: params.search,
         keyword: params.keyword,
+        year: params.year ? Number(params.year) : undefined,
+        month: params.month ? Number(params.month) : undefined,
+        page: currentPage,
+        perPage,
     });
     const keywords = await getPublicationKeywords();
+    const years = await getPublicationYears();
 
     // Get like data
-    const publicationIds = publications.map(p => p.id);
+    const publicationIds = result.data.map(p => p.id);
     const likeCounts = await getPublicationLikeCounts(publicationIds);
     const userLikedIds = session ? await getUserLikedPublicationIds(session.user.id, publicationIds) : [];
+
+    const baseFilterParams = {
+        search: params.search,
+        keyword: params.keyword,
+        year: params.year,
+        month: params.month,
+        perPage: params.perPage,
+        view: params.view,
+    };
 
     return (
         <div className="min-h-screen bg-gray-50 p-8">
@@ -41,86 +89,92 @@ export default async function PublicationsPage({
                 </Link>
 
                 {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
-                    <div>
-                        <h1 className="text-3xl font-bold text-gray-900">Galeri Publikasi</h1>
-                        <p className="text-gray-500 mt-2">Karya dan publikasi mahasiswa Informatika UAI</p>
-                    </div>
-                    {session ? (
-                        <Link
-                            href="/student/publications"
-                            className="inline-flex items-center gap-2 bg-[#0F4C81] text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-[#0F4C81]/90 transition-colors"
-                        >
-                            <BookOpen className="w-4 h-4" />
-                            Ajukan Publikasi
-                        </Link>
-                    ) : (
-                        <Link
-                            href="/login"
-                            className="inline-flex items-center gap-2 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
-                        >
-                            <LogIn className="w-4 h-4" />
-                            Login untuk Ajukan Publikasi
-                        </Link>
-                    )}
+                <div className="mb-8">
+                    <h1 className="text-3xl font-bold text-gray-900">Galeri Publikasi</h1>
+                    <p className="text-gray-500 mt-2">Karya dan publikasi mahasiswa Informatika UAI</p>
                 </div>
 
                 {/* Search and Filter */}
                 <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6">
-                    <form method="GET" className="flex flex-col md:flex-row gap-4">
-                        {/* Search Input */}
-                        <div className="flex-1 relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                            <input
-                                name="search"
-                                type="text"
-                                placeholder="Cari judul atau penulis..."
-                                defaultValue={params.search}
-                                className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20"
-                            />
-                        </div>
+                    <form method="GET" className="flex flex-col gap-4">
+                        {/* Pass view mode */}
+                        <input type="hidden" name="view" value={viewMode} />
 
-                        {/* Keyword Filter */}
-                        <div className="w-full md:w-64">
+                        <div className="flex flex-col md:flex-row gap-4">
+                            {/* Search Input */}
+                            <div className="flex-1 relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                <input
+                                    name="search"
+                                    type="text"
+                                    placeholder="Cari judul atau penulis..."
+                                    defaultValue={params.search}
+                                    className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                />
+                            </div>
+
+                            {/* Keyword Filter */}
                             <select
                                 name="keyword"
                                 defaultValue={params.keyword || ''}
-                                className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                className="px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20"
                             >
                                 <option value="">Semua Kata Kunci</option>
                                 {keywords.map((kw) => (
-                                    <option key={kw} value={kw}>
-                                        {kw}
-                                    </option>
+                                    <option key={kw} value={kw}>{kw}</option>
                                 ))}
                             </select>
-                        </div>
 
-                        <button
-                            type="submit"
-                            className="bg-[#0F4C81] text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-[#0F4C81]/90 transition-colors"
-                        >
-                            Cari
-                        </button>
-
-                        {(params.search || params.keyword) && (
-                            <Link
-                                href="/publications"
-                                className="text-gray-500 hover:text-gray-700 px-4 py-2 text-sm"
+                            {/* Year Filter */}
+                            <select
+                                name="year"
+                                defaultValue={params.year || ''}
+                                className="px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20"
                             >
-                                Reset
-                            </Link>
-                        )}
+                                <option value="">Semua Tahun</option>
+                                {years.map((y) => (
+                                    <option key={y} value={y}>{y}</option>
+                                ))}
+                            </select>
+
+                            {/* Month Filter */}
+                            <select
+                                name="month"
+                                defaultValue={params.month || ''}
+                                className="px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                            >
+                                <option value="">Semua Bulan</option>
+                                {MONTHS.map((m, i) => (
+                                    <option key={i} value={i + 1}>{m}</option>
+                                ))}
+                            </select>
+
+                            <button
+                                type="submit"
+                                className="bg-[#0F4C81] text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-[#0F4C81]/90 transition-colors"
+                            >
+                                Cari
+                            </button>
+
+                            {(params.search || params.keyword || params.year || params.month) && (
+                                <Link
+                                    href={`/publications?view=${viewMode}`}
+                                    className="text-gray-500 hover:text-gray-700 px-4 py-2 text-sm"
+                                >
+                                    Reset
+                                </Link>
+                            )}
+                        </div>
                     </form>
                 </div>
 
                 {/* Active Filters */}
-                {(params.search || params.keyword) && (
-                    <div className="flex items-center gap-2 mb-4 text-sm text-gray-600">
+                {(params.search || params.keyword || params.year || params.month) && (
+                    <div className="flex items-center gap-2 mb-4 text-sm text-gray-600 flex-wrap">
                         <span>Filter aktif:</span>
                         {params.search && (
                             <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded">
-                                Pencarian: "{params.search}"
+                                Pencarian: &quot;{params.search}&quot;
                             </span>
                         )}
                         {params.keyword && (
@@ -129,112 +183,296 @@ export default async function PublicationsPage({
                                 {params.keyword}
                             </span>
                         )}
+                        {params.year && (
+                            <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded">
+                                Tahun: {params.year}
+                            </span>
+                        )}
+                        {params.month && (
+                            <span className="bg-orange-100 text-orange-700 px-2 py-1 rounded">
+                                Bulan: {MONTHS[Number(params.month) - 1]}
+                            </span>
+                        )}
                     </div>
                 )}
 
-                {/* Publications Grid */}
-                {publications.length === 0 ? (
+                {/* Toolbar: View Toggle + PerPage + Count */}
+                <div className="flex items-center justify-between mb-4">
+                    <p className="text-sm text-gray-500">
+                        Menampilkan {Math.min((currentPage - 1) * perPage + 1, result.totalCount)}-{Math.min(currentPage * perPage, result.totalCount)} dari {result.totalCount} publikasi
+                    </p>
+                    <div className="flex items-center gap-3">
+                        {/* Per Page Selector */}
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <span>Per halaman:</span>
+                            {[10, 20, 50, 100].map(n => (
+                                <Link
+                                    key={n}
+                                    href={buildUrl('/publications', { ...baseFilterParams, perPage: String(n), page: '1' })}
+                                    className={`px-2 py-1 rounded text-sm ${perPage === n ? 'bg-[#0F4C81] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                                >
+                                    {n}
+                                </Link>
+                            ))}
+                        </div>
+
+                        {/* View Toggle */}
+                        <div className="flex items-center bg-gray-100 rounded-lg p-0.5">
+                            <Link
+                                href={buildUrl('/publications', { ...baseFilterParams, view: 'grid', page: params.page })}
+                                className={`p-1.5 rounded ${viewMode === 'grid' ? 'bg-white shadow-sm text-[#0F4C81]' : 'text-gray-500 hover:text-gray-700'}`}
+                                title="Tampilan Grid"
+                            >
+                                <LayoutGrid className="w-4 h-4" />
+                            </Link>
+                            <Link
+                                href={buildUrl('/publications', { ...baseFilterParams, view: 'list', page: params.page })}
+                                className={`p-1.5 rounded ${viewMode === 'list' ? 'bg-white shadow-sm text-[#0F4C81]' : 'text-gray-500 hover:text-gray-700'}`}
+                                title="Tampilan List"
+                            >
+                                <List className="w-4 h-4" />
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Publications */}
+                {result.data.length === 0 ? (
                     <div className="bg-white p-12 rounded-xl shadow-sm border border-gray-100 text-center">
                         <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-3" />
                         <p className="text-gray-500">
-                            {params.search || params.keyword
+                            {params.search || params.keyword || params.year || params.month
                                 ? 'Tidak ada publikasi yang cocok dengan filter.'
                                 : 'Belum ada publikasi.'}
                         </p>
                     </div>
-                ) : (
-                    <>
-                        <p className="text-sm text-gray-500 mb-4">{publications.length} publikasi ditemukan</p>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {publications.map((pub) => {
-                                // Parse keywords
-                                let pubKeywords: string[] = [];
-                                if (pub.keywords) {
-                                    try {
-                                        pubKeywords = JSON.parse(pub.keywords);
-                                    } catch { }
-                                }
-
-                                return (
-                                    <div key={pub.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
-                                        <div className="flex items-start justify-between mb-4">
-                                            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                                                <BookOpen className="w-6 h-6 text-primary" />
-                                            </div>
-                                        </div>
-
-                                        {(pub.link || pub.filePath) ? (
-                                            <PublicationLink
-                                                id={pub.id}
-                                                url={pub.link || pub.filePath || '#'}
-                                                className="font-semibold text-gray-900 mb-2 line-clamp-2 hover:text-[#0F4C81] cursor-pointer block"
-                                            >
-                                                {pub.title}
-                                            </PublicationLink>
-                                        ) : (
-                                            <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">{pub.title}</h3>
-                                        )}
-
-                                        <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
-                                            <User className="w-4 h-4" />
-                                            <span>{pub.authorName}</span>
-                                        </div>
-
-                                        {pub.abstract && (
-                                            <p className="text-sm text-gray-600 mb-3 line-clamp-3">{pub.abstract}</p>
-                                        )}
-
-                                        {/* Keywords */}
-                                        {pubKeywords.length > 0 && (
-                                            <div className="flex flex-wrap gap-1 mb-3">
-                                                {pubKeywords.slice(0, 3).map((kw) => (
-                                                    <Link
-                                                        key={kw}
-                                                        href={`/publications?keyword=${encodeURIComponent(kw)}`}
-                                                        className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded hover:bg-gray-200"
+                ) : viewMode === 'list' ? (
+                    /* List View */
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                        <table className="w-full">
+                            <thead>
+                                <tr className="border-b border-gray-100 text-left text-sm text-gray-500">
+                                    <th className="px-6 py-3 font-medium">Judul</th>
+                                    <th className="px-4 py-3 font-medium">Penulis</th>
+                                    <th className="px-4 py-3 font-medium">Kata Kunci</th>
+                                    <th className="px-4 py-3 font-medium">Tahun</th>
+                                    <th className="px-4 py-3 font-medium text-center">Views</th>
+                                    <th className="px-4 py-3 font-medium text-center">Likes</th>
+                                    <th className="px-4 py-3 font-medium"></th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {result.data.map((pub) => {
+                                    let pubKeywords: string[] = [];
+                                    if (pub.keywords) {
+                                        try { pubKeywords = JSON.parse(pub.keywords); } catch { }
+                                    }
+                                    return (
+                                        <tr key={pub.id} className="hover:bg-gray-50 transition-colors">
+                                            <td className="px-6 py-4">
+                                                {(pub.link || pub.filePath) ? (
+                                                    <PublicationLink
+                                                        id={pub.id}
+                                                        url={pub.link || pub.filePath || '#'}
+                                                        className="font-medium text-gray-900 hover:text-[#0F4C81] transition-colors line-clamp-1"
                                                     >
-                                                        {kw}
-                                                    </Link>
-                                                ))}
-                                                {pubKeywords.length > 3 && (
-                                                    <span className="text-xs text-gray-400">+{pubKeywords.length - 3}</span>
+                                                        {pub.title}
+                                                    </PublicationLink>
+                                                ) : (
+                                                    <span className="font-medium text-gray-900 line-clamp-1">{pub.title}</span>
                                                 )}
-                                            </div>
-                                        )}
-
-                                        <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
-                                            {pub.publishDate && (
-                                                <span>{new Date(pub.publishDate).toLocaleDateString('id-ID')}</span>
-                                            )}
-                                            <div className="flex items-center gap-3">
-                                                <span className="flex items-center gap-1">
+                                            </td>
+                                            <td className="px-4 py-4 text-sm text-gray-600">{pub.authorName}</td>
+                                            <td className="px-4 py-4">
+                                                <div className="flex flex-wrap gap-1">
+                                                    {pubKeywords.slice(0, 2).map((kw) => (
+                                                        <span key={kw} className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">{kw}</span>
+                                                    ))}
+                                                    {pubKeywords.length > 2 && (
+                                                        <span className="text-xs text-gray-400">+{pubKeywords.length - 2}</span>
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td className="px-4 py-4 text-sm text-gray-500">
+                                                {formatPublishDate(pub.publishYear, pub.publishMonth, pub.publishDay)}
+                                            </td>
+                                            <td className="px-4 py-4 text-center">
+                                                <span className="text-sm text-gray-500 flex items-center justify-center gap-1">
                                                     <Eye className="w-3 h-3" />
                                                     {pub.viewCount}
                                                 </span>
+                                            </td>
+                                            <td className="px-4 py-4 text-center">
                                                 <LikeButton
                                                     publicationId={pub.id}
                                                     userId={session?.user.id}
                                                     initialLiked={userLikedIds.includes(pub.id)}
                                                     initialLikeCount={likeCounts[pub.id] || 0}
                                                 />
-                                            </div>
-                                        </div>
+                                            </td>
+                                            <td className="px-4 py-4">
+                                                {(pub.link || pub.filePath) && (
+                                                    <PublicationLink
+                                                        id={pub.id}
+                                                        url={pub.link || pub.filePath || '#'}
+                                                        className="inline-flex items-center gap-1 text-[#0F4C81] hover:text-blue-700 text-sm"
+                                                    >
+                                                        <ExternalLink className="w-3 h-3" />
+                                                        Lihat
+                                                    </PublicationLink>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                ) : (
+                    /* Grid View */
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {result.data.map((pub) => {
+                            let pubKeywords: string[] = [];
+                            if (pub.keywords) {
+                                try { pubKeywords = JSON.parse(pub.keywords); } catch { }
+                            }
 
-                                        {(pub.link || pub.filePath) && (
-                                            <PublicationLink
-                                                id={pub.id}
-                                                url={pub.link || pub.filePath || '#'}
-                                                className="inline-flex items-center gap-1 text-primary hover:text-blue-700 text-sm font-medium"
-                                            >
-                                                <ExternalLink className="w-4 h-4" />
-                                                Lihat Publikasi
-                                            </PublicationLink>
-                                        )}
+                            return (
+                                <div key={pub.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
+                                    <div className="flex items-start justify-between mb-4">
+                                        <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                            <BookOpen className="w-6 h-6 text-primary" />
+                                        </div>
                                     </div>
-                                );
-                            })}
-                        </div>
-                    </>
+
+                                    {(pub.link || pub.filePath) ? (
+                                        <PublicationLink
+                                            id={pub.id}
+                                            url={pub.link || pub.filePath || '#'}
+                                            className="font-semibold text-gray-900 mb-2 line-clamp-2 hover:text-[#0F4C81] cursor-pointer block"
+                                        >
+                                            {pub.title}
+                                        </PublicationLink>
+                                    ) : (
+                                        <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">{pub.title}</h3>
+                                    )}
+
+                                    <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+                                        <User className="w-4 h-4" />
+                                        <span>{pub.authorName}</span>
+                                    </div>
+
+                                    {pub.abstract && (
+                                        <p className="text-sm text-gray-600 mb-3 line-clamp-3">{pub.abstract}</p>
+                                    )}
+
+                                    {/* Keywords */}
+                                    {pubKeywords.length > 0 && (
+                                        <div className="flex flex-wrap gap-1 mb-3">
+                                            {pubKeywords.slice(0, 3).map((kw) => (
+                                                <Link
+                                                    key={kw}
+                                                    href={`/publications?keyword=${encodeURIComponent(kw)}&view=${viewMode}`}
+                                                    className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded hover:bg-gray-200"
+                                                >
+                                                    {kw}
+                                                </Link>
+                                            ))}
+                                            {pubKeywords.length > 3 && (
+                                                <span className="text-xs text-gray-400">+{pubKeywords.length - 3}</span>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
+                                        <span>{formatPublishDate(pub.publishYear, pub.publishMonth, pub.publishDay)}</span>
+                                        <div className="flex items-center gap-3">
+                                            <span className="flex items-center gap-1">
+                                                <Eye className="w-3 h-3" />
+                                                {pub.viewCount}
+                                            </span>
+                                            <LikeButton
+                                                publicationId={pub.id}
+                                                userId={session?.user.id}
+                                                initialLiked={userLikedIds.includes(pub.id)}
+                                                initialLikeCount={likeCounts[pub.id] || 0}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {(pub.link || pub.filePath) && (
+                                        <PublicationLink
+                                            id={pub.id}
+                                            url={pub.link || pub.filePath || '#'}
+                                            className="inline-flex items-center gap-1 text-primary hover:text-blue-700 text-sm font-medium"
+                                        >
+                                            <ExternalLink className="w-4 h-4" />
+                                            Lihat Publikasi
+                                        </PublicationLink>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+
+                {/* Pagination */}
+                {result.totalPages > 1 && (
+                    <div className="flex items-center justify-center gap-2 mt-8">
+                        {/* Previous */}
+                        {currentPage > 1 ? (
+                            <Link
+                                href={buildUrl('/publications', { ...baseFilterParams, page: String(currentPage - 1) })}
+                                className="px-4 py-2 rounded-lg bg-white border border-gray-200 text-sm text-gray-600 hover:bg-gray-50"
+                            >
+                                ← Sebelumnya
+                            </Link>
+                        ) : (
+                            <span className="px-4 py-2 rounded-lg bg-gray-100 text-sm text-gray-400 cursor-not-allowed">
+                                ← Sebelumnya
+                            </span>
+                        )}
+
+                        {/* Page numbers */}
+                        {Array.from({ length: Math.min(result.totalPages, 7) }, (_, i) => {
+                            let pageNum: number;
+                            if (result.totalPages <= 7) {
+                                pageNum = i + 1;
+                            } else if (currentPage <= 4) {
+                                pageNum = i + 1;
+                            } else if (currentPage >= result.totalPages - 3) {
+                                pageNum = result.totalPages - 6 + i;
+                            } else {
+                                pageNum = currentPage - 3 + i;
+                            }
+                            return (
+                                <Link
+                                    key={pageNum}
+                                    href={buildUrl('/publications', { ...baseFilterParams, page: String(pageNum) })}
+                                    className={`px-3 py-2 rounded-lg text-sm ${pageNum === currentPage
+                                        ? 'bg-[#0F4C81] text-white'
+                                        : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                                        }`}
+                                >
+                                    {pageNum}
+                                </Link>
+                            );
+                        })}
+
+                        {/* Next */}
+                        {currentPage < result.totalPages ? (
+                            <Link
+                                href={buildUrl('/publications', { ...baseFilterParams, page: String(currentPage + 1) })}
+                                className="px-4 py-2 rounded-lg bg-white border border-gray-200 text-sm text-gray-600 hover:bg-gray-50"
+                            >
+                                Selanjutnya →
+                            </Link>
+                        ) : (
+                            <span className="px-4 py-2 rounded-lg bg-gray-100 text-sm text-gray-400 cursor-not-allowed">
+                                Selanjutnya →
+                            </span>
+                        )}
+                    </div>
                 )}
             </div>
         </div>

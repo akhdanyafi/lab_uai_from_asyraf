@@ -195,7 +195,7 @@ export async function getHomepageStats() {
         db.select({ count: sql<number>`count(*)` }).from(items),
         db.select({ count: sql<number>`count(*)` }).from(items).where(eq(items.status, 'Tersedia')),
         db.select({ count: sql<number>`count(*)` }).from(practicumModules),
-        db.select({ count: sql<number>`count(*)` }).from(publications).where(eq(publications.status, 'Published'))
+        db.select({ count: sql<number>`count(*)` }).from(publications)
     ]);
 
     return {

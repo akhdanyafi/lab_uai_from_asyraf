@@ -440,24 +440,17 @@ export class DashboardService {
      * Get all pending counts for insights
      */
     static async getPendingCounts() {
-        const [pendingLoans, pendingBookings, pendingUsers, publications] = await Promise.all([
+        const [pendingLoans, pendingBookings, pendingUsers] = await Promise.all([
             db.select({ count: sql<number>`count(*)` }).from(itemLoans).where(eq(itemLoans.status, 'Pending')),
             db.select({ count: sql<number>`count(*)` }).from(roomBookings).where(eq(roomBookings.status, 'Pending')),
             db.select({ count: sql<number>`count(*)` }).from(users).where(eq(users.status, 'Pending')),
-            import('@/db/schema').then(async (schema) => {
-                const result = await db
-                    .select({ count: sql<number>`count(*)` })
-                    .from(schema.publications)
-                    .where(eq(schema.publications.status, 'Pending'));
-                return result;
-            })
         ]);
 
         return {
             pendingLoans: pendingLoans[0]?.count || 0,
             pendingBookings: pendingBookings[0]?.count || 0,
             pendingUsers: pendingUsers[0]?.count || 0,
-            pendingPublications: publications[0]?.count || 0
+            pendingPublications: 0
         };
     }
 

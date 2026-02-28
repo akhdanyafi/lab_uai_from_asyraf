@@ -443,9 +443,10 @@ export async function seedPublications() {
             abstract: 'Penelitian ini membahas implementasi algoritma machine learning untuk mendeteksi transaksi fraud.',
             keywords: JSON.stringify(['Machine Learning', 'Fraud Detection', 'Deep Learning']),
             filePath: '/uploads/publications/publication-1.pdf',
-            status: 'Published' as const,
             viewCount: 150,
-            publishDate: new Date(),
+            publishYear: 2025,
+            publishMonth: 1,
+            publishDay: 15,
         },
         {
             title: 'Analisis Keamanan Jaringan IoT',
@@ -453,9 +454,9 @@ export async function seedPublications() {
             abstract: 'Studi komprehensif tentang keamanan perangkat IoT dalam lingkungan smart home.',
             keywords: JSON.stringify(['IoT', 'Network Security', 'Smart Home']),
             filePath: '/uploads/publications/publication-2.pdf',
-            status: 'Published' as const,
             viewCount: 89,
-            publishDate: new Date(),
+            publishYear: 2024,
+            publishMonth: 11,
         },
         {
             title: 'Optimasi Algoritma Kriptografi pada Embedded Systems',
@@ -463,9 +464,8 @@ export async function seedPublications() {
             abstract: 'Penelitian optimasi algoritma AES untuk implementasi pada sistem embedded.',
             keywords: JSON.stringify(['Kriptografi', 'Embedded Systems', 'AES']),
             filePath: '/uploads/publications/publication-3.pdf',
-            status: 'Published' as const,
             viewCount: 67,
-            publishDate: new Date(),
+            publishYear: 2024,
         },
     ];
 

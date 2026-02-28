@@ -2,22 +2,30 @@ import { BookOpen, Eye, User, ArrowRight } from 'lucide-react';
 import PublicationLink from '@/features/publications/components/PublicationLink';
 import Link from 'next/link';
 
+const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+
 interface Publication {
     id: number;
     title: string;
     authorName: string;
     viewCount: number;
     link: string | null;
-    publishDate: Date | null;
+    publishYear: number | null;
+    publishMonth: number | null;
+    publishDay: number | null;
 }
 
 interface PublicationSectionProps {
     topPublications: Publication[];
 }
 
-export default function PublicationSection({ topPublications }: PublicationSectionProps) {
-    // if (topPublications.length === 0) return null;
+function formatDate(year?: number | null, month?: number | null): string {
+    if (!year) return '';
+    if (month) return MONTHS_SHORT[month - 1] + ' ' + year;
+    return String(year);
+}
 
+export default function PublicationSection({ topPublications }: PublicationSectionProps) {
     return (
         <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
             <div className="flex items-center justify-between mb-6">
@@ -52,9 +60,9 @@ export default function PublicationSection({ topPublications }: PublicationSecti
                                         <Eye className="w-3 h-3" />
                                         {pub.viewCount} Views
                                     </div>
-                                    {pub.publishDate && (
+                                    {pub.publishYear && (
                                         <span className="text-xs text-gray-500">
-                                            {new Date(pub.publishDate).toLocaleDateString('id-ID', { year: 'numeric', month: 'short' })}
+                                            {formatDate(pub.publishYear, pub.publishMonth)}
                                         </span>
                                     )}
                                 </div>
