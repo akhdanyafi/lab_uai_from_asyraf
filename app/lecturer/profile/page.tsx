@@ -1,11 +1,11 @@
-import { getSession } from '@/lib/auth';
+import { getSession, hasPermission } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import ProfileForm from '@/features/users/components/ProfileForm';
 
 export default async function LecturerProfilePage() {
     const session = await getSession();
 
-    if (!session || session.user.role !== 'Dosen') {
+    if (!session || !hasPermission(session, 'dashboard.lecturer')) {
         redirect('/login');
     }
 

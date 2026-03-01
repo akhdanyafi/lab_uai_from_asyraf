@@ -2,7 +2,7 @@
 
 import { InventoryService } from './service';
 import { revalidatePath } from 'next/cache';
-import { requireAdmin } from '@/lib/auth';
+import { requirePermission } from '@/lib/auth';
 
 // --- Rooms ---
 
@@ -11,19 +11,19 @@ export async function getRooms() {
 }
 
 export async function createRoom(data: { name: string; location: string; capacity: number }) {
-    await requireAdmin();
+    await requirePermission('inventory.manage');
     await InventoryService.createRoom(data);
     revalidatePath('/admin/inventory');
 }
 
 export async function updateRoom(id: number, data: { name: string; location: string; capacity: number }) {
-    await requireAdmin();
+    await requirePermission('inventory.manage');
     await InventoryService.updateRoom(id, data);
     revalidatePath('/admin/inventory');
 }
 
 export async function deleteRoom(id: number) {
-    await requireAdmin();
+    await requirePermission('inventory.manage');
     await InventoryService.deleteRoom(id);
     revalidatePath('/admin/inventory');
 }
@@ -35,7 +35,7 @@ export async function updateRoomStatus(
     id: number,
     status: 'Tersedia' | 'Maintenance'
 ) {
-    await requireAdmin();
+    await requirePermission('inventory.manage');
     const { db } = await import('@/db');
     const { rooms } = await import('@/db/schema');
     const { eq } = await import('drizzle-orm');
@@ -54,13 +54,13 @@ export async function getCategories() {
 }
 
 export async function createCategory(data: { name: string }) {
-    await requireAdmin();
+    await requirePermission('inventory.manage');
     await InventoryService.createCategory(data);
     revalidatePath('/admin/inventory');
 }
 
 export async function updateCategory(id: number, data: { name: string }) {
-    await requireAdmin();
+    await requirePermission('inventory.manage');
     try {
         await InventoryService.updateCategory(id, data);
         revalidatePath('/admin/inventory');
@@ -74,7 +74,7 @@ export async function updateCategory(id: number, data: { name: string }) {
 }
 
 export async function deleteCategory(id: number) {
-    await requireAdmin();
+    await requirePermission('inventory.manage');
     try {
         await InventoryService.deleteCategory(id);
         revalidatePath('/admin/inventory');
@@ -107,7 +107,7 @@ export async function createItem(data: {
     qrCode: string;
     status: 'Tersedia' | 'Dipinjam' | 'Maintenance'
 }) {
-    await requireAdmin();
+    await requirePermission('inventory.manage');
     await InventoryService.createItem(data);
     revalidatePath('/admin/inventory');
 }
@@ -119,13 +119,13 @@ export async function updateItem(id: number, data: {
     description?: string;
     status: 'Tersedia' | 'Dipinjam' | 'Maintenance'
 }) {
-    await requireAdmin();
+    await requirePermission('inventory.manage');
     await InventoryService.updateItem(id, data);
     revalidatePath('/admin/inventory');
 }
 
 export async function deleteItem(id: number) {
-    await requireAdmin();
+    await requirePermission('inventory.manage');
     await InventoryService.deleteItem(id);
     revalidatePath('/admin/inventory');
 }
@@ -137,7 +137,7 @@ export async function updateItemStatus(
     id: number,
     status: 'Tersedia' | 'Dipinjam' | 'Maintenance'
 ) {
-    await requireAdmin();
+    await requirePermission('inventory.manage');
     const { db } = await import('@/db');
     const { items } = await import('@/db/schema');
     const { eq } = await import('drizzle-orm');

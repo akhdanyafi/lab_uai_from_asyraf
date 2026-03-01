@@ -53,6 +53,7 @@ export default async function AdminValidationsPage({
     // --- Data Fetching for Returns ---
     const pendingReturns = await getPendingReturns();
 
+
     // --- Loans Content (Pending + Active) ---
     const activeLoans = loans.filter(l => l.status === 'Pending' || l.status === 'Disetujui');
 

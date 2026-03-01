@@ -2,10 +2,44 @@
 
 import { cookies } from 'next/headers';
 import { db } from '@/db';
-import { users, roles } from '@/db/schema';
-import { eq, or } from 'drizzle-orm';
+import { users, roles, permissions, rolePermissions, userPermissions } from '@/db/schema';
+import { eq, or, and } from 'drizzle-orm';
 import { encrypt } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
+
+/**
+ * Compute effective permissions for a user:
+ * effective = role_defaults + user_grants - user_revocations
+ */
+async function getEffectivePermissions(userId: number, roleId: number): Promise<string[]> {
+    // 1. Get role default permission codes
+    const rolePerms = await db.select({ code: permissions.code })
+        .from(rolePermissions)
+        .innerJoin(permissions, eq(rolePermissions.permissionId, permissions.id))
+        .where(eq(rolePermissions.roleId, roleId));
+
+    const defaultCodes = new Set(rolePerms.map(rp => rp.code));
+
+    // 2. Get user-level overrides
+    const userOverrides = await db.select({
+        code: permissions.code,
+        granted: userPermissions.granted,
+    })
+        .from(userPermissions)
+        .innerJoin(permissions, eq(userPermissions.permissionId, permissions.id))
+        .where(eq(userPermissions.userId, userId));
+
+    // 3. Apply overrides
+    for (const override of userOverrides) {
+        if (override.granted) {
+            defaultCodes.add(override.code);
+        } else {
+            defaultCodes.delete(override.code);
+        }
+    }
+
+    return Array.from(defaultCodes);
+}
 
 export async function login(formData: any) {
     const { email, password } = formData;
@@ -40,9 +74,15 @@ export async function login(formData: any) {
     const role = await db.select().from(roles).where(eq(roles.id, foundUser.roleId)).limit(1);
     const roleName = role[0]?.name;
 
+    // Get effective permissions for this user
+    const effectivePermissions = await getEffectivePermissions(foundUser.id, foundUser.roleId);
+
     // Create the session
     const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-    const session = await encrypt({ user: { ...foundUser, role: roleName }, expires });
+    const session = await encrypt({
+        user: { ...foundUser, role: roleName, permissions: effectivePermissions },
+        expires
+    });
 
     // Save the session in a cookie
     (await cookies()).set('session', session, { expires, httpOnly: true });

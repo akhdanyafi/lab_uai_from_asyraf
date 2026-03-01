@@ -2,6 +2,7 @@
 
 import { PublicationService, PublicationFilters } from './service';
 import { revalidatePath } from 'next/cache';
+import { requirePermission } from '@/lib/auth';
 
 // Admin/Dosen creates and publishes directly
 export async function createPublication(data: {
@@ -16,6 +17,7 @@ export async function createPublication(data: {
     publishMonth?: number;
     publishDay?: number;
 }) {
+    await requirePermission('publications.manage');
     await PublicationService.create(data);
     revalidatePath('/publications');
     revalidatePath('/admin/publications');
@@ -34,6 +36,7 @@ export async function updatePublication(id: number, data: {
     publishMonth?: number | null;
     publishDay?: number | null;
 }) {
+    await requirePermission('publications.manage');
     await PublicationService.update(id, data);
     revalidatePath('/publications');
     revalidatePath('/admin/publications');
@@ -66,6 +69,7 @@ export async function getPublicationYears() {
 }
 
 export async function deletePublication(id: number) {
+    await requirePermission('publications.manage');
     await PublicationService.delete(id);
     revalidatePath('/publications');
     revalidatePath('/admin/publications');

@@ -59,8 +59,6 @@ export async function seedRoles() {
         { name: 'Admin' },
         { name: 'Dosen' },
         { name: 'Mahasiswa' },
-        { name: 'Kaprodi' },
-        { name: 'Kepala Laboratorium' },
     ];
 
     await db.insert(roles).values(roleData);

@@ -3,12 +3,14 @@
 import { HeroPhotoService } from './service';
 import { revalidatePath } from 'next/cache';
 import { saveFile, deleteFile } from '@/lib/upload';
+import { requirePermission } from '@/lib/auth';
 
 export async function getHeroPhotos() {
     return HeroPhotoService.getAll();
 }
 
 export async function addHeroPhoto(formData: FormData) {
+    await requirePermission('hero.manage');
     const title = formData.get('title') as string;
     const description = formData.get('description') as string;
     const link = formData.get('link') as string;
@@ -32,6 +34,7 @@ export async function addHeroPhoto(formData: FormData) {
 }
 
 export async function updateHeroPhoto(id: number, formData: FormData) {
+    await requirePermission('hero.manage');
     const title = formData.get('title') as string;
     const description = formData.get('description') as string;
     const link = formData.get('link') as string;
@@ -62,6 +65,7 @@ export async function updateHeroPhoto(id: number, formData: FormData) {
 }
 
 export async function deleteHeroPhoto(id: number) {
+    await requirePermission('hero.manage');
     const photo = await HeroPhotoService.getById(id);
 
     if (photo?.imageUrl) {

@@ -1,4 +1,4 @@
-import { getSession } from '@/lib/auth';
+import { getSession, hasPermission } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import ProfileForm from '@/features/users/components/ProfileForm';
 import { db } from '@/db';
@@ -8,7 +8,7 @@ import { eq } from 'drizzle-orm';
 export default async function AdminProfilePage() {
     const session = await getSession();
 
-    if (!session || session.user.role !== 'Admin') {
+    if (!session || !hasPermission(session, 'dashboard.admin')) {
         redirect('/login');
     }
 

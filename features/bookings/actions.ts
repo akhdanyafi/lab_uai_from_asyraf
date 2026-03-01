@@ -2,7 +2,7 @@
 
 import { BookingService } from './service';
 import { revalidatePath } from 'next/cache';
-import { requireAdmin } from '@/lib/auth';
+import { requirePermission } from '@/lib/auth';
 
 /**
  * Get all rooms
@@ -66,7 +66,7 @@ export async function createRoomBooking(data: {
  * Get booking requests (for admin)
  */
 export async function getBookingRequests(status?: string, startDate?: Date, endDate?: Date) {
-    await requireAdmin();
+    await requirePermission('bookings.manage');
     return BookingService.getAll({ status, startDate, endDate });
 }
 
@@ -74,7 +74,7 @@ export async function getBookingRequests(status?: string, startDate?: Date, endD
  * Delete booking
  */
 export async function deleteBooking(id: number) {
-    await requireAdmin();
+    await requirePermission('bookings.manage');
     await BookingService.delete(id);
     revalidatePath('/admin/bookings');
 }
@@ -87,7 +87,7 @@ export async function updateBookingStatus(
     status: 'Disetujui' | 'Ditolak',
     validatorId: number
 ) {
-    await requireAdmin();
+    await requirePermission('bookings.manage');
     await BookingService.updateStatus(bookingId, status, validatorId);
     revalidatePath('/admin/bookings');
     revalidatePath('/student/rooms');

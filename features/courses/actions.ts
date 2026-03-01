@@ -2,7 +2,7 @@
 
 import { CourseService } from './service';
 import { revalidatePath } from 'next/cache';
-import { requireLabStaff } from '@/lib/auth';
+import { requirePermission } from '@/lib/auth';
 import type { CreateCourseInput, UpdateCourseInput } from './types';
 
 /**
@@ -37,7 +37,7 @@ export async function getAllSemesters() {
  * Create new course (Admin / Kepala Lab only)
  */
 export async function createCourse(data: CreateCourseInput) {
-    await requireLabStaff();
+    await requirePermission('courses.manage');
     await CourseService.create(data);
     revalidatePath('/admin/courses');
     revalidatePath('/lecturer/courses');
@@ -47,7 +47,7 @@ export async function createCourse(data: CreateCourseInput) {
  * Update course (Admin / Kepala Lab only)
  */
 export async function updateCourse(id: number, data: UpdateCourseInput) {
-    await requireLabStaff();
+    await requirePermission('courses.manage');
     await CourseService.update(id, data);
     revalidatePath('/admin/courses');
     revalidatePath('/lecturer/courses');
@@ -57,7 +57,7 @@ export async function updateCourse(id: number, data: UpdateCourseInput) {
  * Assign lecturer to course (Admin / Kepala Lab only)
  */
 export async function assignLecturerToCourse(courseId: number, lecturerId: number | null) {
-    await requireLabStaff();
+    await requirePermission('courses.manage');
     await CourseService.assignLecturer(courseId, lecturerId);
     revalidatePath('/admin/courses');
     revalidatePath('/lecturer/courses');
@@ -67,7 +67,7 @@ export async function assignLecturerToCourse(courseId: number, lecturerId: numbe
  * Delete course (Admin / Kepala Lab only)
  */
 export async function deleteCourse(id: number) {
-    await requireLabStaff();
+    await requirePermission('courses.manage');
     await CourseService.delete(id);
     revalidatePath('/admin/courses');
     revalidatePath('/lecturer/courses');

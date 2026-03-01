@@ -2,10 +2,10 @@
 
 import { DashboardService } from './service';
 import { revalidatePath } from 'next/cache';
-import { requireAdmin } from '@/lib/auth';
+import { requirePermission } from '@/lib/auth';
 
 export async function getAdminStats() {
-    await requireAdmin();
+    await requirePermission('dashboard.admin');
     return DashboardService.getAdminStats();
 }
 
@@ -13,61 +13,61 @@ export async function getStudentDashboard(userId: number) {
     return DashboardService.getStudentDashboard(userId);
 }
 
-export async function getLecturerDashboard(userId: number, role?: string) {
-    return DashboardService.getLecturerDashboard(userId, role);
+export async function getLecturerDashboard(userId: number, showLPJ: boolean = false) {
+    return DashboardService.getLecturerDashboard(userId, showLPJ);
 }
 
 export async function markLoanNotificationRead(loanId: number) {
-    await requireAdmin();
+    await requirePermission('dashboard.admin');
     await DashboardService.markLoanNotificationRead(loanId);
     revalidatePath('/admin/dashboard');
 }
 
 export async function markBookingNotificationRead(bookingId: number) {
-    await requireAdmin();
+    await requirePermission('dashboard.admin');
     await DashboardService.markBookingNotificationRead(bookingId);
     revalidatePath('/admin/dashboard');
 }
 
 export async function markAllNotificationsRead() {
-    await requireAdmin();
+    await requirePermission('dashboard.admin');
     await DashboardService.markAllNotificationsRead();
     revalidatePath('/admin/dashboard');
 }
 
 // Analytics actions - admin only
 export async function getLoanTrendData() {
-    await requireAdmin();
+    await requirePermission('dashboard.admin');
     return DashboardService.getLoanTrendData();
 }
 
 export async function getBookingsByRoom() {
-    await requireAdmin();
+    await requirePermission('dashboard.admin');
     return DashboardService.getBookingsByRoom();
 }
 
 export async function getLoansByCategory() {
-    await requireAdmin();
+    await requirePermission('dashboard.admin');
     return DashboardService.getLoansByCategory();
 }
 
 export async function getIdleItemsCount() {
-    await requireAdmin();
+    await requirePermission('dashboard.admin');
     return DashboardService.getIdleItemsCount();
 }
 
 export async function getPendingCounts() {
-    await requireAdmin();
+    await requirePermission('dashboard.admin');
     return DashboardService.getPendingCounts();
 }
 
 export async function getRecentBookings(days?: number) {
-    await requireAdmin();
+    await requirePermission('dashboard.admin');
     return DashboardService.getRecentBookings(days);
 }
 
 export async function getSmartAnalyticsData() {
-    await requireAdmin();
+    await requirePermission('dashboard.admin');
     return DashboardService.getSmartAnalyticsData();
 }
 

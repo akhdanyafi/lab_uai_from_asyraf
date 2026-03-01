@@ -1,5 +1,5 @@
 import { getLecturerDashboard } from '@/features/dashboard/actions';
-import { getSession } from '@/lib/auth';
+import { getSession, hasPermission } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { Calendar, FileText, ArrowRight, Download } from 'lucide-react';
 import Link from 'next/link';
@@ -8,13 +8,13 @@ export default async function LecturerDashboard() {
     const session = await getSession();
     if (!session) redirect('/login');
 
-    const dashboard = await getLecturerDashboard(session.user.id, session.user.role);
-    const isLeadership = ['Kaprodi', 'Kepala Laboratorium'].includes(session.user.role);
+    const showLPJ = hasPermission(session, 'governance.view');
+    const dashboard = await getLecturerDashboard(session.user.id, showLPJ);
 
     return (
         <div>
             <h1 className="text-2xl font-bold text-gray-900 mb-6">
-                Dashboard {session.user.role === 'Kaprodi' ? 'Kaprodi' : session.user.role === 'Kepala Laboratorium' ? 'Kepala Laboratorium' : 'Dosen'}
+                Dashboard Dosen
             </h1>
 
             {/* Stats Cards */}
@@ -48,8 +48,8 @@ export default async function LecturerDashboard() {
             </div>
 
             <div className="grid grid-cols-1 gap-6">
-                {/* LPJ Section - Only for Kaprodi & Kepala Lab */}
-                {isLeadership && dashboard.latestLPJ && dashboard.latestLPJ.length > 0 && (
+                {/* LPJ Section - visible for users with governance.view permission */}
+                {showLPJ && dashboard.latestLPJ && dashboard.latestLPJ.length > 0 && (
                     <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="text-lg font-semibold flex items-center gap-2">
@@ -94,7 +94,7 @@ export default async function LecturerDashboard() {
                     </div>
                 )}
 
-                {isLeadership && (!dashboard.latestLPJ || dashboard.latestLPJ.length === 0) && (
+                {showLPJ && (!dashboard.latestLPJ || dashboard.latestLPJ.length === 0) && (
                     <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="text-lg font-semibold flex items-center gap-2">

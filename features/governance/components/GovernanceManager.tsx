@@ -27,9 +27,11 @@ interface GovernanceManagerProps {
     lecturers: { id: number; fullName: string; identifier: string }[];
     heroPhotos: HeroPhoto[];
     adminId: number;
+    allPermissions?: any[];
+    rolePermissionMap?: Record<number, string[]>;
 }
 
-export default function GovernanceManager({ sops, lpjs, users, roles, lecturers, heroPhotos, adminId }: GovernanceManagerProps) {
+export default function GovernanceManager({ sops, lpjs, users, roles, lecturers, heroPhotos, adminId, allPermissions, rolePermissionMap }: GovernanceManagerProps) {
     const [activeTab, setActiveTab] = useState<'sop' | 'lpj' | 'users' | 'hero'>('sop');
 
 
@@ -148,7 +150,7 @@ export default function GovernanceManager({ sops, lpjs, users, roles, lecturers,
                                     </button>
                                 </div>
                                 <BulkEnrollment />
-                                <UserList users={users} roles={roles} lecturers={lecturers} />
+                                <UserList users={users} roles={roles} lecturers={lecturers} allPermissions={allPermissions} rolePermissionMap={rolePermissionMap} />
                             </>
                         ) : (
                             <UserForm

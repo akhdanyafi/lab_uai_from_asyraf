@@ -1,4 +1,4 @@
-import { getSession } from '@/lib/auth';
+import { getSession, hasPermission } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import Sidebar from '@/components/layout/Sidebar';
 
@@ -13,18 +13,30 @@ export default async function StudentLayout({
         redirect('/login');
     }
 
-    const menuItems = [
+    // Default student menus
+    const menuItems: any[] = [
         { name: 'Dashboard', href: '/student/dashboard', iconName: 'LayoutDashboard' },
         { name: 'Pinjam Alat', href: '/student/items', iconName: 'Box' },
         { name: 'Peminjaman Saya', href: '/student/loans', iconName: 'ClipboardList' },
         { name: 'Booking Ruangan', href: '/student/rooms', iconName: 'CalendarDays' },
-        { name: 'Modul Praktikum', href: '/student/practicum', iconName: 'BookOpen' },
+        {
+            name: 'Akademik', href: '#', iconName: 'GraduationCap',
+            children: [
+                { name: 'Mata Kuliah', href: '/student/courses', iconName: 'GraduationCap' },
+                { name: 'Modul Praktikum', href: '/student/practicum', iconName: 'BookOpen' },
+                { name: 'Jadwal Praktikum', href: '/student/scheduled-practicum', iconName: 'Calendar' },
+            ]
+        },
         { name: 'Publikasi', href: '/student/publications', iconName: 'FileText' },
     ];
 
+    // Add extra menu items if student has custom permissions
+    if (hasPermission(session, 'publications.manage')) {
+        menuItems.push({ name: 'Kelola Publikasi', href: '/lecturer/publications', iconName: 'BookOpen' });
+    }
+
     return (
         <div className="flex min-h-screen bg-gray-50">
-            {/* Sidebar */}
             <Sidebar
                 subtitle="Student Portal"
                 menuItems={menuItems}
@@ -35,8 +47,6 @@ export default async function StudentLayout({
                     initial: session.user.fullName.charAt(0)
                 }}
             />
-
-            {/* Main Content - responsive margin */}
             <main className="flex-1 lg:ml-64 pt-20 lg:pt-0 p-4 lg:p-8">
                 {children}
             </main>

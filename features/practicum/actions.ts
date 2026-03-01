@@ -2,6 +2,7 @@
 
 import { PracticumService } from './service';
 import { revalidatePath } from 'next/cache';
+import { requirePermission } from '@/lib/auth';
 import type { CreateModuleInput, UpdateModuleInput } from './types';
 
 /**
@@ -36,6 +37,7 @@ export async function getModulesByCourse(courseId: number) {
  * Create new module
  */
 export async function createModule(data: CreateModuleInput) {
+    await requirePermission('practicum.manage');
     await PracticumService.create(data);
     revalidatePath('/admin/practicum');
     revalidatePath('/lecturer/practicum');
@@ -46,6 +48,7 @@ export async function createModule(data: CreateModuleInput) {
  * Update module
  */
 export async function updateModule(id: number, data: UpdateModuleInput) {
+    await requirePermission('practicum.manage');
     await PracticumService.update(id, data);
     revalidatePath('/admin/practicum');
     revalidatePath('/lecturer/practicum');
@@ -56,6 +59,7 @@ export async function updateModule(id: number, data: UpdateModuleInput) {
  * Delete module
  */
 export async function deleteModule(id: number) {
+    await requirePermission('practicum.manage');
     await PracticumService.delete(id);
     revalidatePath('/admin/practicum');
     revalidatePath('/lecturer/practicum');

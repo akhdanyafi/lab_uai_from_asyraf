@@ -46,6 +46,7 @@ interface RoomBookingClientProps {
     calendarBookings: Booking[];
     practicumSchedules?: PracticumSchedule[];
     userId: number;
+    userRole?: string;
 }
 
 // Organization options
@@ -67,7 +68,7 @@ const PURPOSE_TEMPLATES = [
     'Lainnya',
 ];
 
-export default function RoomBookingClient({ rooms, calendarBookings, practicumSchedules = [], userId }: RoomBookingClientProps) {
+export default function RoomBookingClient({ rooms, calendarBookings, practicumSchedules = [], userId, userRole }: RoomBookingClientProps) {
     const [selectedDate, setSelectedDate] = useState<string>('');
     const [selectedRoomId, setSelectedRoomId] = useState<string>('');
     const [startTime, setStartTime] = useState('');
@@ -326,21 +327,23 @@ export default function RoomBookingClient({ rooms, calendarBookings, practicumSc
                                     </div>
                                 </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-                                        <GraduationCap className="w-4 h-4" /> Dosen Pembimbing
-                                    </label>
-                                    <select
-                                        value={dosenPembimbing}
-                                        onChange={(e) => setDosenPembimbing(e.target.value)}
-                                        className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20"
-                                    >
-                                        <option value="">Dosen Pembimbing Saya</option>
-                                        {lecturers.map(lecturer => (
-                                            <option key={lecturer.id} value={lecturer.fullName}>{lecturer.fullName}</option>
-                                        ))}
-                                    </select>
-                                </div>
+                                {userRole !== 'Dosen' && (
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                                            <GraduationCap className="w-4 h-4" /> Dosen Pembimbing
+                                        </label>
+                                        <select
+                                            value={dosenPembimbing}
+                                            onChange={(e) => setDosenPembimbing(e.target.value)}
+                                            className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                        >
+                                            <option value="">Dosen Pembimbing Saya</option>
+                                            {lecturers.map(lecturer => (
+                                                <option key={lecturer.id} value={lecturer.fullName}>{lecturer.fullName}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
                             </div>
                         </div>
 

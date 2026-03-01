@@ -10,7 +10,7 @@ export default async function DashboardPage() {
         redirect('/admin/dashboard');
     } else if (session.user.role === 'Mahasiswa') {
         redirect('/student/dashboard');
-    } else if (['Dosen', 'Kaprodi', 'Kepala Laboratorium'].includes(session.user.role)) {
+    } else if (session.user.role === 'Dosen') {
         redirect('/lecturer/dashboard');
     }
 

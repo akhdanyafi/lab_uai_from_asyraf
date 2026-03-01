@@ -2,7 +2,7 @@
 
 import { ScheduledPracticumService } from './service';
 import { revalidatePath } from 'next/cache';
-import { requireLabStaff, getSession } from '@/lib/auth';
+import { requirePermission, getSession } from '@/lib/auth';
 import { createScheduledPracticumSchema, updateScheduledPracticumSchema } from './validator';
 import type { CreateScheduledPracticumInput, UpdateScheduledPracticumInput } from './types';
 
@@ -38,7 +38,7 @@ export async function getScheduledPracticumSemesters() {
  * Create new scheduled practicum (Admin / Kepala Lab only)
  */
 export async function createScheduledPracticum(data: CreateScheduledPracticumInput) {
-    const session = await requireLabStaff();
+    const session = await requirePermission('practicum.manage');
     const validated = createScheduledPracticumSchema.parse(data);
 
     await ScheduledPracticumService.create(validated as CreateScheduledPracticumInput, session.user.id);
@@ -51,7 +51,7 @@ export async function createScheduledPracticum(data: CreateScheduledPracticumInp
  * Update scheduled practicum (Admin / Kepala Lab only)
  */
 export async function updateScheduledPracticum(id: number, data: UpdateScheduledPracticumInput) {
-    await requireLabStaff();
+    await requirePermission('practicum.manage');
     const validated = updateScheduledPracticumSchema.parse(data);
 
     await ScheduledPracticumService.update(id, validated as UpdateScheduledPracticumInput);
@@ -64,7 +64,7 @@ export async function updateScheduledPracticum(id: number, data: UpdateScheduled
  * Delete scheduled practicum (Admin / Kepala Lab only)
  */
 export async function deleteScheduledPracticum(id: number) {
-    await requireLabStaff();
+    await requirePermission('practicum.manage');
     await ScheduledPracticumService.delete(id);
     revalidatePath('/admin/scheduled-practicum');
     revalidatePath('/lecturer/scheduled-practicum');

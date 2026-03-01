@@ -26,39 +26,32 @@ export async function getSession() {
     return await decrypt(session);
 }
 
-export async function requireAdmin() {
+/**
+ * Require a specific permission. Throws if user doesn't have it.
+ */
+export async function requirePermission(permission: string) {
     const session = await getSession();
-    if (!session || session.user.role !== 'Admin') {
-        throw new Error('Unauthorized: Admin access required');
+    if (!session) {
+        throw new Error('Unauthorized: Not logged in');
     }
-    return session;
-}
-
-export async function requireKepalaLab() {
-    const session = await getSession();
-    if (!session || session.user.role !== 'Kepala Laboratorium') {
-        throw new Error('Unauthorized: Kepala Laboratorium access required');
-    }
-    return session;
-}
-
-export async function requireKaprodi() {
-    const session = await getSession();
-    if (!session || session.user.role !== 'Kaprodi') {
-        throw new Error('Unauthorized: Kaprodi access required');
+    if (!hasPermission(session, permission)) {
+        throw new Error(`Unauthorized: Permission '${permission}' required`);
     }
     return session;
 }
 
 /**
- * Requires Admin or Kepala Laboratorium role
+ * Check if session has a specific permission (non-throwing).
  */
-export async function requireLabStaff() {
-    const session = await getSession();
-    if (!session || !['Admin', 'Kepala Laboratorium'].includes(session.user.role)) {
-        throw new Error('Unauthorized: Admin or Kepala Laboratorium access required');
-    }
-    return session;
+export function hasPermission(session: any, permission: string): boolean {
+    return session?.user?.permissions?.includes(permission) ?? false;
+}
+
+/**
+ * Check if session has ANY of the specified permissions.
+ */
+export function hasAnyPermission(session: any, permissions: string[]): boolean {
+    return permissions.some(p => hasPermission(session, p));
 }
 
 export async function updateSession(request: NextRequest) {

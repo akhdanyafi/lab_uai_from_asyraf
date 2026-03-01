@@ -7,6 +7,7 @@ import { revalidatePath } from 'next/cache';
 import { writeFile } from 'fs/promises';
 import { join } from 'path';
 import { mkdir } from 'fs/promises';
+import { requirePermission } from '@/lib/auth';
 
 export async function getGovernanceDocs(type: string) {
     const docs = await db
@@ -28,6 +29,7 @@ export async function getGovernanceDocs(type: string) {
 }
 
 export async function uploadGovernanceDoc(formData: FormData) {
+    await requirePermission('governance.manage');
     const file = formData.get('file') as File;
     const coverFile = formData.get('cover') as File | null;
     const title = formData.get('title') as string;
@@ -74,6 +76,7 @@ export async function uploadGovernanceDoc(formData: FormData) {
 }
 
 export async function updateGovernanceDoc(id: number, formData: FormData) {
+    await requirePermission('governance.manage');
     const file = formData.get('file') as File | null;
     const coverFile = formData.get('cover') as File | null;
     const title = formData.get('title') as string;
@@ -115,6 +118,7 @@ export async function updateGovernanceDoc(id: number, formData: FormData) {
 }
 
 export async function deleteGovernanceDoc(id: number) {
+    await requirePermission('governance.manage');
     await db.delete(governanceDocs).where(eq(governanceDocs.id, id));
     revalidatePath('/admin/governance');
 }

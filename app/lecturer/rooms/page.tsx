@@ -58,6 +58,7 @@ export default async function LecturerRoomsPage() {
                 calendarBookings={calendarBookings}
                 practicumSchedules={practicumSchedules}
                 userId={session.user.id}
+                userRole={session.user.role}
             />
 
             {/* My Bookings */}

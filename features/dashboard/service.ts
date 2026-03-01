@@ -240,9 +240,9 @@ export class DashboardService {
 
     /**
      * Get lecturer dashboard data
-     * Kaprodi & Kepala Lab also see latest LPJ documents
+     * Users with governance.view permission also see latest LPJ documents
      */
-    static async getLecturerDashboard(userId: number, role?: string) {
+    static async getLecturerDashboard(userId: number, showLPJ: boolean = false) {
         const today = new Date();
 
         const upcomingBookingsRaw = await db
@@ -264,9 +264,9 @@ export class DashboardService {
             room: row.room!,
         }));
 
-        // Fetch LPJ documents for Kaprodi and Kepala Laboratorium
+        // Fetch LPJ documents if user has governance.view permission
         let latestLPJ: { id: number; title: string; filePath: string; coverPath: string | null; createdAt: Date | null; uploaderName: string | null }[] = [];
-        if (role === 'Kaprodi' || role === 'Kepala Laboratorium') {
+        if (showLPJ) {
             latestLPJ = await db
                 .select({
                     id: governanceDocs.id,
