@@ -7,10 +7,10 @@ import { createScheduledPracticumSchema, updateScheduledPracticumSchema } from '
 import type { CreateScheduledPracticumInput, UpdateScheduledPracticumInput } from './types';
 
 /**
- * Get all scheduled practicums (optionally filtered by semester)
+ * Get all scheduled practicums
  */
-export async function getScheduledPracticums(semester?: string) {
-    return ScheduledPracticumService.getAll(semester);
+export async function getScheduledPracticums() {
+    return ScheduledPracticumService.getAll();
 }
 
 /**
@@ -23,19 +23,12 @@ export async function getScheduledPracticumById(id: number) {
 /**
  * Get scheduled practicums by room
  */
-export async function getScheduledPracticumsByRoom(roomId: number, semester?: string) {
-    return ScheduledPracticumService.getByRoom(roomId, semester);
+export async function getScheduledPracticumsByRoom(roomId: number) {
+    return ScheduledPracticumService.getByRoom(roomId);
 }
 
 /**
- * Get all semesters
- */
-export async function getScheduledPracticumSemesters() {
-    return ScheduledPracticumService.getAllSemesters();
-}
-
-/**
- * Create new scheduled practicum (Admin / Kepala Lab only)
+ * Create new scheduled practicum
  */
 export async function createScheduledPracticum(data: CreateScheduledPracticumInput) {
     const session = await requirePermission('practicum.manage');
@@ -44,11 +37,12 @@ export async function createScheduledPracticum(data: CreateScheduledPracticumInp
     await ScheduledPracticumService.create(validated as CreateScheduledPracticumInput, session.user.id);
     revalidatePath('/admin/scheduled-practicum');
     revalidatePath('/lecturer/scheduled-practicum');
+    revalidatePath('/student/scheduled-practicum');
     revalidatePath('/student/rooms');
 }
 
 /**
- * Update scheduled practicum (Admin / Kepala Lab only)
+ * Update scheduled practicum
  */
 export async function updateScheduledPracticum(id: number, data: UpdateScheduledPracticumInput) {
     await requirePermission('practicum.manage');
@@ -57,16 +51,18 @@ export async function updateScheduledPracticum(id: number, data: UpdateScheduled
     await ScheduledPracticumService.update(id, validated as UpdateScheduledPracticumInput);
     revalidatePath('/admin/scheduled-practicum');
     revalidatePath('/lecturer/scheduled-practicum');
+    revalidatePath('/student/scheduled-practicum');
     revalidatePath('/student/rooms');
 }
 
 /**
- * Delete scheduled practicum (Admin / Kepala Lab only)
+ * Delete scheduled practicum
  */
 export async function deleteScheduledPracticum(id: number) {
     await requirePermission('practicum.manage');
     await ScheduledPracticumService.delete(id);
     revalidatePath('/admin/scheduled-practicum');
     revalidatePath('/lecturer/scheduled-practicum');
+    revalidatePath('/student/scheduled-practicum');
     revalidatePath('/student/rooms');
 }

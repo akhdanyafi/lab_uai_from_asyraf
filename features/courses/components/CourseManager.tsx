@@ -39,7 +39,7 @@ export default function CourseManager({ courses, lecturers }: CourseManagerProps
         const name = formData.get('name') as string;
         const description = formData.get('description') as string;
         const sks = parseInt(formData.get('sks') as string) || 3;
-        const semester = formData.get('semester') as string;
+        const semester = formData.get('semester') as 'Ganjil' | 'Genap' | '';
         const lecturerId = formData.get('lecturerId') as string;
 
         startTransition(async () => {
@@ -158,12 +158,15 @@ export default function CourseManager({ courses, lecturers }: CourseManagerProps
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Semester</label>
-                                <input
+                                <select
                                     name="semester"
                                     defaultValue={editingCourse?.semester || ''}
                                     className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#0F4C81]/20"
-                                    placeholder="Ganjil 2024/2025"
-                                />
+                                >
+                                    <option value="">-- Pilih Semester --</option>
+                                    <option value="Ganjil">Ganjil</option>
+                                    <option value="Genap">Genap</option>
+                                </select>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Dosen Pengajar</label>

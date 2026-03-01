@@ -9,24 +9,26 @@ import { rooms } from '@/db/schema';
 import { eq, and, desc, gte, lte } from 'drizzle-orm';
 import type { CreateScheduledPracticumInput, UpdateScheduledPracticumInput } from './types';
 
+/**
+ * Convert JS Date.getDay() (0=Sunday) to our dayOfWeek (0=Senin...6=Minggu)
+ */
+function dateToDayOfWeek(date: Date): number {
+    const jsDay = date.getDay(); // 0=Sunday, 1=Monday, ...
+    return jsDay === 0 ? 6 : jsDay - 1; // 0=Senin, 1=Selasa, ..., 6=Minggu
+}
+
 export class ScheduledPracticumService {
     /**
      * Get all scheduled practicums with details
      */
-    static async getAll(semester?: string) {
-        const conditions = [];
-        if (semester) {
-            conditions.push(eq(scheduledPracticums.semester, semester));
-        }
-
-        const query = db
+    static async getAll() {
+        return await db
             .select({
                 id: scheduledPracticums.id,
                 courseId: scheduledPracticums.courseId,
                 roomId: scheduledPracticums.roomId,
                 moduleId: scheduledPracticums.moduleId,
                 createdBy: scheduledPracticums.createdBy,
-                semester: scheduledPracticums.semester,
                 dayOfWeek: scheduledPracticums.dayOfWeek,
                 startTime: scheduledPracticums.startTime,
                 endTime: scheduledPracticums.endTime,
@@ -45,12 +47,6 @@ export class ScheduledPracticumService {
             .leftJoin(practicumModules, eq(scheduledPracticums.moduleId, practicumModules.id))
             .leftJoin(users, eq(scheduledPracticums.createdBy, users.id))
             .orderBy(scheduledPracticums.scheduledDate, scheduledPracticums.dayOfWeek);
-
-        if (conditions.length > 0) {
-            return await (query as any).where(and(...conditions));
-        }
-
-        return await query;
     }
 
     /**
@@ -64,7 +60,6 @@ export class ScheduledPracticumService {
                 roomId: scheduledPracticums.roomId,
                 moduleId: scheduledPracticums.moduleId,
                 createdBy: scheduledPracticums.createdBy,
-                semester: scheduledPracticums.semester,
                 dayOfWeek: scheduledPracticums.dayOfWeek,
                 startTime: scheduledPracticums.startTime,
                 endTime: scheduledPracticums.endTime,
@@ -91,21 +86,11 @@ export class ScheduledPracticumService {
     /**
      * Get scheduled practicums by room (for checking booking conflicts)
      */
-    static async getByRoom(roomId: number, semester?: string) {
-        const conditions = [
-            eq(scheduledPracticums.roomId, roomId),
-            eq(scheduledPracticums.status, 'Aktif'),
-        ];
-
-        if (semester) {
-            conditions.push(eq(scheduledPracticums.semester, semester));
-        }
-
+    static async getByRoom(roomId: number) {
         return await db
             .select({
                 id: scheduledPracticums.id,
                 courseId: scheduledPracticums.courseId,
-                semester: scheduledPracticums.semester,
                 dayOfWeek: scheduledPracticums.dayOfWeek,
                 startTime: scheduledPracticums.startTime,
                 endTime: scheduledPracticums.endTime,
@@ -118,7 +103,10 @@ export class ScheduledPracticumService {
             .from(scheduledPracticums)
             .leftJoin(courses, eq(scheduledPracticums.courseId, courses.id))
             .leftJoin(practicumModules, eq(scheduledPracticums.moduleId, practicumModules.id))
-            .where(and(...conditions))
+            .where(and(
+                eq(scheduledPracticums.roomId, roomId),
+                eq(scheduledPracticums.status, 'Aktif'),
+            ))
             .orderBy(scheduledPracticums.scheduledDate, scheduledPracticums.dayOfWeek);
     }
 
@@ -127,20 +115,16 @@ export class ScheduledPracticumService {
      */
     static async hasConflict(
         roomId: number,
-        dayOfWeek: number,
+        scheduledDate: Date,
         startTime: string,
         endTime: string,
-        semester: string,
-        scheduledDate: Date,
         excludeId?: number
     ): Promise<boolean> {
-        // 1. Check conflict with other scheduled practicums
-        const conditions = [
-            eq(scheduledPracticums.roomId, roomId),
-            eq(scheduledPracticums.dayOfWeek, dayOfWeek),
-            eq(scheduledPracticums.semester, semester),
-            eq(scheduledPracticums.status, 'Aktif'),
-        ];
+        // 1. Check conflict with other scheduled practicums on the SAME DATE
+        const startOfDay = new Date(scheduledDate);
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date(scheduledDate);
+        endOfDay.setHours(23, 59, 59, 999);
 
         const schedules = await db
             .select({
@@ -149,7 +133,12 @@ export class ScheduledPracticumService {
                 endTime: scheduledPracticums.endTime,
             })
             .from(scheduledPracticums)
-            .where(and(...conditions));
+            .where(and(
+                eq(scheduledPracticums.roomId, roomId),
+                eq(scheduledPracticums.status, 'Aktif'),
+                gte(scheduledPracticums.scheduledDate, startOfDay),
+                lte(scheduledPracticums.scheduledDate, endOfDay),
+            ));
 
         const practicumConflict = schedules.some(s => {
             if (excludeId && s.id === excludeId) return false;
@@ -159,11 +148,6 @@ export class ScheduledPracticumService {
         if (practicumConflict) return true;
 
         // 2. Check conflict with approved room bookings on that date
-        const startOfDay = new Date(scheduledDate);
-        startOfDay.setHours(0, 0, 0, 0);
-        const endOfDay = new Date(scheduledDate);
-        endOfDay.setHours(23, 59, 59, 999);
-
         const approvedBookings = await db
             .select({
                 id: roomBookings.id,
@@ -189,16 +173,18 @@ export class ScheduledPracticumService {
 
     /**
      * Create a new scheduled practicum
+     * dayOfWeek is auto-computed from scheduledDate
      */
     static async create(data: CreateScheduledPracticumInput, createdBy: number) {
+        // Auto-compute dayOfWeek from scheduledDate
+        const dayOfWeek = dateToDayOfWeek(new Date(data.scheduledDate));
+
         // Check for conflicts first (practicums + approved bookings)
         const hasConflict = await this.hasConflict(
             data.roomId,
-            data.dayOfWeek,
+            data.scheduledDate,
             data.startTime,
             data.endTime,
-            data.semester,
-            data.scheduledDate
         );
 
         if (hasConflict) {
@@ -210,8 +196,7 @@ export class ScheduledPracticumService {
             roomId: data.roomId,
             moduleId: data.moduleId || null,
             createdBy,
-            semester: data.semester,
-            dayOfWeek: data.dayOfWeek,
+            dayOfWeek,
             startTime: data.startTime,
             endTime: data.endTime,
             scheduledDate: data.scheduledDate,
@@ -220,6 +205,7 @@ export class ScheduledPracticumService {
 
     /**
      * Update a scheduled practicum
+     * If scheduledDate changes, dayOfWeek is auto-recomputed
      */
     static async update(id: number, data: UpdateScheduledPracticumInput) {
         const updateData: Record<string, any> = {};
@@ -227,10 +213,13 @@ export class ScheduledPracticumService {
         if (data.courseId !== undefined) updateData.courseId = data.courseId;
         if (data.roomId !== undefined) updateData.roomId = data.roomId;
         if (data.moduleId !== undefined) updateData.moduleId = data.moduleId;
-        if (data.dayOfWeek !== undefined) updateData.dayOfWeek = data.dayOfWeek;
         if (data.startTime !== undefined) updateData.startTime = data.startTime;
         if (data.endTime !== undefined) updateData.endTime = data.endTime;
-        if (data.scheduledDate !== undefined) updateData.scheduledDate = data.scheduledDate;
+        if (data.scheduledDate !== undefined) {
+            updateData.scheduledDate = data.scheduledDate;
+            // Auto-recompute dayOfWeek when date changes
+            updateData.dayOfWeek = dateToDayOfWeek(new Date(data.scheduledDate));
+        }
         if (data.status !== undefined) updateData.status = data.status;
 
         await db.update(scheduledPracticums).set(updateData).where(eq(scheduledPracticums.id, id));
@@ -241,17 +230,5 @@ export class ScheduledPracticumService {
      */
     static async delete(id: number) {
         await db.delete(scheduledPracticums).where(eq(scheduledPracticums.id, id));
-    }
-
-    /**
-     * Get all unique semesters from scheduled practicums
-     */
-    static async getAllSemesters(): Promise<string[]> {
-        const results = await db
-            .select({ semester: scheduledPracticums.semester })
-            .from(scheduledPracticums)
-            .groupBy(scheduledPracticums.semester);
-
-        return results.map(r => r.semester).sort();
     }
 }

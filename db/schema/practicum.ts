@@ -1,4 +1,4 @@
-import { mysqlTable, int, varchar, text, datetime, mysqlEnum, index } from 'drizzle-orm/mysql-core';
+import { mysqlTable, int, varchar, text, datetime, mysqlEnum, index, date } from 'drizzle-orm/mysql-core';
 import { relations, sql } from 'drizzle-orm';
 import { users } from './users';
 import { rooms } from './bookings';
@@ -12,7 +12,7 @@ export const courses = mysqlTable('courses', {
     name: varchar('name', { length: 255 }).notNull(),             // e.g. "Basis Data"
     description: text('description'),
     sks: int('sks').default(3),
-    semester: varchar('semester', { length: 50 }),                 // e.g. "Ganjil 2024/2025"
+    semester: mysqlEnum('semester', ['Ganjil', 'Genap']),           // Ganjil or Genap
     lecturerId: int('lecturer_id').references(() => users.id, { onDelete: 'set null' }), // Dosen pengajar
     createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
 }, (table) => ({
@@ -62,8 +62,7 @@ export const scheduledPracticums = mysqlTable('scheduled_practicums', {
     roomId: int('room_id').notNull().references(() => rooms.id, { onDelete: 'cascade' }),
     moduleId: int('module_id').references(() => practicumModules.id, { onDelete: 'set null' }), // Modul praktikum
     createdBy: int('created_by').notNull().references(() => users.id, { onDelete: 'cascade' }),
-    semester: varchar('semester', { length: 50 }).notNull(),       // e.g. "Ganjil 2024/2025"
-    dayOfWeek: int('day_of_week').notNull(),                       // 0=Senin, 1=Selasa, ..., 6=Minggu
+    dayOfWeek: int('day_of_week').notNull(),                       // 0=Senin, 1=Selasa, ..., 6=Minggu (auto-computed from scheduledDate)
     startTime: varchar('start_time', { length: 5 }).notNull(),     // "08:00"
     endTime: varchar('end_time', { length: 5 }).notNull(),         // "10:00"
     scheduledDate: datetime('scheduled_date').notNull(),            // Tanggal praktikum
@@ -74,7 +73,6 @@ export const scheduledPracticums = mysqlTable('scheduled_practicums', {
     roomIdx: index('sp_room_idx').on(table.roomId),
     moduleIdx: index('sp_module_idx').on(table.moduleId),
     createdByIdx: index('sp_created_by_idx').on(table.createdBy),
-    semesterIdx: index('sp_semester_idx').on(table.semester),
 }));
 
 export const scheduledPracticumsRelations = relations(scheduledPracticums, ({ one }) => ({

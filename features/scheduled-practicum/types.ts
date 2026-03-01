@@ -8,8 +8,7 @@ export interface ScheduledPracticum {
     roomId: number;
     moduleId: number | null;
     createdBy: number;
-    semester: string;
-    dayOfWeek: number; // 0=Senin, 1=Selasa, ..., 6=Minggu
+    dayOfWeek: number; // 0=Senin, 1=Selasa, ..., 6=Minggu (auto-computed from scheduledDate)
     startTime: string; // "08:00"
     endTime: string;   // "10:00"
     scheduledDate: Date;
@@ -29,8 +28,6 @@ export interface CreateScheduledPracticumInput {
     courseId: number;
     roomId: number;
     moduleId?: number;
-    semester: string;
-    dayOfWeek: number;
     startTime: string;
     endTime: string;
     scheduledDate: Date;
@@ -40,7 +37,6 @@ export interface UpdateScheduledPracticumInput {
     courseId?: number;
     roomId?: number;
     moduleId?: number | null;
-    dayOfWeek?: number;
     startTime?: string;
     endTime?: string;
     scheduledDate?: Date;

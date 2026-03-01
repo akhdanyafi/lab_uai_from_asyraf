@@ -7,7 +7,6 @@ import type { ScheduledPracticumWithDetails } from '@/features/scheduled-practic
 import { DAY_NAMES } from '@/features/scheduled-practicum/types';
 import type { CourseWithLecturer } from '@/features/courses/types';
 import type { PracticumModuleWithCourse } from '@/features/practicum/types';
-
 interface Room {
     id: number;
     name: string;
@@ -66,7 +65,6 @@ export default function ScheduledPracticumManager({ schedules, courses, modules,
 
     const [showForm, setShowForm] = useState(false);
     const [editing, setEditing] = useState<ScheduledPracticumWithDetails | null>(null);
-    const [formDayOfWeek, setFormDayOfWeek] = useState<number | undefined>();
     const [formDate, setFormDate] = useState<string>('');
 
     const now = new Date();
@@ -74,25 +72,12 @@ export default function ScheduledPracticumManager({ schedules, courses, modules,
     const [month, setMonth] = useState(now.getMonth());
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
-    const [filterSemester, setFilterSemester] = useState('');
     const [selectedCourseId, setSelectedCourseId] = useState<string>('');
-
-    const semesters = useMemo(() => {
-        const s = new Set(schedules.map(s => s.semester));
-        return Array.from(s).sort();
-    }, [schedules]);
-
-    const filtered = useMemo(() => {
-        return schedules.filter(s => {
-            if (filterSemester && s.semester !== filterSemester) return false;
-            return true;
-        });
-    }, [schedules, filterSemester]);
 
     // Map: dateKey → schedules (by scheduledDate)
     const dateMap = useMemo(() => {
         const m = new Map<string, ScheduledPracticumWithDetails[]>();
-        for (const s of filtered) {
+        for (const s of schedules) {
             if (s.scheduledDate) {
                 const key = toDateKey(s.scheduledDate);
                 if (!m.has(key)) m.set(key, []);
@@ -100,7 +85,7 @@ export default function ScheduledPracticumManager({ schedules, courses, modules,
             }
         }
         return m;
-    }, [filtered]);
+    }, [schedules]);
 
     const getSchedulesForDate = useCallback(
         (date: Date) => dateMap.get(toDateKey(date)) || [],
@@ -123,8 +108,6 @@ export default function ScheduledPracticumManager({ schedules, courses, modules,
 
     const openFormForDate = () => {
         if (!selectedDate) return;
-        const dow = jsDayToOurDay(selectedDate.getDay());
-        setFormDayOfWeek(dow);
         setFormDate(formatDateStr(selectedDate));
         setEditing(null);
         setSelectedCourseId('');
@@ -138,8 +121,6 @@ export default function ScheduledPracticumManager({ schedules, courses, modules,
             courseId: parseInt(fd.get('courseId') as string),
             roomId: parseInt(fd.get('roomId') as string),
             moduleId: fd.get('moduleId') ? parseInt(fd.get('moduleId') as string) : undefined,
-            semester: fd.get('semester') as string,
-            dayOfWeek: parseInt(fd.get('dayOfWeek') as string),
             startTime: fd.get('startTime') as string,
             endTime: fd.get('endTime') as string,
             scheduledDate: new Date(fd.get('scheduledDate') as string),
@@ -153,7 +134,7 @@ export default function ScheduledPracticumManager({ schedules, courses, modules,
                     await createScheduledPracticum(data);
                     setMessage({ type: 'success', text: 'Jadwal berhasil ditambahkan!' });
                 }
-                setShowForm(false); setEditing(null); setFormDayOfWeek(undefined); setFormDate('');
+                setShowForm(false); setEditing(null); setFormDate('');
             } catch (err: any) {
                 setMessage({ type: 'error', text: err.message || 'Gagal menyimpan jadwal' });
             }
@@ -171,7 +152,6 @@ export default function ScheduledPracticumManager({ schedules, courses, modules,
     const handleEdit = (s: ScheduledPracticumWithDetails) => {
         setEditing(s);
         setSelectedCourseId(String(s.courseId));
-        setFormDayOfWeek(undefined);
         setFormDate('');
         setShowForm(true);
     };
@@ -189,14 +169,6 @@ export default function ScheduledPracticumManager({ schedules, courses, modules,
                     <h1 className="text-2xl font-bold text-gray-900">Kalender Praktikum</h1>
                     <p className="text-gray-500 text-sm mt-1">Klik tanggal untuk melihat atau menambahkan jadwal praktikum</p>
                 </div>
-                <select
-                    value={filterSemester}
-                    onChange={e => setFilterSemester(e.target.value)}
-                    className="px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-200"
-                >
-                    <option value="">Semua Semester</option>
-                    {semesters.map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
             </div>
 
             {/* Message */}
@@ -349,9 +321,6 @@ export default function ScheduledPracticumManager({ schedules, courses, modules,
                                                                 {s.roomName}
                                                             </span>
                                                         </div>
-                                                        <span className="inline-block mt-2 text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-600">
-                                                            {s.semester}
-                                                        </span>
                                                     </div>
                                                     <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                         <button onClick={() => handleEdit(s)} className="p-1 text-blue-500 hover:bg-blue-50 rounded" title="Edit">
@@ -407,7 +376,7 @@ export default function ScheduledPracticumManager({ schedules, courses, modules,
                                 </h3>
                                 {formDate && !editing && (
                                     <p className="text-sm text-green-700 mt-0.5">
-                                        {DAY_NAMES[formDayOfWeek ?? 0]}, {formDate}
+                                        {formDate}
                                     </p>
                                 )}
                             </div>
@@ -469,40 +438,15 @@ export default function ScheduledPracticumManager({ schedules, courses, modules,
                                 </select>
                             </div>
 
-                            {/* Semester + Tanggal */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Semester *</label>
-                                    <input
-                                        name="semester" required
-                                        defaultValue={editing?.semester || ''}
-                                        className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-200"
-                                        placeholder="Ganjil 2024/2025"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Tanggal *</label>
-                                    <input
-                                        name="scheduledDate" type="date" required
-                                        defaultValue={editing?.scheduledDate ? formatDateStr(new Date(editing.scheduledDate)) : formDate}
-                                        className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-200"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Hari */}
+                            {/* Tanggal */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Hari *</label>
-                                <select
-                                    name="dayOfWeek" required
-                                    defaultValue={editing?.dayOfWeek ?? formDayOfWeek ?? ''}
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Tanggal *</label>
+                                <input
+                                    name="scheduledDate" type="date" required
+                                    defaultValue={editing?.scheduledDate ? formatDateStr(new Date(editing.scheduledDate)) : formDate}
                                     className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-200"
-                                >
-                                    <option value="">-- Pilih Hari --</option>
-                                    {DAY_NAMES.map((day, i) => (
-                                        <option key={i} value={i}>{day}</option>
-                                    ))}
-                                </select>
+                                />
+                                <p className="text-xs text-gray-400 mt-1">Hari akan otomatis ditentukan dari tanggal yang dipilih</p>
                             </div>
 
                             {/* Waktu */}

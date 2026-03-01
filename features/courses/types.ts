@@ -8,7 +8,7 @@ export interface Course {
     name: string;
     description: string | null;
     sks: number | null;
-    semester: string | null;
+    semester: 'Ganjil' | 'Genap' | null;
     lecturerId: number | null;
     createdAt: Date | null;
 }
@@ -22,7 +22,7 @@ export interface CreateCourseInput {
     name: string;
     description?: string;
     sks?: number;
-    semester?: string;
+    semester?: 'Ganjil' | 'Genap';
     lecturerId?: number;
 }
 
@@ -31,6 +31,6 @@ export interface UpdateCourseInput {
     name?: string;
     description?: string;
     sks?: number;
-    semester?: string;
+    semester?: 'Ganjil' | 'Genap';
     lecturerId?: number | null;
 }
