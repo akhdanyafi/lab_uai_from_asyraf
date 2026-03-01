@@ -8,6 +8,8 @@ interface HeroPhoto {
     title: string;
     description: string | null;
     imageUrl: string;
+    focalX: number;
+    focalY: number;
     link: string | null;
 }
 
@@ -61,6 +63,7 @@ export default function HeroCarousel({ photos }: { photos: HeroPhoto[] }) {
                             src={photo.imageUrl}
                             alt={photo.title}
                             className="w-full h-full object-cover"
+                            style={{ objectPosition: `${photo.focalX || 50}% ${photo.focalY || 50}%` }}
                         />
 
                         {/* Content */}

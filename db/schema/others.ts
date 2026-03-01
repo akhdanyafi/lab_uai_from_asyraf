@@ -73,6 +73,8 @@ export const heroPhotos = mysqlTable('hero_photos', {
     title: varchar('title', { length: 255 }).notNull(),
     description: text('description'),
     imageUrl: text('image_url').notNull(),
+    focalX: int('focal_x').default(50).notNull(), // Percentage 0-100, default center
+    focalY: int('focal_y').default(50).notNull(), // Percentage 0-100, default center
     link: text('link'), // Optional link
     createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
 });

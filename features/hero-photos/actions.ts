@@ -14,6 +14,8 @@ export async function addHeroPhoto(formData: FormData) {
     const title = formData.get('title') as string;
     const description = formData.get('description') as string;
     const link = formData.get('link') as string;
+    const focalX = parseInt(formData.get('focalX') as string) || 50;
+    const focalY = parseInt(formData.get('focalY') as string) || 50;
     const file = formData.get('file') as File;
 
     if (!file || file.size === 0) {
@@ -26,6 +28,8 @@ export async function addHeroPhoto(formData: FormData) {
         title,
         description,
         imageUrl,
+        focalX,
+        focalY,
         link: link || null,
     });
 
@@ -38,6 +42,13 @@ export async function updateHeroPhoto(id: number, formData: FormData) {
     const title = formData.get('title') as string;
     const description = formData.get('description') as string;
     const link = formData.get('link') as string;
+
+    // Parse focal points - if empty, do not override
+    const focalXStr = formData.get('focalX');
+    const focalYStr = formData.get('focalY');
+    const focalX = focalXStr ? parseInt(focalXStr as string) : undefined;
+    const focalY = focalYStr ? parseInt(focalYStr as string) : undefined;
+
     const file = formData.get('file') as File;
 
     let imageUrl: string | undefined;
@@ -57,6 +68,8 @@ export async function updateHeroPhoto(id: number, formData: FormData) {
         title,
         description,
         imageUrl,
+        focalX,
+        focalY,
         link: link || null,
     });
 

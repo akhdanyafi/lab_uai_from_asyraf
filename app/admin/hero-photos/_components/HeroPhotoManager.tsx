@@ -9,8 +9,12 @@ interface HeroPhoto {
     title: string;
     description: string | null;
     imageUrl: string;
+    focalX: number;
+    focalY: number;
     link: string | null;
 }
+
+import HeroFocalPicker from './HeroFocalPicker';
 
 export default function HeroPhotoManager({ initialPhotos }: { initialPhotos: HeroPhoto[] }) {
     const [photos, setPhotos] = useState(initialPhotos);
@@ -20,28 +24,35 @@ export default function HeroPhotoManager({ initialPhotos }: { initialPhotos: Her
     const [formData, setFormData] = useState({
         title: '',
         description: '',
-        link: ''
+        link: '',
+        focalX: 50,
+        focalY: 50
     });
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string>('');
+    const [isFocalPickerOpen, setIsFocalPickerOpen] = useState(false);
 
     const handleEdit = (photo: HeroPhoto) => {
         setEditingPhoto(photo);
         setFormData({
             title: photo.title,
             description: photo.description || '',
-            link: photo.link || ''
+            link: photo.link || '',
+            focalX: photo.focalX || 50,
+            focalY: photo.focalY || 50
         });
         setPreviewUrl(photo.imageUrl);
         setSelectedFile(null);
+        setIsFocalPickerOpen(false);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const handleCancelEdit = () => {
         setEditingPhoto(null);
-        setFormData({ title: '', description: '', link: '' });
+        setFormData({ title: '', description: '', link: '', focalX: 50, focalY: 50 });
         setPreviewUrl('');
         setSelectedFile(null);
+        setIsFocalPickerOpen(false);
     };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -50,6 +61,7 @@ export default function HeroPhotoManager({ initialPhotos }: { initialPhotos: Her
             setSelectedFile(file);
             const url = URL.createObjectURL(file);
             setPreviewUrl(url);
+            setIsFocalPickerOpen(true); // Auto-open for new files
         }
     };
 
@@ -62,6 +74,8 @@ export default function HeroPhotoManager({ initialPhotos }: { initialPhotos: Her
             data.append('title', formData.title);
             data.append('description', formData.description);
             data.append('link', formData.link);
+            data.append('focalX', formData.focalX.toString());
+            data.append('focalY', formData.focalY.toString());
 
             if (selectedFile) {
                 data.append('file', selectedFile);
@@ -127,7 +141,7 @@ export default function HeroPhotoManager({ initialPhotos }: { initialPhotos: Her
                                 type="file"
                                 accept="image/*"
                                 onChange={handleFileChange}
-                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                                 required={!editingPhoto}
                             />
                             {previewUrl ? (
@@ -136,6 +150,7 @@ export default function HeroPhotoManager({ initialPhotos }: { initialPhotos: Her
                                         src={previewUrl}
                                         alt="Preview"
                                         className="w-full h-full object-cover rounded-lg"
+                                        style={{ objectPosition: `${formData.focalX}% ${formData.focalY}%` }}
                                     />
                                     <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 hover:opacity-100 transition-opacity rounded-lg text-white text-sm font-medium">
                                         Ganti Foto
@@ -150,6 +165,40 @@ export default function HeroPhotoManager({ initialPhotos }: { initialPhotos: Her
                             )}
                         </div>
                     </div>
+
+                    {/* Focal Picker Section */}
+                    {previewUrl && !isFocalPickerOpen && (
+                        <div className="md:col-span-2">
+                            <button
+                                type="button"
+                                onClick={() => setIsFocalPickerOpen(true)}
+                                className="flex items-center justify-center gap-2 w-full py-3 border-2 border-dashed border-primary/30 text-primary hover:bg-primary/5 rounded-lg font-medium transition-colors"
+                            >
+                                <span className="text-xl">⛶</span> Atur Area Fokus Gambar
+                            </button>
+                        </div>
+                    )}
+
+                    {previewUrl && isFocalPickerOpen && (
+                        <div className="md:col-span-2 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            <div className="flex justify-between items-center mb-3">
+                                <label className="block text-sm font-semibold text-gray-800">Menyesuaikan Titik Fokus</label>
+                                <button
+                                    type="button"
+                                    onClick={() => setIsFocalPickerOpen(false)}
+                                    className="text-xs bg-white border border-gray-300 px-3 py-1.5 rounded-md shadow-sm hover:bg-gray-100 font-medium"
+                                >
+                                    Selesai Atur Fokus
+                                </button>
+                            </div>
+                            <HeroFocalPicker
+                                imageUrl={previewUrl}
+                                initialFocalX={formData.focalX}
+                                initialFocalY={formData.focalY}
+                                onChange={(x, y) => setFormData(prev => ({ ...prev, focalX: x, focalY: y }))}
+                            />
+                        </div>
+                    )}
 
                     <div className="md:col-span-2">
                         <label className="block text-sm font-medium text-gray-700 mb-1">Link / URL (Opsional)</label>
@@ -205,6 +254,7 @@ export default function HeroPhotoManager({ initialPhotos }: { initialPhotos: Her
                                     src={photo.imageUrl}
                                     alt={photo.title}
                                     className="w-full h-full object-cover"
+                                    style={{ objectPosition: `${photo.focalX}% ${photo.focalY}%` }}
                                 />
                             ) : (
                                 <div className="flex items-center justify-center h-full text-gray-400">

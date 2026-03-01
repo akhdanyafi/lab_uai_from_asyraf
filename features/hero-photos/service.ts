@@ -11,6 +11,8 @@ export interface CreateHeroPhotoInput {
     title: string;
     description?: string;
     imageUrl: string;
+    focalX: number;
+    focalY: number;
     link?: string | null;
 }
 
@@ -18,6 +20,8 @@ export interface UpdateHeroPhotoInput {
     title: string;
     description?: string;
     imageUrl?: string;
+    focalX?: number;
+    focalY?: number;
     link?: string | null;
 }
 
@@ -46,6 +50,8 @@ export class HeroPhotoService {
             title: data.title,
             description: data.description,
             imageUrl: data.imageUrl,
+            focalX: data.focalX,
+            focalY: data.focalY,
             link: data.link || null,
         });
     }
@@ -59,6 +65,9 @@ export class HeroPhotoService {
             description: data.description,
             link: data.link || null,
         };
+
+        if (data.focalX !== undefined) updateData.focalX = data.focalX;
+        if (data.focalY !== undefined) updateData.focalY = data.focalY;
 
         if (data.imageUrl) {
             updateData.imageUrl = data.imageUrl;
