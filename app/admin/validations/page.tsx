@@ -143,7 +143,10 @@ export default async function AdminValidationsPage({
                                         </div>
                                     )}
                                     {loan.status === 'Disetujui' && (
-                                        <form action={adminDirectReturn.bind(null, loan.id, session!.user.id)}>
+                                        <form action={async () => {
+                                            'use server';
+                                            await adminDirectReturn(loan.id, session!.user.id);
+                                        }}>
                                             <button className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition-colors" title="Konfirmasi Pengembalian">
                                                 <CheckCircle className="w-4 h-4" />
                                                 Kembalikan
@@ -211,13 +214,19 @@ export default async function AdminValidationsPage({
                                     </td>
                                     <td className="px-6 py-4 text-right">
                                         <div className="flex gap-2 justify-end">
-                                            <form action={approveReturn.bind(null, loan.id, session!.user.id)}>
+                                            <form action={async () => {
+                                                'use server';
+                                                await approveReturn(loan.id, session!.user.id);
+                                            }}>
                                                 <button className="flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 transition-colors" title="Approve Return">
                                                     <CheckCircle className="w-4 h-4" />
                                                     Approve
                                                 </button>
                                             </form>
-                                            <form action={rejectReturn.bind(null, loan.id)}>
+                                            <form action={async () => {
+                                                'use server';
+                                                await rejectReturn(loan.id);
+                                            }}>
                                                 <button className="flex items-center gap-1 px-3 py-1.5 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 transition-colors" title="Reject Return">
                                                     <XCircle className="w-4 h-4" />
                                                     Reject

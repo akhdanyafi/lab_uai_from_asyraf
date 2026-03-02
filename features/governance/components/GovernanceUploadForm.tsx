@@ -24,13 +24,21 @@ export default function GovernanceUploadForm({ adminId, allowedTypes, initialDat
             <form action={async (formData) => {
                 setIsSubmitting(true);
                 try {
+                    let res;
                     if (isEdit) {
-                        await updateGovernanceDoc(initialData.id, formData);
-                        if (onCancel) onCancel();
+                        res = await updateGovernanceDoc(initialData.id, formData);
                     } else {
-                        await uploadGovernanceDoc(formData);
-                        const form = document.getElementById('gov-upload-form') as HTMLFormElement;
-                        form?.reset();
+                        res = await uploadGovernanceDoc(formData);
+                    }
+
+                    if (res?.error) {
+                        alert(res.error);
+                    } else {
+                        if (isEdit && onCancel) onCancel();
+                        if (!isEdit) {
+                            const form = document.getElementById('gov-upload-form') as HTMLFormElement;
+                            form?.reset();
+                        }
                     }
                 } catch (error) {
                     alert('Gagal menyimpan dokumen');

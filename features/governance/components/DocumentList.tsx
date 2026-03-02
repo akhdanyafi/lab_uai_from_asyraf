@@ -13,7 +13,7 @@ interface Document {
 
 interface DocumentListProps {
     documents: Document[];
-    onDelete: (id: number) => void;
+    onDelete: (id: number) => any;
     onEdit?: (doc: Document) => void;
 }
 
@@ -97,9 +97,14 @@ export default function DocumentList({ documents, onDelete, onEdit }: DocumentLi
                                         </button>
                                     )}
                                     <button
-                                        onClick={() => {
+                                        onClick={async () => {
                                             if (confirm('Hapus dokumen ini?')) {
-                                                onDelete(doc.id);
+                                                try {
+                                                    const res = await onDelete(doc.id);
+                                                    if (res?.error) alert(res.error);
+                                                } catch (err) {
+                                                    alert('Gagal menghapus dokumen');
+                                                }
                                             }
                                         }}
                                         className="text-red-500 hover:text-red-700 p-1.5 hover:bg-red-50 rounded-lg transition-colors"

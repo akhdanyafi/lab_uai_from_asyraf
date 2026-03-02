@@ -133,7 +133,7 @@ export class CourseService {
     /**
      * Get all unique semesters from courses
      */
-    static async getAllSemesters(): Promise<string[]> {
+    static async getAllSemesters(): Promise<("Ganjil" | "Genap")[]> {
         const results = await db
             .select({ semester: courses.semester })
             .from(courses)
@@ -141,7 +141,7 @@ export class CourseService {
 
         return results
             .map(r => r.semester)
-            .filter((s): s is string => s !== null)
+            .filter((s): s is "Ganjil" | "Genap" => s === "Ganjil" || s === "Genap")
             .sort();
     }
 }

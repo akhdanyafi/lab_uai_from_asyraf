@@ -169,16 +169,16 @@ export async function seedCourses() {
     const lecturers = allUsers.filter(u => u.roleId === dosenRole.id);
 
     const courseData = [
-        { code: 'IF101', name: 'Algoritma Pemrograman', description: 'Dasar-dasar algoritma dan pemrograman komputer.', sks: 3, semester: 'Ganjil 2024/2025', lecturerId: lecturers[0]?.id || null },
-        { code: 'IF102', name: 'Struktur Data', description: 'Konsep dan implementasi struktur data: array, linked list, tree, graph.', sks: 3, semester: 'Ganjil 2024/2025', lecturerId: lecturers[1]?.id || null },
-        { code: 'IF201', name: 'Basis Data', description: 'Perancangan dan implementasi basis data relasional.', sks: 3, semester: 'Ganjil 2024/2025', lecturerId: lecturers[2]?.id || null },
-        { code: 'IF202', name: 'Jaringan Komputer', description: 'Konsep jaringan komputer, protokol, dan implementasi.', sks: 3, semester: 'Ganjil 2024/2025', lecturerId: lecturers[0]?.id || null },
-        { code: 'IF301', name: 'Rekayasa Perangkat Lunak', description: 'Metodologi pengembangan perangkat lunak dan software engineering.', sks: 3, semester: 'Genap 2024/2025', lecturerId: lecturers[1]?.id || null },
-        { code: 'IF302', name: 'Kriptografi', description: 'Konsep dan implementasi algoritma kriptografi modern.', sks: 3, semester: 'Genap 2024/2025', lecturerId: lecturers[2]?.id || null },
-        { code: 'IF303', name: 'Keamanan Komputer', description: 'Prinsip keamanan komputer, ethical hacking, dan cyber security.', sks: 3, semester: 'Genap 2024/2025', lecturerId: lecturers[0]?.id || null },
-        { code: 'IF401', name: 'Komputasi Awan', description: 'Cloud computing: IaaS, PaaS, SaaS, dan deployment.', sks: 3, semester: 'Ganjil 2024/2025', lecturerId: lecturers[1]?.id || null },
-        { code: 'IF402', name: 'Web Dinamis', description: 'Pengembangan aplikasi web dinamis dengan framework modern.', sks: 3, semester: 'Genap 2024/2025', lecturerId: lecturers[2]?.id || null },
-        { code: 'IF403', name: 'Web Semantik', description: 'Konsep semantic web, ontologi, dan linked data.', sks: 3, semester: 'Genap 2024/2025', lecturerId: lecturers[0]?.id || null },
+        { code: 'IF101', name: 'Algoritma Pemrograman', description: 'Dasar-dasar algoritma dan pemrograman komputer.', sks: 3, semester: 'Ganjil' as const, lecturerId: lecturers[0]?.id || null },
+        { code: 'IF102', name: 'Struktur Data', description: 'Konsep dan implementasi struktur data: array, linked list, tree, graph.', sks: 3, semester: 'Ganjil' as const, lecturerId: lecturers[1]?.id || null },
+        { code: 'IF201', name: 'Basis Data', description: 'Perancangan dan implementasi basis data relasional.', sks: 3, semester: 'Ganjil' as const, lecturerId: lecturers[2]?.id || null },
+        { code: 'IF202', name: 'Jaringan Komputer', description: 'Konsep jaringan komputer, protokol, dan implementasi.', sks: 3, semester: 'Ganjil' as const, lecturerId: lecturers[0]?.id || null },
+        { code: 'IF301', name: 'Rekayasa Perangkat Lunak', description: 'Metodologi pengembangan perangkat lunak dan software engineering.', sks: 3, semester: 'Genap' as const, lecturerId: lecturers[1]?.id || null },
+        { code: 'IF302', name: 'Kriptografi', description: 'Konsep dan implementasi algoritma kriptografi modern.', sks: 3, semester: 'Genap' as const, lecturerId: lecturers[2]?.id || null },
+        { code: 'IF303', name: 'Keamanan Komputer', description: 'Prinsip keamanan komputer, ethical hacking, dan cyber security.', sks: 3, semester: 'Genap' as const, lecturerId: lecturers[0]?.id || null },
+        { code: 'IF401', name: 'Komputasi Awan', description: 'Cloud computing: IaaS, PaaS, SaaS, dan deployment.', sks: 3, semester: 'Ganjil' as const, lecturerId: lecturers[1]?.id || null },
+        { code: 'IF402', name: 'Web Dinamis', description: 'Pengembangan aplikasi web dinamis dengan framework modern.', sks: 3, semester: 'Genap' as const, lecturerId: lecturers[2]?.id || null },
+        { code: 'IF403', name: 'Web Semantik', description: 'Konsep semantic web, ontologi, dan linked data.', sks: 3, semester: 'Genap' as const, lecturerId: lecturers[0]?.id || null },
     ];
 
     await db.insert(courses).values(courseData);

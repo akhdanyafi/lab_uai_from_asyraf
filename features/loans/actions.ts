@@ -30,12 +30,16 @@ export async function createLoanRequest(data: {
     dosenPembimbing?: string;
     software?: string[];
 }) {
-    // Ideally check session.user.id === data.studentId
-    await LoanService.create(data);
-    revalidatePath('/student/loans');
-    revalidatePath('/student/items');
-    revalidatePath('/admin/loans');
-    revalidatePath('/admin/inventory');
+    try {
+        await LoanService.create(data);
+        revalidatePath('/student/loans');
+        revalidatePath('/student/items');
+        revalidatePath('/admin/loans');
+        revalidatePath('/admin/inventory');
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, error: error.message || 'Gagal membuat permintaan peminjaman' };
+    }
 }
 
 /**
@@ -54,21 +58,31 @@ export async function updateLoanStatus(
     status: 'Disetujui' | 'Ditolak',
     validatorId: number
 ) {
-    await requirePermission('loans.manage');
-    await LoanService.updateStatus(loanId, status, validatorId);
-    revalidatePath('/admin/loans');
-    revalidatePath('/student/loans');
-    revalidatePath('/admin/inventory');
+    try {
+        await requirePermission('loans.manage');
+        await LoanService.updateStatus(loanId, status, validatorId);
+        revalidatePath('/admin/loans');
+        revalidatePath('/student/loans');
+        revalidatePath('/admin/inventory');
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, error: error.message || 'Gagal mengubah status peminjaman' };
+    }
 }
 
 /**
  * Delete loan
  */
 export async function deleteLoan(id: number) {
-    await requirePermission('loans.manage');
-    await LoanService.delete(id);
-    revalidatePath('/admin/loans');
-    revalidatePath('/admin/inventory');
+    try {
+        await requirePermission('loans.manage');
+        await LoanService.delete(id);
+        revalidatePath('/admin/loans');
+        revalidatePath('/admin/inventory');
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, error: error.message || 'Gagal menghapus peminjaman' };
+    }
 }
 
 /**
@@ -84,49 +98,68 @@ export async function getMyLoans(userId: number) {
  * With photo: auto-approved, without photo: pending admin approval
  */
 export async function requestItemReturn(loanId: number, returnPhoto?: string) {
-    const result = await LoanService.requestReturn(loanId, returnPhoto);
-    revalidatePath('/student/loans');
-    revalidatePath('/student/items');
-    revalidatePath('/admin/loans');
-    revalidatePath('/admin/validations');
-    revalidatePath('/admin/dashboard');
-    return result;
+    try {
+        const result = await LoanService.requestReturn(loanId, returnPhoto);
+        revalidatePath('/student/loans');
+        revalidatePath('/student/items');
+        revalidatePath('/admin/loans');
+        revalidatePath('/admin/validations');
+        revalidatePath('/admin/dashboard');
+        return { success: true, ...result };
+    } catch (error: any) {
+        return { success: false, error: error.message || 'Gagal mengajukan pengembalian' };
+    }
 }
 
 /**
  * Approve pending return (by admin)
  */
 export async function approveReturn(loanId: number, validatorId: number) {
-    await requirePermission('loans.manage');
-    await LoanService.approveReturn(loanId, validatorId);
-    revalidatePath('/admin/loans');
-    revalidatePath('/admin/validations');
-    revalidatePath('/admin/inventory');
-    revalidatePath('/student/loans');
+    try {
+        await requirePermission('loans.manage');
+        await LoanService.approveReturn(loanId, validatorId);
+        revalidatePath('/admin/loans');
+        revalidatePath('/admin/validations');
+        revalidatePath('/admin/inventory');
+        revalidatePath('/student/loans');
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, error: error.message || 'Gagal menyetujui pengembalian' };
+    }
 }
 
 /**
  * Reject pending return (by admin)
  */
 export async function rejectReturn(loanId: number) {
-    await requirePermission('loans.manage');
-    await LoanService.rejectReturn(loanId);
-    revalidatePath('/admin/loans');
-    revalidatePath('/admin/validations');
-    revalidatePath('/student/loans');
+    try {
+        await requirePermission('loans.manage');
+        await LoanService.rejectReturn(loanId);
+        revalidatePath('/admin/loans');
+        revalidatePath('/admin/validations');
+        revalidatePath('/student/loans');
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, error: error.message || 'Gagal menolak pengembalian' };
+    }
 }
 
 /**
  * Admin directly returns an item (without requiring student to submit return first)
  */
 export async function adminDirectReturn(loanId: number, validatorId: number) {
-    await requirePermission('loans.manage');
-    await LoanService.adminDirectReturn(loanId, validatorId);
-    revalidatePath('/admin/loans');
-    revalidatePath('/admin/validations');
-    revalidatePath('/admin/inventory');
-    revalidatePath('/admin/pengembalian');
-    revalidatePath('/student/loans');
+    try {
+        await requirePermission('loans.manage');
+        await LoanService.adminDirectReturn(loanId, validatorId);
+        revalidatePath('/admin/loans');
+        revalidatePath('/admin/validations');
+        revalidatePath('/admin/inventory');
+        revalidatePath('/admin/pengembalian');
+        revalidatePath('/student/loans');
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, error: error.message || 'Gagal memproses pengembalian' };
+    }
 }
 
 /**
@@ -167,17 +200,22 @@ export async function requestItemLoan(data: {
     permitLetter?: string;
     permitVerified?: boolean;
 }) {
-    await LoanService.create({
-        itemId: data.itemId,
-        studentId: data.studentId,
-        purpose: data.purpose,
-        returnPlanDate: data.returnPlanDate,
-        suratIzin: data.permitLetter,
-        suratVerified: data.permitVerified,
-    });
-    revalidatePath('/student/loans');
-    revalidatePath('/admin/loans');
-    revalidatePath('/admin/inventory');
-    revalidatePath('/items');
+    try {
+        await LoanService.create({
+            itemId: data.itemId,
+            studentId: data.studentId,
+            purpose: data.purpose,
+            returnPlanDate: data.returnPlanDate,
+            suratIzin: data.permitLetter,
+            suratVerified: data.permitVerified,
+        });
+        revalidatePath('/student/loans');
+        revalidatePath('/admin/loans');
+        revalidatePath('/admin/inventory');
+        revalidatePath('/items');
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, error: error.message || 'Gagal mengajukan peminjaman' };
+    }
 }
 

@@ -31,38 +31,53 @@ export async function getScheduledPracticumsByRoom(roomId: number) {
  * Create new scheduled practicum
  */
 export async function createScheduledPracticum(data: CreateScheduledPracticumInput) {
-    const session = await requirePermission('practicum.manage');
-    const validated = createScheduledPracticumSchema.parse(data);
+    try {
+        const session = await requirePermission('practicum.manage');
+        const validated = createScheduledPracticumSchema.parse(data);
 
-    await ScheduledPracticumService.create(validated as CreateScheduledPracticumInput, session.user.id);
-    revalidatePath('/admin/scheduled-practicum');
-    revalidatePath('/lecturer/scheduled-practicum');
-    revalidatePath('/student/scheduled-practicum');
-    revalidatePath('/student/rooms');
+        await ScheduledPracticumService.create(validated as CreateScheduledPracticumInput, session.user.id);
+        revalidatePath('/admin/scheduled-practicum');
+        revalidatePath('/lecturer/scheduled-practicum');
+        revalidatePath('/student/scheduled-practicum');
+        revalidatePath('/student/rooms');
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, error: error.message || 'Gagal membuat jadwal praktikum' };
+    }
 }
 
 /**
  * Update scheduled practicum
  */
 export async function updateScheduledPracticum(id: number, data: UpdateScheduledPracticumInput) {
-    await requirePermission('practicum.manage');
-    const validated = updateScheduledPracticumSchema.parse(data);
+    try {
+        await requirePermission('practicum.manage');
+        const validated = updateScheduledPracticumSchema.parse(data);
 
-    await ScheduledPracticumService.update(id, validated as UpdateScheduledPracticumInput);
-    revalidatePath('/admin/scheduled-practicum');
-    revalidatePath('/lecturer/scheduled-practicum');
-    revalidatePath('/student/scheduled-practicum');
-    revalidatePath('/student/rooms');
+        await ScheduledPracticumService.update(id, validated as UpdateScheduledPracticumInput);
+        revalidatePath('/admin/scheduled-practicum');
+        revalidatePath('/lecturer/scheduled-practicum');
+        revalidatePath('/student/scheduled-practicum');
+        revalidatePath('/student/rooms');
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, error: error.message || 'Gagal memperbarui jadwal praktikum' };
+    }
 }
 
 /**
  * Delete scheduled practicum
  */
 export async function deleteScheduledPracticum(id: number) {
-    await requirePermission('practicum.manage');
-    await ScheduledPracticumService.delete(id);
-    revalidatePath('/admin/scheduled-practicum');
-    revalidatePath('/lecturer/scheduled-practicum');
-    revalidatePath('/student/scheduled-practicum');
-    revalidatePath('/student/rooms');
+    try {
+        await requirePermission('practicum.manage');
+        await ScheduledPracticumService.delete(id);
+        revalidatePath('/admin/scheduled-practicum');
+        revalidatePath('/lecturer/scheduled-practicum');
+        revalidatePath('/student/scheduled-practicum');
+        revalidatePath('/student/rooms');
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, error: error.message || 'Gagal menghapus jadwal praktikum' };
+    }
 }

@@ -17,6 +17,8 @@ interface HeroPhoto {
     description: string | null;
     imageUrl: string;
     link: string | null;
+    focalX: number;
+    focalY: number;
 }
 
 interface GovernanceManagerProps {

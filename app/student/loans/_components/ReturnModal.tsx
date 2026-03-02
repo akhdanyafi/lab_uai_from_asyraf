@@ -51,8 +51,12 @@ export default function ReturnModal({ loanId, itemName, onClose }: ReturnModalPr
                 }
             }
 
-            await requestItemReturn(loanId, photoPath);
-            onClose();
+            const res = await requestItemReturn(loanId, photoPath);
+            if (res?.error) {
+                alert(res.error);
+            } else {
+                onClose();
+            }
         });
     };
 

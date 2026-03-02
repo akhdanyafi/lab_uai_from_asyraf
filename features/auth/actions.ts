@@ -42,50 +42,56 @@ async function getEffectivePermissions(userId: number, roleId: number): Promise<
 }
 
 export async function login(formData: any) {
-    const { email, password } = formData;
+    try {
+        const { email, password } = formData;
 
-    // Find user
-    const user = await db.select().from(users).where(or(eq(users.email, email), eq(users.identifier, email))).limit(1);
+        // Find user
+        const user = await db.select().from(users).where(or(eq(users.email, email), eq(users.identifier, email))).limit(1);
 
-    if (user.length === 0) {
-        throw new Error('User not found');
+        if (user.length === 0) {
+            return { success: false, error: 'User tidak ditemukan' };
+        }
+
+        const foundUser = user[0];
+
+        // Verify password
+        if (!foundUser.passwordHash) {
+            return { success: false, error: 'User tidak memiliki password' };
+        }
+        const passwordMatch = await bcrypt.compare(password, foundUser.passwordHash);
+        if (!passwordMatch) {
+            return { success: false, error: 'Password salah' };
+        }
+
+        // Check status
+        if (foundUser.status === 'Pending') {
+            return { success: false, error: 'Akun Anda sedang menunggu persetujuan admin' };
+        }
+        if (foundUser.status === 'Rejected') {
+            return { success: false, error: 'Akun Anda ditolak oleh admin' };
+        }
+
+        // Get role name
+        const role = await db.select().from(roles).where(eq(roles.id, foundUser.roleId)).limit(1);
+        const roleName = role[0]?.name;
+
+        // Get effective permissions for this user
+        const effectivePermissions = await getEffectivePermissions(foundUser.id, foundUser.roleId);
+
+        // Create the session
+        const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+        const session = await encrypt({
+            user: { ...foundUser, role: roleName, permissions: effectivePermissions },
+            expires
+        });
+
+        // Save the session in a cookie
+        (await cookies()).set('session', session, { expires, httpOnly: true });
+
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, error: error.message || 'Login gagal, terjadi kesalahan sistem' };
     }
-
-    const foundUser = user[0];
-
-    // Verify password
-    if (!foundUser.passwordHash) {
-        throw new Error('User tidak memiliki password');
-    }
-    const passwordMatch = await bcrypt.compare(password, foundUser.passwordHash);
-    if (!passwordMatch) {
-        throw new Error('Password salah');
-    }
-
-    // Check status
-    if (foundUser.status === 'Pending') {
-        throw new Error('Akun Anda sedang menunggu persetujuan admin');
-    }
-    if (foundUser.status === 'Rejected') {
-        throw new Error('Akun Anda ditolak oleh admin');
-    }
-
-    // Get role name
-    const role = await db.select().from(roles).where(eq(roles.id, foundUser.roleId)).limit(1);
-    const roleName = role[0]?.name;
-
-    // Get effective permissions for this user
-    const effectivePermissions = await getEffectivePermissions(foundUser.id, foundUser.roleId);
-
-    // Create the session
-    const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-    const session = await encrypt({
-        user: { ...foundUser, role: roleName, permissions: effectivePermissions },
-        expires
-    });
-
-    // Save the session in a cookie
-    (await cookies()).set('session', session, { expires, httpOnly: true });
 }
 
 export async function logout() {

@@ -149,7 +149,7 @@ export default function ItemCard({ item, userId }: { item: any; userId: number }
                 ? new Date(`${loanDate}T${endTime}`)
                 : undefined;
 
-            await createLoanRequest({
+            const res = await createLoanRequest({
                 studentId: userId,
                 itemId: item.id,
                 returnPlanDate: new Date(returnDate),
@@ -162,6 +162,11 @@ export default function ItemCard({ item, userId }: { item: any; userId: number }
                 dosenPembimbing: dosenPembimbing || undefined,
                 software: isPCServerCategory && finalSoftware.length > 0 ? finalSoftware : undefined,
             });
+
+            if (res?.error) {
+                alert(res.error);
+                return;
+            }
 
             // Show success message
             const statusMessage = suratIzinPath && isVerified

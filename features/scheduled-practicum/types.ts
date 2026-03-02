@@ -12,16 +12,16 @@ export interface ScheduledPracticum {
     startTime: string; // "08:00"
     endTime: string;   // "10:00"
     scheduledDate: Date;
-    status: 'Aktif' | 'Dibatalkan';
+    status: 'Aktif' | 'Dibatalkan' | null;
     createdAt: Date | null;
 }
 
 export interface ScheduledPracticumWithDetails extends ScheduledPracticum {
-    courseName: string;
-    courseCode: string;
-    roomName: string;
+    courseName: string | null;
+    courseCode: string | null;
+    roomName: string | null;
     moduleName: string | null;
-    createdByName: string;
+    createdByName: string | null;
 }
 
 export interface CreateScheduledPracticumInput {

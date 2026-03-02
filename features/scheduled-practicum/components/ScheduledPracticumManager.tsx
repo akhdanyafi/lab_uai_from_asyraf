@@ -127,16 +127,18 @@ export default function ScheduledPracticumManager({ schedules, courses, modules,
         };
         startTransition(async () => {
             try {
-                if (editing) {
-                    await updateScheduledPracticum(editing.id, data);
-                    setMessage({ type: 'success', text: 'Jadwal berhasil diperbarui!' });
+                const res = editing
+                    ? await updateScheduledPracticum(editing.id, data)
+                    : await createScheduledPracticum(data);
+
+                if (res?.error) {
+                    setMessage({ type: 'error', text: res.error });
                 } else {
-                    await createScheduledPracticum(data);
-                    setMessage({ type: 'success', text: 'Jadwal berhasil ditambahkan!' });
+                    setMessage({ type: 'success', text: editing ? 'Jadwal berhasil diperbarui!' : 'Jadwal berhasil ditambahkan!' });
+                    setShowForm(false); setEditing(null); setFormDate('');
                 }
-                setShowForm(false); setEditing(null); setFormDate('');
             } catch (err: any) {
-                setMessage({ type: 'error', text: err.message || 'Gagal menyimpan jadwal' });
+                setMessage({ type: 'error', text: 'Gagal menyimpan jadwal' });
             }
         });
     };
@@ -144,8 +146,14 @@ export default function ScheduledPracticumManager({ schedules, courses, modules,
     const handleDelete = (id: number) => {
         if (!confirm('Hapus jadwal ini?')) return;
         startTransition(async () => {
-            try { await deleteScheduledPracticum(id); setMessage({ type: 'success', text: 'Jadwal dihapus!' }); }
-            catch { setMessage({ type: 'error', text: 'Gagal menghapus' }); }
+            try {
+                const res = await deleteScheduledPracticum(id);
+                if (res?.error) {
+                    setMessage({ type: 'error', text: res.error });
+                } else {
+                    setMessage({ type: 'success', text: 'Jadwal dihapus!' });
+                }
+            } catch { setMessage({ type: 'error', text: 'Gagal menghapus' }); }
         });
     };
 

@@ -26,11 +26,15 @@ function LoginForm() {
         setError('');
 
         try {
-            await login({ email, password });
-            // Redirect to callback URL if provided, otherwise to dashboard
-            router.push(callbackUrl || '/dashboard');
+            const res = await login({ email, password });
+            if (res?.error) {
+                setError(res.error);
+            } else {
+                // Redirect to callback URL if provided, otherwise to dashboard
+                router.push(callbackUrl || '/dashboard');
+            }
         } catch (err: any) {
-            setError(err.message || 'Login gagal. Periksa kembali kredensial Anda.');
+            setError('Login gagal. Periksa kembali kredensial Anda.');
         } finally {
             setLoading(false);
         }

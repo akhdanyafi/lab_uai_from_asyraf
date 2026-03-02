@@ -66,7 +66,7 @@ export default async function ItemLoanFormPage({ params }: Props) {
         }
 
         // Create loan request
-        await requestItemLoan({
+        const res = await requestItemLoan({
             itemId,
             studentId: sessionUserId,
             purpose,
@@ -74,6 +74,10 @@ export default async function ItemLoanFormPage({ params }: Props) {
             permitLetter: permitPath,
             permitVerified,
         });
+
+        if (res?.error) {
+            throw new Error(res.error);
+        }
 
         redirect('/student/loans');
     }
