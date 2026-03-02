@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Clock, Upload, Users, Building2, GraduationCap } from 'lucide-react';
 import CalendarView from '@/components/shared/CalendarView';
 import { createRoomBooking, getLecturers } from '@/features/bookings/actions';
+import TimeSelect from '@/components/shared/TimeSelect';
 
 interface Room {
     id: number;
@@ -306,22 +307,18 @@ export default function RoomBookingClient({ rooms, calendarBookings, practicumSc
                                             className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20"
                                         />
                                         <div className="flex gap-2 items-center">
-                                            <input
+                                            <TimeSelect
                                                 name="startTime"
-                                                type="time"
-                                                required
                                                 value={startTime}
-                                                onChange={(e) => setStartTime(e.target.value)}
-                                                className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20"
-                                            />
-                                            <span className="text-gray-400">-</span>
-                                            <input
-                                                name="endTime"
-                                                type="time"
+                                                onChange={setStartTime}
                                                 required
+                                            />
+                                            <span className="text-gray-400 font-medium">-</span>
+                                            <TimeSelect
+                                                name="endTime"
                                                 value={endTime}
-                                                onChange={(e) => setEndTime(e.target.value)}
-                                                className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                                onChange={setEndTime}
+                                                required
                                             />
                                         </div>
                                     </div>

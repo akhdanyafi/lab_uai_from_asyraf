@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Box, MapPin, Tag, Calendar, Clock, Building2, GraduationCap, Upload, Check } from 'lucide-react';
 import { createLoanRequest, getLecturersForLoan } from '@/features/loans/actions';
 import { useRouter } from 'next/navigation';
+import TimeSelect from '@/components/shared/TimeSelect';
 
 // Organization options
 const ORGANISASI_OPTIONS = [
@@ -45,7 +46,7 @@ interface Lecturer {
     fullName: string;
 }
 
-export default function ItemCard({ item, userId }: { item: any; userId: number }) {
+export default function ItemCard({ item, userId, variant = 'grid' }: { item: any; userId: number; variant?: 'grid' | 'list' }) {
     const [showModal, setShowModal] = useState(false);
     const [loading, setLoading] = useState(false);
     const router = useRouter();
@@ -212,39 +213,48 @@ export default function ItemCard({ item, userId }: { item: any; userId: number }
 
     return (
         <>
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
-                <div className="p-6">
-                    <div className="flex items-start gap-4 mb-4">
-                        <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                            <Box className="w-6 h-6 text-primary" />
+            {variant === 'list' ? (
+                <button
+                    onClick={() => setShowModal(true)}
+                    className="text-sm font-medium text-white bg-[#0F4C81] hover:bg-[#0F4C81]/90 px-3 py-1.5 rounded transition-colors whitespace-nowrap"
+                >
+                    Pinjam
+                </button>
+            ) : (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
+                    <div className="p-6">
+                        <div className="flex items-start gap-4 mb-4">
+                            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                <Box className="w-6 h-6 text-primary" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <h3 className="font-semibold text-gray-900 mb-1">{item.name}</h3>
+                                {item.description && (
+                                    <p className="text-sm text-gray-500 line-clamp-2">{item.description}</p>
+                                )}
+                            </div>
                         </div>
-                        <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-gray-900 mb-1">{item.name}</h3>
-                            {item.description && (
-                                <p className="text-sm text-gray-500 line-clamp-2">{item.description}</p>
-                            )}
-                        </div>
-                    </div>
 
-                    <div className="space-y-2 mb-4">
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                            <Tag className="w-4 h-4 text-gray-400" />
-                            <span>{item.category.name}</span>
+                        <div className="space-y-2 mb-4">
+                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                                <Tag className="w-4 h-4 text-gray-400" />
+                                <span>{item.category.name}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                                <MapPin className="w-4 h-4 text-gray-400" />
+                                <span>{item.room.name}</span>
+                            </div>
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                            <MapPin className="w-4 h-4 text-gray-400" />
-                            <span>{item.room.name}</span>
-                        </div>
-                    </div>
 
-                    <button
-                        onClick={() => setShowModal(true)}
-                        className="w-full bg-[#0F4C81] text-white py-2 rounded-lg text-sm font-medium hover:bg-[#0F4C81]/90 transition-colors"
-                    >
-                        Ajukan Peminjaman
-                    </button>
+                        <button
+                            onClick={() => setShowModal(true)}
+                            className="w-full bg-[#0F4C81] text-white py-2 rounded-lg text-sm font-medium hover:bg-[#0F4C81]/90 transition-colors"
+                        >
+                            Ajukan Peminjaman
+                        </button>
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* Enhanced Loan Request Modal */}
             {showModal && (
@@ -344,12 +354,10 @@ export default function ItemCard({ item, userId }: { item: any; userId: number }
                                     <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
                                         <Clock className="w-4 h-4" /> Waktu Mulai
                                     </label>
-                                    <input
-                                        type="time"
+                                    <TimeSelect
                                         value={startTime}
-                                        onChange={(e) => setStartTime(e.target.value)}
+                                        onChange={setStartTime}
                                         required
-                                        className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm"
                                     />
                                 </div>
 
@@ -358,12 +366,10 @@ export default function ItemCard({ item, userId }: { item: any; userId: number }
                                     <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
                                         <Clock className="w-4 h-4" /> Waktu Selesai
                                     </label>
-                                    <input
-                                        type="time"
+                                    <TimeSelect
                                         value={endTime}
-                                        onChange={(e) => setEndTime(e.target.value)}
+                                        onChange={setEndTime}
                                         required
-                                        className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm"
                                     />
                                 </div>
                             </div>

@@ -1,14 +1,19 @@
 import { getStudentDashboard } from '@/features/dashboard/actions';
+import { getScheduledPracticums } from '@/features/scheduled-practicum/actions';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { Package, Calendar, Clock, AlertCircle, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
+import StudentScheduleWidget from './_components/StudentScheduleWidget';
 
 export default async function StudentDashboard() {
     const session = await getSession();
     if (!session) redirect('/login');
 
-    const dashboard = await getStudentDashboard(session.user.id);
+    const [dashboard, schedules] = await Promise.all([
+        getStudentDashboard(session.user.id),
+        getScheduledPracticums()
+    ]);
 
     // Check for overdue items
     const today = new Date();
@@ -59,6 +64,10 @@ export default async function StudentDashboard() {
                     </div>
                     <p className="text-3xl font-bold text-orange-500">{dashboard.pendingRequests.length}</p>
                 </div>
+            </div>
+
+            <div className="mb-8">
+                <StudentScheduleWidget schedules={schedules} />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

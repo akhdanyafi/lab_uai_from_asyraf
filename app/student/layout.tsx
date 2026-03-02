@@ -16,15 +16,13 @@ export default async function StudentLayout({
     // Default student menus
     const menuItems: any[] = [
         { name: 'Dashboard', href: '/student/dashboard', iconName: 'LayoutDashboard' },
-        { name: 'Pinjam Alat', href: '/student/items', iconName: 'Box' },
-        { name: 'Peminjaman Saya', href: '/student/loans', iconName: 'ClipboardList' },
+        { name: 'Peminjaman Alat', href: '/student/items', iconName: 'Box' },
         { name: 'Booking Ruangan', href: '/student/rooms', iconName: 'CalendarDays' },
         {
             name: 'Akademik', href: '#', iconName: 'GraduationCap',
             children: [
                 { name: 'Mata Kuliah', href: '/student/courses', iconName: 'GraduationCap' },
                 { name: 'Modul Praktikum', href: '/student/practicum', iconName: 'BookOpen' },
-                { name: 'Jadwal Praktikum', href: '/student/scheduled-practicum', iconName: 'Calendar' },
             ]
         },
         { name: 'Publikasi', href: '/student/publications', iconName: 'FileText' },
