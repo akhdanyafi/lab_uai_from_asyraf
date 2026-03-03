@@ -4,7 +4,15 @@ import { useState } from 'react';
 import { UserCheck } from 'lucide-react';
 import AttendanceModal from './AttendanceModal';
 
-export default function AttendanceButton() {
+interface AttendanceButtonProps {
+    userData?: {
+        identifier: string;
+        role: string;
+        dosenPembimbing?: string;
+    };
+}
+
+export default function AttendanceButton({ userData }: AttendanceButtonProps = {}) {
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     return (
@@ -20,6 +28,7 @@ export default function AttendanceButton() {
             <AttendanceModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
+                userData={userData}
             />
         </>
     );

@@ -7,6 +7,8 @@ import DashboardAnalytics from './_components/DashboardAnalytics';
 import TodayAttendance from './_components/TodayAttendance';
 import RoomAttendanceChart from './_components/RoomAttendanceChart';
 import DashboardNotifications from './_components/DashboardNotifications';
+import AttendanceButton from '@/features/attendance/components/AttendanceButton';
+import { getSession } from '@/lib/auth';
 
 export default async function AdminDashboard() {
     const [stats, roomAttendanceStats, pendingUsers] = await Promise.all([
@@ -15,9 +17,16 @@ export default async function AdminDashboard() {
         UserService.getPending()
     ]);
 
+    const session = await getSession();
+
     return (
         <div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-6">Dashboard Overview</h1>
+            <div className="flex justify-between items-center mb-6">
+                <h1 className="text-2xl font-bold text-gray-900">Dashboard Overview</h1>
+                {session && (
+                    <AttendanceButton userData={{ identifier: session.user.identifier, role: session.user.role }} />
+                )}
+            </div>
 
             {/* Unified Notifications Section */}
             <DashboardNotifications

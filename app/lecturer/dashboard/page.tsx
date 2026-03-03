@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { Calendar, FileText, ArrowRight, Download, Package, Clock } from 'lucide-react';
 import Link from 'next/link';
 import StudentScheduleWidget from '@/app/student/dashboard/_components/StudentScheduleWidget';
+import AttendanceButton from '@/features/attendance/components/AttendanceButton';
 
 export default async function LecturerDashboard() {
     const session = await getSession();
@@ -18,9 +19,12 @@ export default async function LecturerDashboard() {
 
     return (
         <div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-6">
-                Dashboard Dosen
-            </h1>
+            <div className="flex justify-between items-center mb-6">
+                <h1 className="text-2xl font-bold text-gray-900">
+                    Dashboard Dosen
+                </h1>
+                <AttendanceButton userData={{ identifier: session.user.identifier, role: session.user.role }} />
+            </div>
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">

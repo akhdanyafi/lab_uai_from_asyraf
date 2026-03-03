@@ -10,6 +10,11 @@ import type { AttendanceRecord } from '../types';
 interface AttendanceModalProps {
     isOpen: boolean;
     onClose: () => void;
+    userData?: {
+        identifier: string;
+        role: string;
+        dosenPembimbing?: string;
+    };
 }
 
 interface Room {
@@ -25,12 +30,12 @@ interface Lecturer {
 
 type ModalState = 'form' | 'loading' | 'success' | 'error';
 
-export default function AttendanceModal({ isOpen, onClose }: AttendanceModalProps) {
-    const [nim, setNim] = useState('');
+export default function AttendanceModal({ isOpen, onClose, userData }: AttendanceModalProps) {
+    const [nim, setNim] = useState(userData?.identifier || '');
     const [roomId, setRoomId] = useState<number>(0);
     const [selectedPurpose, setSelectedPurpose] = useState('');
     const [customPurpose, setCustomPurpose] = useState('');
-    const [dosenPenanggungJawab, setDosenPenanggungJawab] = useState('');
+    const [dosenPenanggungJawab, setDosenPenanggungJawab] = useState(userData?.dosenPembimbing || '');
     const [rooms, setRooms] = useState<Room[]>([]);
     const [lecturers, setLecturers] = useState<Lecturer[]>([]);
     const [modalState, setModalState] = useState<ModalState>('form');
@@ -121,22 +126,24 @@ export default function AttendanceModal({ isOpen, onClose }: AttendanceModalProp
                 <div className="p-6">
                     {modalState === 'form' && (
                         <form onSubmit={handleSubmit} className="space-y-5">
-                            {/* NIM Input */}
-                            <div>
-                                <label htmlFor="nim" className="block text-sm font-medium text-gray-700 mb-2">
-                                    Nomor Induk Mahasiswa (NIM)
-                                </label>
-                                <input
-                                    id="nim"
-                                    type="text"
-                                    value={nim}
-                                    onChange={(e) => setNim(e.target.value)}
-                                    placeholder="Masukkan NIM Anda"
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0F4C81] focus:border-transparent transition-all text-lg"
-                                    required
-                                    autoFocus
-                                />
-                            </div>
+                            {/* NIM Input (Hidden if logged in user data is provided) */}
+                            {!userData && (
+                                <div>
+                                    <label htmlFor="nim" className="block text-sm font-medium text-gray-700 mb-2">
+                                        Nomor Induk Mahasiswa / Dosen
+                                    </label>
+                                    <input
+                                        id="nim"
+                                        type="text"
+                                        value={nim}
+                                        onChange={(e) => setNim(e.target.value)}
+                                        placeholder="Masukkan NIM atau ID Anda"
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0F4C81] focus:border-transparent transition-all text-lg"
+                                        required
+                                        autoFocus
+                                    />
+                                </div>
+                            )}
 
                             {/* Room Selection */}
                             <div>
@@ -200,27 +207,29 @@ export default function AttendanceModal({ isOpen, onClose }: AttendanceModalProp
                                 </div>
                             )}
 
-                            {/* Dosen Penanggung Jawab Selection (Optional) */}
-                            <div>
-                                <label htmlFor="dosenPenanggungJawab" className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                                    <GraduationCap className="w-4 h-4" />
-                                    Dosen Penanggung Jawab
-                                </label>
-                                <select
-                                    id="dosenPenanggungJawab"
-                                    value={dosenPenanggungJawab}
-                                    onChange={(e) => setDosenPenanggungJawab(e.target.value)}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0F4C81] focus:border-transparent transition-all text-gray-700 bg-white"
-                                >
-                                    <option value="">Dosen Pembimbing Saya</option>
-                                    {lecturers.map((lecturer) => (
-                                        <option key={lecturer.identifier} value={lecturer.fullName}>
-                                            {lecturer.fullName}
-                                        </option>
-                                    ))}
-                                </select>
-                                <p className="text-xs text-gray-500 mt-1">Kosongkan untuk menggunakan dosen pembimbing Anda</p>
-                            </div>
+                            {/* Dosen Penanggung Jawab Selection (Hidden for Lecturer role) */}
+                            {userData?.role !== 'Dosen' && (
+                                <div>
+                                    <label htmlFor="dosenPenanggungJawab" className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                                        <GraduationCap className="w-4 h-4" />
+                                        Dosen Penanggung Jawab
+                                    </label>
+                                    <select
+                                        id="dosenPenanggungJawab"
+                                        value={dosenPenanggungJawab}
+                                        onChange={(e) => setDosenPenanggungJawab(e.target.value)}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0F4C81] focus:border-transparent transition-all text-gray-700 bg-white"
+                                    >
+                                        <option value="">Dosen Pembimbing Saya / Tidak Memiliki</option>
+                                        {lecturers.map((lecturer) => (
+                                            <option key={lecturer.identifier} value={lecturer.fullName}>
+                                                {lecturer.fullName}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <p className="text-xs text-gray-500 mt-1">Kosongkan untuk menggunakan dosen pembimbing Anda</p>
+                                </div>
+                            )}
 
                             <button
                                 type="submit"

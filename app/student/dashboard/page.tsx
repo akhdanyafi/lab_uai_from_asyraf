@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { Package, Calendar, Clock, AlertCircle, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import StudentScheduleWidget from './_components/StudentScheduleWidget';
+import AttendanceButton from '@/features/attendance/components/AttendanceButton';
 
 export default async function StudentDashboard() {
     const session = await getSession();
@@ -23,7 +24,10 @@ export default async function StudentDashboard() {
 
     return (
         <div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-6">Dashboard Mahasiswa</h1>
+            <div className="flex justify-between items-center mb-6">
+                <h1 className="text-2xl font-bold text-gray-900">Dashboard Mahasiswa</h1>
+                <AttendanceButton userData={{ identifier: session.user.identifier, role: session.user.role }} />
+            </div>
 
             {/* Alert for overdue items */}
             {overdueLoans.length > 0 && (
