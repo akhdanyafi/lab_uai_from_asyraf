@@ -12,6 +12,8 @@ interface StudentItemsManagerProps {
     myLoans: any[];
     userId: string;
     initialTab?: 'items' | 'loans';
+    initialQrCode?: string;
+    initialAction?: string;
     role?: 'student' | 'lecturer';
 }
 
@@ -22,12 +24,14 @@ export default function StudentItemsManager({
     myLoans,
     userId,
     initialTab = 'items',
+    initialQrCode,
+    initialAction,
     role = 'student'
 }: StudentItemsManagerProps) {
     const [activeTab, setActiveTab] = useState<'items' | 'loans'>(initialTab);
 
     // Items list state
-    const [searchQuery, setSearchQuery] = useState('');
+    const [searchQuery, setSearchQuery] = useState(initialQrCode || '');
     const [selectedCategory, setSelectedCategory] = useState('');
     const [selectedRoom, setSelectedRoom] = useState('');
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -37,7 +41,7 @@ export default function StudentItemsManager({
         return items.filter(item => {
             if (searchQuery) {
                 const query = searchQuery.toLowerCase();
-                if (!item.name.toLowerCase().includes(query)) return false;
+                if (!item.name.toLowerCase().includes(query) && !item.qrCode?.toLowerCase().includes(query)) return false;
             }
             if (selectedCategory && item.categoryId !== parseInt(selectedCategory)) {
                 return false;
@@ -194,9 +198,13 @@ export default function StudentItemsManager({
                                                     </span>
                                                 </td>
                                                 <td className="px-4 py-4 text-center">
-                                                    {/* We use the same ItemCard logic, but wrap it minimally. Alternatively, we can render the ItemCard button but in List view style. */}
-                                                    {/* It's easier to just use ItemCard component and hide its card styling, but since it has a modal inside, we could just render a slim version. Let's just create a wrapper or use the ItemCard directly. Since ItemCard requires its own wrapper to look good in grid, we'll need to adapt it. Wait, the modal state is inside ItemCard. We can just render the ItemCard with a "variant" or extract the modal. For now, since ItemCard has all the complex loan request logic, let's just render the `Ajukan Peminjaman` button that opens a modal. Since we don't want to duplicate 400 lines of modal logic, let's keep the grid view rendering for now until we refactor ItemCard, OR we can conditionally pass `variant="list"` to ItemCard. Let's refactor ItemCard next. */}
-                                                    <ItemCard item={item} userId={userId} variant="list" role={role} />
+                                                    <ItemCard
+                                                        item={item}
+                                                        userId={userId}
+                                                        variant="list"
+                                                        role={role}
+                                                        initialOpen={initialQrCode === item.qrCode && initialAction === 'pinjam'}
+                                                    />
                                                 </td>
                                             </tr>
                                         ))}
@@ -206,7 +214,14 @@ export default function StudentItemsManager({
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {filteredItems.map(item => (
-                                    <ItemCard key={item.id} item={item} userId={userId} variant="grid" role={role} />
+                                    <ItemCard
+                                        key={item.id}
+                                        item={item}
+                                        userId={userId}
+                                        variant="grid"
+                                        role={role}
+                                        initialOpen={initialQrCode === item.qrCode && initialAction === 'pinjam'}
+                                    />
                                 ))}
                             </div>
                         )}

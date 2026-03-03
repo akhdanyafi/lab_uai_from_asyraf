@@ -4,12 +4,14 @@ import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import StudentItemsManager from './_components/StudentItemsManager';
 
-export default async function BrowseItemsPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+export default async function BrowseItemsPage({ searchParams }: { searchParams: Promise<{ tab?: string; qrCode?: string; action?: string }> }) {
     const session = await getSession();
     if (!session) redirect('/login');
 
     const params = await searchParams;
     const initialTab = params.tab === 'loans' ? 'loans' : 'items';
+    const qrCode = params.qrCode;
+    const action = params.action;
 
     const [items, categories, rooms, myLoans] = await Promise.all([
         getAvailableItems(), // Fetch all without categoryId, we do client filter
@@ -29,6 +31,8 @@ export default async function BrowseItemsPage({ searchParams }: { searchParams: 
                 myLoans={myLoans}
                 userId={session.user.identifier}
                 initialTab={initialTab}
+                initialQrCode={qrCode}
+                initialAction={action}
             />
         </div>
     );

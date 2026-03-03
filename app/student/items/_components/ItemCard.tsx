@@ -46,8 +46,8 @@ interface Lecturer {
     fullName: string;
 }
 
-export default function ItemCard({ item, userId, variant = 'grid', role = 'student' }: { item: any; userId: string; variant?: 'grid' | 'list', role?: 'student' | 'lecturer' }) {
-    const [showModal, setShowModal] = useState(false);
+export default function ItemCard({ item, userId, variant = 'grid', role = 'student', initialOpen = false }: { item: any; userId: string; variant?: 'grid' | 'list', role?: 'student' | 'lecturer', initialOpen?: boolean }) {
+    const [showModal, setShowModal] = useState(initialOpen);
     const [loading, setLoading] = useState(false);
     const router = useRouter();
 

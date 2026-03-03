@@ -4,12 +4,14 @@ import { getSession, hasPermission } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import StudentItemsManager from '@/app/student/items/_components/StudentItemsManager';
 
-export default async function LecturerItemsPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+export default async function LecturerItemsPage({ searchParams }: { searchParams: Promise<{ tab?: string; qrCode?: string; action?: string }> }) {
     const session = await getSession();
     if (!session || !hasPermission(session, 'dashboard.lecturer')) redirect('/login');
 
     const params = await searchParams;
     const initialTab = params.tab === 'loans' ? 'loans' : 'items';
+    const qrCode = params.qrCode;
+    const action = params.action;
 
     const [items, categories, rooms, myLoans] = await Promise.all([
         getAvailableItems(),
@@ -29,6 +31,8 @@ export default async function LecturerItemsPage({ searchParams }: { searchParams
                 myLoans={myLoans}
                 userId={session.user.identifier}
                 initialTab={initialTab}
+                initialQrCode={qrCode}
+                initialAction={action}
                 role="lecturer"
             />
         </div>
