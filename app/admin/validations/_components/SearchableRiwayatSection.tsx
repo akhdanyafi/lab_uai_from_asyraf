@@ -112,7 +112,7 @@ export default function SearchableRiwayatSection({ completedLoans, completedBook
                                 <th className="px-6 py-4 font-semibold text-gray-700">Alat</th>
                                 <th className="px-6 py-4 font-semibold text-gray-700">Tanggal</th>
                                 <th className="px-6 py-4 font-semibold text-gray-700">Status</th>
-                                <th className="px-6 py-4 font-semibold text-gray-700 text-right">Aksi</th>
+                                <th className="px-6 py-4 font-semibold text-gray-700 text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
@@ -141,7 +141,7 @@ export default function SearchableRiwayatSection({ completedLoans, completedBook
                                             Selesai
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4 text-right">
+                                    <td className="px-6 py-4 text-center">
                                         <button
                                             onClick={() => handleDeleteLoan(loan.id)}
                                             disabled={isPending}
@@ -176,7 +176,7 @@ export default function SearchableRiwayatSection({ completedLoans, completedBook
                                 <th className="px-6 py-4 font-semibold text-gray-700">Ruangan</th>
                                 <th className="px-6 py-4 font-semibold text-gray-700">Waktu</th>
                                 <th className="px-6 py-4 font-semibold text-gray-700">Status</th>
-                                <th className="px-6 py-4 font-semibold text-gray-700 text-right">Aksi</th>
+                                <th className="px-6 py-4 font-semibold text-gray-700 text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
@@ -202,7 +202,7 @@ export default function SearchableRiwayatSection({ completedLoans, completedBook
                                             Selesai
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4 text-right">
+                                    <td className="px-6 py-4 text-center">
                                         <button
                                             onClick={() => handleDeleteBooking(booking.id)}
                                             disabled={isPending}

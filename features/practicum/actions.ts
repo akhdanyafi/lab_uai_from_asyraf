@@ -15,7 +15,7 @@ export async function getModules() {
 /**
  * Get modules for courses taught by a specific lecturer
  */
-export async function getModulesByLecturerId(lecturerId: number) {
+export async function getModulesByLecturerId(lecturerId: string) {
     return PracticumService.getByLecturerId(lecturerId);
 }
 

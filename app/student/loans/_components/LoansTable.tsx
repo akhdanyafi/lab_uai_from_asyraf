@@ -56,7 +56,7 @@ export default function LoansTable({ loans }: LoansTableProps) {
                             <th className="px-6 py-4 font-semibold text-gray-700">Tanggal Pinjam</th>
                             <th className="px-6 py-4 font-semibold text-gray-700">Rencana Kembali</th>
                             <th className="px-6 py-4 font-semibold text-gray-700">Status</th>
-                            <th className="px-6 py-4 font-semibold text-gray-700 text-right">Aksi</th>
+                            <th className="px-6 py-4 font-semibold text-gray-700 text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
@@ -85,11 +85,11 @@ export default function LoansTable({ loans }: LoansTableProps) {
                                         {loan.status}
                                     </span>
                                 </td>
-                                <td className="px-6 py-4 text-right">
+                                <td className="px-6 py-4 text-center">
                                     {loan.status === 'Disetujui' && loan.returnStatus === 'Belum' && (
                                         <button
                                             onClick={() => setReturnModal({ loanId: loan.id, itemName: loan.item.name })}
-                                            className="text-green-600 hover:text-green-700 text-sm font-medium hover:bg-green-50 px-3 py-1 rounded transition-colors"
+                                            className="bg-[#0F4C81] text-white hover:bg-[#0F4C81]/90 text-sm font-medium px-3 py-1.5 rounded-lg transition-colors"
                                         >
                                             Kembalikan
                                         </button>

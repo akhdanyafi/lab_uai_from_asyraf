@@ -21,7 +21,7 @@ interface Booking {
 
 interface SearchableBookingsProps {
     bookings: Booking[];
-    sessionUserId: number;
+    sessionUserId: string;
 }
 
 export default function SearchableBookingsSection({ bookings, sessionUserId }: SearchableBookingsProps) {
@@ -110,7 +110,7 @@ export default function SearchableBookingsSection({ bookings, sessionUserId }: S
                             <th className="px-6 py-4 font-semibold text-gray-700">Tanggal & Waktu</th>
                             <th className="px-6 py-4 font-semibold text-gray-700">Keperluan</th>
                             <th className="px-6 py-4 font-semibold text-gray-700">Status</th>
-                            <th className="px-6 py-4 font-semibold text-gray-700 text-right">Aksi</th>
+                            <th className="px-6 py-4 font-semibold text-gray-700 text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
@@ -143,15 +143,15 @@ export default function SearchableBookingsSection({ bookings, sessionUserId }: S
                                 </td>
                                 <td className="px-6 py-4">
                                     <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${booking.status === 'Pending' ? 'bg-yellow-50 text-yellow-700' :
-                                            booking.status === 'Disetujui' ? 'bg-green-50 text-green-700' :
-                                                'bg-red-50 text-red-700'
+                                        booking.status === 'Disetujui' ? 'bg-green-50 text-green-700' :
+                                            'bg-red-50 text-red-700'
                                         }`}>
                                         {booking.status}
                                     </span>
                                 </td>
-                                <td className="px-6 py-4 text-right">
+                                <td className="px-6 py-4">
                                     {booking.status === 'Pending' && (
-                                        <div className="flex gap-2 justify-end">
+                                        <div className="flex gap-2 justify-center">
                                             <button
                                                 onClick={() => handleApprove(booking.id)}
                                                 disabled={isPending}

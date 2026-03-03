@@ -14,9 +14,9 @@ export const rooms = mysqlTable('rooms', {
 // Room Bookings
 export const roomBookings = mysqlTable('room_bookings', {
     id: int('id').autoincrement().primaryKey(),
-    userId: int('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    userId: varchar('user_id', { length: 50 }).notNull().references(() => users.identifier, { onDelete: 'cascade' }),
     roomId: int('room_id').notNull().references(() => rooms.id, { onDelete: 'cascade' }),
-    validatorId: int('validator_id').references(() => users.id, { onDelete: 'set null' }),
+    validatorId: varchar('validator_id', { length: 50 }).references(() => users.identifier, { onDelete: 'set null' }),
     startTime: datetime('start_time').notNull(),
     endTime: datetime('end_time').notNull(),
     purpose: text('purpose').notNull(),
@@ -36,7 +36,7 @@ export const roomBookings = mysqlTable('room_bookings', {
 export const roomBookingsRelations = relations(roomBookings, ({ one }) => ({
     user: one(users, {
         fields: [roomBookings.userId],
-        references: [users.id],
+        references: [users.identifier],
     }),
     room: one(rooms, {
         fields: [roomBookings.roomId],
@@ -44,6 +44,6 @@ export const roomBookingsRelations = relations(roomBookings, ({ one }) => ({
     }),
     validator: one(users, {
         fields: [roomBookings.validatorId],
-        references: [users.id],
+        references: [users.identifier],
     }),
 }));

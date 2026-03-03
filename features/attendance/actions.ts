@@ -20,7 +20,7 @@ export async function getLecturers() {
 
     const lecturers = await db
         .select({
-            id: users.id,
+            identifier: users.identifier,
             fullName: users.fullName,
         })
         .from(users)
@@ -83,10 +83,10 @@ export async function checkIn(
         }
 
         // Create attendance record
-        await createAttendance(user.id, roomId, purpose.trim(), finalDosenPenanggungJawab);
+        await createAttendance(user.identifier, roomId, purpose.trim(), finalDosenPenanggungJawab);
 
         // Get the latest attendance for this user with details
-        const attendance = await getLatestAttendanceForUser(user.id);
+        const attendance = await getLatestAttendanceForUser(user.identifier);
 
         return {
             success: true,
@@ -104,7 +104,7 @@ export async function checkIn(
 /**
  * Get the latest attendance record for a user with all details
  */
-async function getLatestAttendanceForUser(userId: number) {
+async function getLatestAttendanceForUser(userId: string) {
     const { db } = await import('@/db');
     const { labAttendance, users, rooms } = await import('@/db/schema');
     const { eq, desc } = await import('drizzle-orm');
@@ -117,9 +117,8 @@ async function getLatestAttendanceForUser(userId: number) {
         dosenPenanggungJawab: labAttendance.dosenPenanggungJawab,
         checkInTime: labAttendance.checkInTime,
         user: {
-            id: users.id,
-            fullName: users.fullName,
             identifier: users.identifier,
+            fullName: users.fullName,
         },
         room: {
             id: rooms.id,
@@ -128,7 +127,7 @@ async function getLatestAttendanceForUser(userId: number) {
         }
     })
         .from(labAttendance)
-        .innerJoin(users, eq(labAttendance.userId, users.id))
+        .innerJoin(users, eq(labAttendance.userId, users.identifier))
         .innerJoin(rooms, eq(labAttendance.roomId, rooms.id))
         .where(eq(labAttendance.userId, userId))
         .orderBy(desc(labAttendance.checkInTime))

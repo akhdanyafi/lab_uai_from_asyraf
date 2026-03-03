@@ -45,14 +45,14 @@ export class ScheduledPracticumService {
             .leftJoin(courses, eq(scheduledPracticums.courseId, courses.id))
             .leftJoin(rooms, eq(scheduledPracticums.roomId, rooms.id))
             .leftJoin(practicumModules, eq(scheduledPracticums.moduleId, practicumModules.id))
-            .leftJoin(users, eq(scheduledPracticums.createdBy, users.id))
+            .leftJoin(users, eq(scheduledPracticums.createdBy, users.identifier))
             .orderBy(scheduledPracticums.scheduledDate, scheduledPracticums.dayOfWeek);
     }
 
     /**
      * Get scheduled practicums for a specific lecturer's courses
      */
-    static async getByLecturerId(lecturerId: number) {
+    static async getByLecturerId(lecturerId: string) {
         return await db
             .select({
                 id: scheduledPracticums.id,
@@ -76,7 +76,7 @@ export class ScheduledPracticumService {
             .leftJoin(courses, eq(scheduledPracticums.courseId, courses.id))
             .leftJoin(rooms, eq(scheduledPracticums.roomId, rooms.id))
             .leftJoin(practicumModules, eq(scheduledPracticums.moduleId, practicumModules.id))
-            .leftJoin(users, eq(scheduledPracticums.createdBy, users.id))
+            .leftJoin(users, eq(scheduledPracticums.createdBy, users.identifier))
             .where(eq(courses.lecturerId, lecturerId))
             .orderBy(scheduledPracticums.scheduledDate, scheduledPracticums.dayOfWeek);
     }
@@ -108,7 +108,7 @@ export class ScheduledPracticumService {
             .leftJoin(courses, eq(scheduledPracticums.courseId, courses.id))
             .leftJoin(rooms, eq(scheduledPracticums.roomId, rooms.id))
             .leftJoin(practicumModules, eq(scheduledPracticums.moduleId, practicumModules.id))
-            .leftJoin(users, eq(scheduledPracticums.createdBy, users.id))
+            .leftJoin(users, eq(scheduledPracticums.createdBy, users.identifier))
             .where(eq(scheduledPracticums.id, id))
             .limit(1);
 
@@ -207,7 +207,7 @@ export class ScheduledPracticumService {
      * Create a new scheduled practicum
      * dayOfWeek is auto-computed from scheduledDate
      */
-    static async create(data: CreateScheduledPracticumInput, createdBy: number) {
+    static async create(data: CreateScheduledPracticumInput, createdBy: string) {
         // Auto-compute dayOfWeek from scheduledDate
         const dayOfWeek = dateToDayOfWeek(new Date(data.scheduledDate));
 

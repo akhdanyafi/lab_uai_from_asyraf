@@ -8,7 +8,7 @@ interface ScheduledPracticum {
     courseId: number;
     roomId: number;
     moduleId: number | null;
-    createdBy: number;
+    createdBy: string;
     dayOfWeek: number;
     startTime: string;
     endTime: string;

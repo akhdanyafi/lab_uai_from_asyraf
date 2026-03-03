@@ -14,7 +14,7 @@ export default async function LecturerRoomsPage() {
     // Fetch bookings for current month and next 2 months
     const [rooms, myBookings, currentMonthBookings, nextMonthBookings, nextNextMonthBookings, practicumSchedules] = await Promise.all([
         getAllRooms(),
-        getMyBookings(session.user.id),
+        getMyBookings(session.user.identifier),
         getMonthBookings(currentMonth, currentYear),
         getMonthBookings((currentMonth + 1) % 12, currentMonth + 1 > 11 ? currentYear + 1 : currentYear),
         getMonthBookings((currentMonth + 2) % 12, currentMonth + 2 > 11 ? currentYear + 1 : currentYear),
@@ -39,7 +39,7 @@ export default async function LecturerRoomsPage() {
                 myBookings={myBookings}
                 calendarBookings={calendarBookings}
                 practicumSchedules={practicumSchedules}
-                userId={session.user.id}
+                userId={session.user.identifier}
                 role="lecturer"
             />
         </div>

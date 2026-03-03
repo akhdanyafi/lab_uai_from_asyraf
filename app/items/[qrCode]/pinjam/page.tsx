@@ -31,7 +31,7 @@ export default async function ItemLoanFormPage({ params }: Props) {
 
     // Extract values for use in server action
     const itemId = item.id;
-    const sessionUserId = session.user.id;
+    const sessionUserId = session.user.identifier;
 
     async function handleSubmit(formData: FormData) {
         'use server';

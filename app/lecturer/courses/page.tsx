@@ -7,7 +7,7 @@ export default async function LecturerCoursesPage() {
     const session = await getSession();
     if (!session || !hasPermission(session, 'dashboard.lecturer')) redirect('/login');
 
-    const courses = await getCoursesByLecturerId(session.user.id);
+    const courses = await getCoursesByLecturerId(session.user.identifier);
 
     return (
         <div>

@@ -8,7 +8,7 @@ import { publications, users, publicationLikes } from '@/db/schema';
 import { eq, desc, sql, like, or, and, count } from 'drizzle-orm';
 
 export interface CreatePublicationInput {
-    uploaderId?: number;
+    uploaderId?: string;
     authorName: string;
     title: string;
     abstract?: string;
@@ -120,7 +120,7 @@ export class PublicationService {
             uploaderName: users.fullName,
         })
             .from(publications)
-            .leftJoin(users, eq(publications.uploaderId, users.id))
+            .leftJoin(users, eq(publications.uploaderId, users.identifier))
             .where(whereClause)
             .orderBy(desc(publications.createdAt))
             .limit(perPage)
@@ -265,7 +265,7 @@ export class PublicationService {
     /**
      * Toggle like for a publication
      */
-    static async toggleLike(publicationId: number, userId: number) {
+    static async toggleLike(publicationId: number, userId: string) {
         const existingLike = await db.select()
             .from(publicationLikes)
             .where(and(
@@ -301,7 +301,7 @@ export class PublicationService {
     /**
      * Check if user has liked a publication
      */
-    static async checkUserLiked(publicationId: number, userId: number): Promise<boolean> {
+    static async checkUserLiked(publicationId: number, userId: string): Promise<boolean> {
         const result = await db.select()
             .from(publicationLikes)
             .where(and(
@@ -336,7 +336,7 @@ export class PublicationService {
     /**
      * Get user's liked publication IDs
      */
-    static async getUserLikedIds(userId: number, publicationIds: number[]): Promise<number[]> {
+    static async getUserLikedIds(userId: string, publicationIds: number[]): Promise<number[]> {
         if (publicationIds.length === 0) return [];
 
         const results = await db.select({ publicationId: publicationLikes.publicationId })

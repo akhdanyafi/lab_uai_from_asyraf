@@ -7,9 +7,8 @@ import { eq } from 'drizzle-orm';
  */
 export async function findUserByNim(nim: string) {
     const result = await db.select({
-        id: users.id,
-        fullName: users.fullName,
         identifier: users.identifier,
+        fullName: users.fullName,
         dosenPembimbing: users.dosenPembimbing,
         roleName: roles.name,
     })
@@ -40,7 +39,7 @@ export async function getAvailableRooms() {
  * Create attendance record with room, purpose, and dosen penanggung jawab
  */
 export async function createAttendance(
-    userId: number,
+    userId: string,
     roomId: number,
     purpose: string,
     dosenPenanggungJawab: string
@@ -58,7 +57,7 @@ export async function createAttendance(
 /**
  * Get attendance with user and room info
  */
-export async function getAttendanceWithDetails(userId: number, roomId: number) {
+export async function getAttendanceWithDetails(userId: string, roomId: number) {
     const result = await db.select({
         id: labAttendance.id,
         userId: labAttendance.userId,
@@ -66,9 +65,8 @@ export async function getAttendanceWithDetails(userId: number, roomId: number) {
         purpose: labAttendance.purpose,
         checkInTime: labAttendance.checkInTime,
         user: {
-            id: users.id,
-            fullName: users.fullName,
             identifier: users.identifier,
+            fullName: users.fullName,
         },
         room: {
             id: rooms.id,
@@ -77,7 +75,7 @@ export async function getAttendanceWithDetails(userId: number, roomId: number) {
         }
     })
         .from(labAttendance)
-        .innerJoin(users, eq(labAttendance.userId, users.id))
+        .innerJoin(users, eq(labAttendance.userId, users.identifier))
         .innerJoin(rooms, eq(labAttendance.roomId, rooms.id))
         .where(eq(labAttendance.userId, userId))
         .orderBy(labAttendance.checkInTime)
@@ -102,9 +100,8 @@ export async function getTodayAttendance() {
         checkInTime: labAttendance.checkInTime,
         dosenPenanggungJawab: labAttendance.dosenPenanggungJawab,
         user: {
-            id: users.id,
-            fullName: users.fullName,
             identifier: users.identifier,
+            fullName: users.fullName,
         },
         room: {
             id: rooms.id,
@@ -112,7 +109,7 @@ export async function getTodayAttendance() {
         }
     })
         .from(labAttendance)
-        .innerJoin(users, eq(labAttendance.userId, users.id))
+        .innerJoin(users, eq(labAttendance.userId, users.identifier))
         .innerJoin(rooms, eq(labAttendance.roomId, rooms.id))
         .where(gte(labAttendance.checkInTime, todayUTC))
         .orderBy(desc(labAttendance.checkInTime));

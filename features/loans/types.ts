@@ -2,9 +2,9 @@
 
 export interface Loan {
     id: number;
-    studentId: number;
+    studentId: string;
     itemId: number;
-    validatorId: number | null;
+    validatorId: string | null;
     requestDate: Date | null;
     returnPlanDate: Date;
     actualReturnDate: Date | null;
@@ -21,7 +21,6 @@ export interface Loan {
 
 export interface LoanWithDetails extends Loan {
     student: {
-        id: number;
         fullName: string;
         identifier: string;
     };
@@ -32,13 +31,13 @@ export interface LoanWithDetails extends Loan {
         room: { name: string };
     };
     validator?: {
-        id: number;
+        identifier: string;
         fullName: string;
     };
 }
 
 export interface CreateLoanInput {
-    studentId: number;
+    studentId: string;
     itemId: number;
     returnPlanDate: Date;
     // New fields
@@ -54,5 +53,5 @@ export interface CreateLoanInput {
 export interface UpdateLoanStatusInput {
     loanId: number;
     status: 'Disetujui' | 'Ditolak';
-    validatorId: number;
+    validatorId: string;
 }

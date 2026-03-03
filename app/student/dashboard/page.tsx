@@ -11,7 +11,7 @@ export default async function StudentDashboard() {
     if (!session) redirect('/login');
 
     const [dashboard, schedules] = await Promise.all([
-        getStudentDashboard(session.user.id),
+        getStudentDashboard(session.user.identifier),
         getScheduledPracticums()
     ]);
 

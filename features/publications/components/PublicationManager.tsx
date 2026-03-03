@@ -23,7 +23,7 @@ interface Publication {
 
 interface Props {
     publications: Publication[];
-    userId: number;
+    userId: string;
 }
 
 const MONTHS = [
@@ -471,7 +471,7 @@ export default function PublicationManager({ publications, userId }: Props) {
                                         <th className="px-4 py-3 font-medium">Kata Kunci</th>
                                         <th className="px-4 py-3 font-medium">Tahun</th>
                                         <th className="px-4 py-3 font-medium text-center">Views</th>
-                                        <th className="px-4 py-3 font-medium text-right">Aksi</th>
+                                        <th className="px-4 py-3 font-medium text-center">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
@@ -502,7 +502,7 @@ export default function PublicationManager({ publications, userId }: Props) {
                                                     </span>
                                                 </td>
                                                 <td className="px-4 py-4">
-                                                    <div className="flex items-center justify-end gap-1">
+                                                    <div className="flex items-center justify-center gap-1">
                                                         {(pub.link || pub.filePath) && (
                                                             <a href={pub.link || pub.filePath || '#'} target="_blank" rel="noopener noreferrer" className="text-[#0F4C81] hover:text-blue-700 p-1.5 hover:bg-blue-50 rounded-lg transition-colors" title="Lihat">
                                                                 <ExternalLink className="w-4 h-4" />

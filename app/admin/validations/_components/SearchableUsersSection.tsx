@@ -30,13 +30,13 @@ export default function SearchableUsersSection({ users }: SearchableUsersProps) 
         );
     }, [users, searchQuery]);
 
-    const handleApprove = (userId: number) => {
+    const handleApprove = (userId: string) => {
         startTransition(async () => {
             await updateUserStatus(userId, 'Active');
         });
     };
 
-    const handleReject = (userId: number) => {
+    const handleReject = (userId: string) => {
         startTransition(async () => {
             await updateUserStatus(userId, 'Rejected');
         });
@@ -86,12 +86,12 @@ export default function SearchableUsersSection({ users }: SearchableUsersProps) 
                             <th className="px-6 py-4 font-semibold text-gray-700">NIM/NIDN</th>
                             <th className="px-6 py-4 font-semibold text-gray-700">Email</th>
                             <th className="px-6 py-4 font-semibold text-gray-700">Role</th>
-                            <th className="px-6 py-4 font-semibold text-gray-700 text-right">Aksi</th>
+                            <th className="px-6 py-4 font-semibold text-gray-700 text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
                         {filteredUsers.map((user) => (
-                            <tr key={user.id} className={`hover:bg-gray-50 transition-colors ${isPending ? 'opacity-50' : ''}`}>
+                            <tr key={user.identifier} className={`hover:bg-gray-50 transition-colors ${isPending ? 'opacity-50' : ''}`}>
                                 <td className="px-6 py-4">
                                     <div className="flex items-center gap-2">
                                         <User className="w-4 h-4 text-gray-400" />
@@ -106,9 +106,9 @@ export default function SearchableUsersSection({ users }: SearchableUsersProps) 
                                     </span>
                                 </td>
                                 <td className="px-6 py-4">
-                                    <div className="flex gap-2 justify-end">
+                                    <div className="flex gap-2 justify-center">
                                         <button
-                                            onClick={() => handleApprove(user.id)}
+                                            onClick={() => handleApprove(user.identifier)}
                                             disabled={isPending}
                                             className="flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 transition-colors disabled:opacity-50"
                                         >
@@ -116,7 +116,7 @@ export default function SearchableUsersSection({ users }: SearchableUsersProps) 
                                             Setujui
                                         </button>
                                         <button
-                                            onClick={() => handleReject(user.id)}
+                                            onClick={() => handleReject(user.identifier)}
                                             disabled={isPending}
                                             className="flex items-center gap-1 px-3 py-1.5 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 transition-colors disabled:opacity-50"
                                         >

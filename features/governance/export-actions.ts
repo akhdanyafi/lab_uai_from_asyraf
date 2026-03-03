@@ -42,7 +42,7 @@ export async function exportAttendanceData(filters: ExportFilters) {
             dosenPJ: labAttendance.dosenPenanggungJawab,
         })
         .from(labAttendance)
-        .leftJoin(users, eq(labAttendance.userId, users.id))
+        .leftJoin(users, eq(labAttendance.userId, users.identifier))
         .leftJoin(rooms, eq(labAttendance.roomId, rooms.id))
         .where(
             and(
@@ -92,7 +92,7 @@ export async function exportLoanData(filters: ExportFilters) {
             purpose: itemLoans.purpose,
         })
         .from(itemLoans)
-        .leftJoin(users, eq(itemLoans.studentId, users.id))
+        .leftJoin(users, eq(itemLoans.studentId, users.identifier))
         .leftJoin(items, eq(itemLoans.itemId, items.id))
         .where(
             and(
@@ -141,7 +141,7 @@ export async function exportBookingData(filters: ExportFilters) {
             dosenPembimbing: roomBookings.dosenPembimbing,
         })
         .from(roomBookings)
-        .leftJoin(users, eq(roomBookings.userId, users.id))
+        .leftJoin(users, eq(roomBookings.userId, users.identifier))
         .leftJoin(rooms, eq(roomBookings.roomId, rooms.id))
         .where(
             and(

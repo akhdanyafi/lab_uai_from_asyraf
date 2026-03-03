@@ -5,7 +5,7 @@ import { Upload } from 'lucide-react';
 import { useState } from 'react';
 
 interface GovernanceUploadFormProps {
-    adminId: number;
+    adminId: string;
     allowedTypes: string[];
     initialData?: any;
     onCancel?: () => void;

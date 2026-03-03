@@ -21,7 +21,7 @@ export async function getLecturers() {
 
     const lecturers = await db
         .select({
-            id: users.id,
+            identifier: users.identifier,
             fullName: users.fullName,
         })
         .from(users)
@@ -44,7 +44,7 @@ export async function getRoomAvailability(roomId: number, date: Date) {
  * Auto-validates if suratPermohonan is provided
  */
 export async function createRoomBooking(data: {
-    userId: number;
+    userId: string;
     roomId: number;
     startTime: Date;
     endTime: Date;
@@ -55,7 +55,7 @@ export async function createRoomBooking(data: {
     suratVerified?: boolean;
     dosenPembimbing?: string;
 }) {
-    // Ideally check session.user.id === data.userId
+    // Ideally check session.user.identifier === data.userId
     await BookingService.create(data);
     revalidatePath('/student/rooms');
     revalidatePath('/lecturer/rooms');
@@ -85,7 +85,7 @@ export async function deleteBooking(id: number) {
 export async function updateBookingStatus(
     bookingId: number,
     status: 'Disetujui' | 'Ditolak',
-    validatorId: number
+    validatorId: string
 ) {
     await requirePermission('bookings.manage');
     await BookingService.updateStatus(bookingId, status, validatorId);
@@ -97,7 +97,7 @@ export async function updateBookingStatus(
 /**
  * Get user's bookings
  */
-export async function getMyBookings(userId: number) {
+export async function getMyBookings(userId: string) {
     return BookingService.getByUserId(userId);
 }
 
@@ -120,4 +120,82 @@ export async function getMaintenanceRooms() {
  */
 export async function getScheduledPracticumsForCalendar() {
     return BookingService.getScheduledPracticumsForCalendar();
+}
+
+/**
+ * Admin Manual Booking: Creates/upserts user and creates room booking
+ */
+export async function adminManualBooking(data: {
+    identifier: string;
+    fullName: string;
+    phoneNumber?: string;
+    dosenPembimbing?: string;
+    roomId: number;
+    startTime: Date;
+    endTime: Date;
+    purpose: string;
+    jumlahPeserta: number;
+    organisasi: string;
+    suratPermohonan?: string;
+    validatorId: string;
+}) {
+    await requirePermission('bookings.manage');
+    const { db } = await import('@/db');
+    const { users, roles, roomBookings } = await import('@/db/schema');
+    const { eq, and, desc } = await import('drizzle-orm');
+
+    // 1. Upsert User
+    const existingUser = await db.query.users.findFirst({
+        where: eq(users.identifier, data.identifier)
+    });
+
+    if (existingUser) {
+        await db.update(users).set({
+            phoneNumber: data.phoneNumber || existingUser.phoneNumber,
+            dosenPembimbing: data.dosenPembimbing || existingUser.dosenPembimbing
+        }).where(eq(users.identifier, data.identifier));
+    } else {
+        const studentRole = await db.query.roles.findFirst({
+            where: eq(roles.name, 'Mahasiswa')
+        });
+        if (!studentRole) throw new Error("Role Mahasiswa not found");
+
+        await db.insert(users).values({
+            identifier: data.identifier,
+            fullName: data.fullName,
+            email: `${data.identifier}@student.uai.ac.id`,
+            roleId: studentRole.id,
+            phoneNumber: data.phoneNumber || null,
+            dosenPembimbing: data.dosenPembimbing || null,
+            status: 'Active'
+        });
+    }
+
+    // 2. Create Booking
+    await BookingService.create({
+        userId: data.identifier,
+        roomId: data.roomId,
+        startTime: data.startTime,
+        endTime: data.endTime,
+        purpose: data.purpose,
+        jumlahPeserta: data.jumlahPeserta,
+        organisasi: data.organisasi,
+        suratPermohonan: data.suratPermohonan,
+        suratVerified: true,
+        dosenPembimbing: data.dosenPembimbing || undefined
+    });
+
+    const latestBooking = await db.query.roomBookings.findFirst({
+        where: and(eq(roomBookings.userId, data.identifier), eq(roomBookings.roomId, data.roomId)),
+        orderBy: [desc(roomBookings.id)]
+    });
+
+    if (latestBooking) {
+        await BookingService.updateStatus(latestBooking.id, 'Disetujui', data.validatorId);
+    }
+
+    revalidatePath('/admin/bookings');
+    revalidatePath('/admin/validations');
+    revalidatePath('/student/rooms');
+    return { success: true };
 }

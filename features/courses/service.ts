@@ -26,7 +26,7 @@ export class CourseService {
                 lecturerName: users.fullName,
             })
             .from(courses)
-            .leftJoin(users, eq(courses.lecturerId, users.id))
+            .leftJoin(users, eq(courses.lecturerId, users.identifier))
             .orderBy(desc(courses.createdAt));
 
         return results;
@@ -35,7 +35,7 @@ export class CourseService {
     /**
      * Get all courses for a specific lecturer
      */
-    static async getByLecturerId(lecturerId: number) {
+    static async getByLecturerId(lecturerId: string) {
         const results = await db
             .select({
                 id: courses.id,
@@ -49,7 +49,7 @@ export class CourseService {
                 lecturerName: users.fullName,
             })
             .from(courses)
-            .leftJoin(users, eq(courses.lecturerId, users.id))
+            .leftJoin(users, eq(courses.lecturerId, users.identifier))
             .where(eq(courses.lecturerId, lecturerId))
             .orderBy(desc(courses.createdAt));
 
@@ -73,7 +73,7 @@ export class CourseService {
                 lecturerName: users.fullName,
             })
             .from(courses)
-            .leftJoin(users, eq(courses.lecturerId, users.id))
+            .leftJoin(users, eq(courses.lecturerId, users.identifier))
             .where(eq(courses.id, id))
             .limit(1);
 
@@ -98,7 +98,7 @@ export class CourseService {
                 lecturerName: users.fullName,
             })
             .from(courses)
-            .leftJoin(users, eq(courses.lecturerId, users.id))
+            .leftJoin(users, eq(courses.lecturerId, users.identifier))
             .where(
                 or(
                     like(courses.code, searchTerm),
@@ -141,7 +141,7 @@ export class CourseService {
     /**
      * Assign lecturer to course (can be updated anytime by Kepala Lab / Admin)
      */
-    static async assignLecturer(courseId: number, lecturerId: number | null) {
+    static async assignLecturer(courseId: number, lecturerId: string | null) {
         await db.update(courses)
             .set({ lecturerId })
             .where(eq(courses.id, courseId));

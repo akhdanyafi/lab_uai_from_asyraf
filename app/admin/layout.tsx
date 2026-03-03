@@ -16,7 +16,7 @@ export default async function AdminLayout({
     // Define all possible menu items with their required permissions
     const allMenuItems: any[] = [
         { name: 'Dashboard', href: '/admin/dashboard', iconName: 'LayoutDashboard', permission: 'dashboard.admin' },
-        { name: 'Validasi', href: '/admin/validations', iconName: 'ClipboardList', permissions: ['loans.manage', 'bookings.manage', 'users.manage'] },
+        { name: 'Manajemen Layanan', href: '/admin/validations', iconName: 'ClipboardList', permissions: ['loans.manage', 'bookings.manage', 'users.manage'] },
         { name: 'Manajemen Aset', href: '/admin/inventory', iconName: 'Box', permission: 'inventory.manage' },
         {
             name: 'Akademik', href: '#', iconName: 'GraduationCap',

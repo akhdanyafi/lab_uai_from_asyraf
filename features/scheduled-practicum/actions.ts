@@ -16,7 +16,7 @@ export async function getScheduledPracticums() {
 /**
  * Get scheduled practicums for a specific lecturer's courses
  */
-export async function getScheduledPracticumsByLecturerId(lecturerId: number) {
+export async function getScheduledPracticumsByLecturerId(lecturerId: string) {
     return ScheduledPracticumService.getByLecturerId(lecturerId);
 }
 
@@ -42,7 +42,7 @@ export async function createScheduledPracticum(data: CreateScheduledPracticumInp
         const session = await requirePermission('practicum.manage');
         const validated = createScheduledPracticumSchema.parse(data);
 
-        await ScheduledPracticumService.create(validated as CreateScheduledPracticumInput, session.user.id);
+        await ScheduledPracticumService.create(validated as CreateScheduledPracticumInput, session.user.identifier);
         revalidatePath('/admin/scheduled-practicum');
         revalidatePath('/lecturer/scheduled-practicum');
         revalidatePath('/student/scheduled-practicum');

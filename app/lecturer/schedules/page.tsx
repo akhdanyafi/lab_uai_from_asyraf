@@ -10,7 +10,7 @@ export default async function LecturerScheduledPracticumPage() {
     const session = await getSession();
     if (!session || !hasPermission(session, 'dashboard.lecturer')) redirect('/login');
 
-    const courses = await getCoursesByLecturerId(session.user.id);
+    const courses = await getCoursesByLecturerId(session.user.identifier);
 
     if (courses.length === 0) {
         return (
@@ -24,8 +24,8 @@ export default async function LecturerScheduledPracticumPage() {
     }
 
     const [schedules, modules, rooms] = await Promise.all([
-        getScheduledPracticumsByLecturerId(session.user.id),
-        getModulesByLecturerId(session.user.id),
+        getScheduledPracticumsByLecturerId(session.user.identifier),
+        getModulesByLecturerId(session.user.identifier),
         getRooms()
     ]);
 

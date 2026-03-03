@@ -19,7 +19,7 @@ interface Room {
 }
 
 interface Lecturer {
-    id: number;
+    identifier: string;
     fullName: string;
 }
 
@@ -214,7 +214,7 @@ export default function AttendanceModal({ isOpen, onClose }: AttendanceModalProp
                                 >
                                     <option value="">Dosen Pembimbing Saya</option>
                                     {lecturers.map((lecturer) => (
-                                        <option key={lecturer.id} value={lecturer.fullName}>
+                                        <option key={lecturer.identifier} value={lecturer.fullName}>
                                             {lecturer.fullName}
                                         </option>
                                     ))}

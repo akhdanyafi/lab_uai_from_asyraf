@@ -8,7 +8,7 @@ import { roomBookings, rooms, users, roles, scheduledPracticums, courses } from 
 import { eq, and, desc, gte, lte } from 'drizzle-orm';
 
 export interface CreateBookingInput {
-    userId: number;
+    userId: string;
     roomId: number;
     startTime: Date;
     endTime: Date;
@@ -92,7 +92,7 @@ export class BookingService {
             })
             .from(users)
             .innerJoin(roles, eq(users.roleId, roles.id))
-            .where(eq(users.id, data.userId))
+            .where(eq(users.identifier, data.userId))
             .limit(1);
 
         // If user is a lecturer (Dosen), don't set dosen pembimbing
@@ -126,7 +126,7 @@ export class BookingService {
                 room: rooms,
             })
             .from(roomBookings)
-            .leftJoin(users, eq(roomBookings.userId, users.id))
+            .leftJoin(users, eq(roomBookings.userId, users.identifier))
             .leftJoin(rooms, eq(roomBookings.roomId, rooms.id))
             .orderBy(desc(roomBookings.startTime));
 
@@ -174,7 +174,7 @@ export class BookingService {
     static async updateStatus(
         bookingId: number,
         status: 'Disetujui' | 'Ditolak',
-        validatorId: number
+        validatorId: string
     ) {
         await db.update(roomBookings)
             .set({ status, validatorId })
@@ -184,7 +184,7 @@ export class BookingService {
     /**
      * Get user's bookings
      */
-    static async getByUserId(userId: number) {
+    static async getByUserId(userId: string) {
         const results = await db
             .select({
                 booking: roomBookings,

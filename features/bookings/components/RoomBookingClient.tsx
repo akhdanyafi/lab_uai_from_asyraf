@@ -26,7 +26,7 @@ interface Booking {
 }
 
 interface Lecturer {
-    id: number;
+    identifier: string;
     fullName: string;
 }
 
@@ -46,7 +46,7 @@ interface RoomBookingClientProps {
     rooms: Room[];
     calendarBookings: Booking[];
     practicumSchedules?: PracticumSchedule[];
-    userId: number;
+    userId: string;
     userRole?: string;
 }
 
@@ -207,8 +207,8 @@ export default function RoomBookingClient({ rooms, calendarBookings, practicumSc
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            {/* Left Column: Calendar (Sidebar - 5 cols) */}
-            <div className="lg:col-span-5 order-2 lg:order-1">
+            {/* Left Column: Calendar (Sidebar - 4 cols) */}
+            <div className="lg:col-span-4 order-2 lg:order-1">
                 <div className="lg:sticky lg:top-6">
                     <CalendarView
                         rooms={rooms}
@@ -216,14 +216,14 @@ export default function RoomBookingClient({ rooms, calendarBookings, practicumSc
                         practicumSchedules={practicumSchedules}
                         title="Cek Ketersediaan"
                         onDateSelect={handleDateSelect}
-                        className="w-full min-h-[600px]"
+                        className="w-full min-h-[450px]"
                     />
                 </div>
             </div>
 
-            {/* Right Column: Booking Form (Main Content - 7 cols) */}
-            <div className="lg:col-span-7 order-1 lg:order-2">
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 min-h-[600px]">
+            {/* Right Column: Booking Form (Main Content - 8 cols) */}
+            <div className="lg:col-span-8 order-1 lg:order-2">
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 min-h-[450px]">
                     <h2 className="text-xl font-bold mb-6 flex items-center gap-2 border-b pb-4">
                         <Clock className="w-6 h-6 text-primary" />
                         Form Pengajuan Booking
@@ -336,7 +336,7 @@ export default function RoomBookingClient({ rooms, calendarBookings, practicumSc
                                         >
                                             <option value="">Dosen Pembimbing Saya</option>
                                             {lecturers.map(lecturer => (
-                                                <option key={lecturer.id} value={lecturer.fullName}>{lecturer.fullName}</option>
+                                                <option key={lecturer.identifier} value={lecturer.fullName}>{lecturer.fullName}</option>
                                             ))}
                                         </select>
                                     </div>

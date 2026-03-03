@@ -69,7 +69,7 @@ export default function LoansTableWithSearch({
                             <th className="px-6 py-4 font-semibold text-gray-700">Tanggal Pinjam</th>
                             <th className="px-6 py-4 font-semibold text-gray-700">Rencana Kembali</th>
                             <th className="px-6 py-4 font-semibold text-gray-700">Status</th>
-                            <th className="px-6 py-4 font-semibold text-gray-700 text-right">Aksi</th>
+                            <th className="px-6 py-4 font-semibold text-gray-700 text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
@@ -101,15 +101,15 @@ export default function LoansTableWithSearch({
                                 </td>
                                 <td className="px-6 py-4">
                                     <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${loan.status === 'Pending' ? 'bg-yellow-50 text-yellow-700' :
-                                            loan.status === 'Disetujui' ? 'bg-green-50 text-green-700' :
-                                                'bg-red-50 text-red-700'
+                                        loan.status === 'Disetujui' ? 'bg-green-50 text-green-700' :
+                                            'bg-red-50 text-red-700'
                                         }`}>
                                         {loan.status}
                                     </span>
                                 </td>
-                                <td className="px-6 py-4 text-right">
+                                <td className="px-6 py-4">
                                     {loan.status === 'Pending' && (
-                                        <div className="flex gap-2 justify-end">
+                                        <div className="flex gap-2 justify-center">
                                             <button
                                                 onClick={() => onApprove(loan.id)}
                                                 className="text-green-600 hover:text-green-700 p-2 hover:bg-green-50 rounded-lg transition-colors"
@@ -127,7 +127,7 @@ export default function LoansTableWithSearch({
                                     {loan.status === 'Disetujui' && (
                                         <button
                                             onClick={() => onReturn(loan.id)}
-                                            className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition-colors"
+                                            className="mx-auto flex items-center justify-center gap-1 px-3 py-1.5 bg-[#0F4C81] text-white rounded-lg text-sm hover:bg-[#0F4C81]/90 transition-colors"
                                         >
                                             <CheckCircle className="w-4 h-4" />
                                             Kembalikan

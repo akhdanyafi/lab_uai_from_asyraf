@@ -15,7 +15,7 @@ export async function getCourses() {
 /**
  * Get courses for a specific lecturer
  */
-export async function getCoursesByLecturerId(lecturerId: number) {
+export async function getCoursesByLecturerId(lecturerId: string) {
     return CourseService.getByLecturerId(lecturerId);
 }
 
@@ -63,7 +63,7 @@ export async function updateCourse(id: number, data: UpdateCourseInput) {
 /**
  * Assign lecturer to course (Admin / Kepala Lab only)
  */
-export async function assignLecturerToCourse(courseId: number, lecturerId: number | null) {
+export async function assignLecturerToCourse(courseId: number, lecturerId: string | null) {
     await requirePermission('courses.manage');
     await CourseService.assignLecturer(courseId, lecturerId);
     revalidatePath('/admin/courses');

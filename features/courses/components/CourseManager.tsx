@@ -6,9 +6,8 @@ import { createCourse, updateCourse, deleteCourse, assignLecturerToCourse } from
 import type { CourseWithLecturer } from '@/features/courses/types';
 
 interface Lecturer {
-    id: number;
-    fullName: string;
     identifier: string;
+    fullName: string;
 }
 
 interface CourseManagerProps {
@@ -81,7 +80,7 @@ export default function CourseManager({ courses, lecturers, readOnly = false }: 
                         code, name,
                         description: description || undefined,
                         sks, semester: semester || undefined,
-                        lecturerId: lecturerId ? parseInt(lecturerId) : null,
+                        lecturerId: lecturerId ? lecturerId : null,
                     });
                     setMessage({ type: 'success', text: 'Mata kuliah berhasil diperbarui!' });
                 } else {
@@ -89,7 +88,7 @@ export default function CourseManager({ courses, lecturers, readOnly = false }: 
                         code, name,
                         description: description || undefined,
                         sks, semester: semester || undefined,
-                        lecturerId: lecturerId ? parseInt(lecturerId) : undefined,
+                        lecturerId: lecturerId ? lecturerId : undefined,
                     });
                     setMessage({ type: 'success', text: 'Mata kuliah berhasil ditambahkan!' });
                 }
@@ -211,7 +210,7 @@ export default function CourseManager({ courses, lecturers, readOnly = false }: 
                                 >
                                     <option value="">-- Belum ditentukan --</option>
                                     {lecturers.map(l => (
-                                        <option key={l.id} value={l.id}>{l.fullName} ({l.identifier})</option>
+                                        <option key={l.identifier} value={l.identifier}>{l.fullName} ({l.identifier})</option>
                                     ))}
                                 </select>
                             </div>
@@ -309,7 +308,7 @@ export default function CourseManager({ courses, lecturers, readOnly = false }: 
                                     <th className="text-left px-6 py-3 font-semibold text-gray-600">SKS</th>
                                     <th className="text-left px-6 py-3 font-semibold text-gray-600">Semester</th>
                                     <th className="text-left px-6 py-3 font-semibold text-gray-600">Dosen</th>
-                                    {!readOnly && <th className="text-right px-6 py-3 font-semibold text-gray-600">Aksi</th>}
+                                    {!readOnly && <th className="text-center px-6 py-3 font-semibold text-gray-600">Aksi</th>}
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
@@ -340,7 +339,7 @@ export default function CourseManager({ courses, lecturers, readOnly = false }: 
                                         </td>
                                         {!readOnly && (
                                             <td className="px-6 py-4">
-                                                <div className="flex justify-end gap-1">
+                                                <div className="flex justify-center gap-1">
                                                     <button
                                                         onClick={() => handleEdit(course)}
                                                         className="text-blue-500 hover:text-blue-700 p-1.5 hover:bg-blue-50 rounded-lg transition-colors"

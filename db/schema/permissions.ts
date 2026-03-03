@@ -24,7 +24,7 @@ export const rolePermissions = mysqlTable('role_permissions', {
 // User-level Permission Overrides
 export const userPermissions = mysqlTable('user_permissions', {
     id: int('id').autoincrement().primaryKey(),
-    userId: int('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    userId: varchar('user_id', { length: 50 }).notNull().references(() => users.identifier, { onDelete: 'cascade' }),
     permissionId: int('permission_id').notNull().references(() => permissions.id, { onDelete: 'cascade' }),
     granted: boolean('granted').notNull().default(true), // true=grant, false=revoke
 }, (table) => ({
@@ -52,7 +52,7 @@ export const rolePermissionsRelations = relations(rolePermissions, ({ one }) => 
 export const userPermissionsRelations = relations(userPermissions, ({ one }) => ({
     user: one(users, {
         fields: [userPermissions.userId],
-        references: [users.id],
+        references: [users.identifier],
     }),
     permission: one(permissions, {
         fields: [userPermissions.permissionId],

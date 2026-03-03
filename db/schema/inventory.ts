@@ -37,9 +37,9 @@ export const itemsRelations = relations(items, ({ one }) => ({
 // Item Loans
 export const itemLoans = mysqlTable('item_loans', {
     id: int('id').autoincrement().primaryKey(),
-    studentId: int('student_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    studentId: varchar('student_id', { length: 50 }).notNull().references(() => users.identifier, { onDelete: 'cascade' }),
     itemId: int('item_id').notNull().references(() => items.id, { onDelete: 'restrict' }),
-    validatorId: int('validator_id').references(() => users.id, { onDelete: 'set null' }),
+    validatorId: varchar('validator_id', { length: 50 }).references(() => users.identifier, { onDelete: 'set null' }),
     requestDate: datetime('request_date').default(sql`CURRENT_TIMESTAMP`),
     returnPlanDate: datetime('return_plan_date').notNull(),
     actualReturnDate: datetime('actual_return_date'),
@@ -66,7 +66,7 @@ export const itemLoans = mysqlTable('item_loans', {
 export const itemLoansRelations = relations(itemLoans, ({ one }) => ({
     student: one(users, {
         fields: [itemLoans.studentId],
-        references: [users.id],
+        references: [users.identifier],
     }),
     item: one(items, {
         fields: [itemLoans.itemId],
@@ -74,6 +74,6 @@ export const itemLoansRelations = relations(itemLoans, ({ one }) => ({
     }),
     validator: one(users, {
         fields: [itemLoans.validatorId],
-        references: [users.id],
+        references: [users.identifier],
     }),
 }));

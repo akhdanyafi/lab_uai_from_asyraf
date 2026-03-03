@@ -9,10 +9,9 @@ export const roles = mysqlTable('roles', {
 
 // Users
 export const users = mysqlTable('users', {
-    id: int('id').autoincrement().primaryKey(),
     roleId: int('role_id').notNull().references(() => roles.id, { onDelete: 'restrict' }),
     fullName: varchar('full_name', { length: 255 }).notNull(),
-    identifier: varchar('identifier', { length: 50 }).notNull().unique(), // NIM or NIDN
+    identifier: varchar('identifier', { length: 50 }).primaryKey(), // NIM or NIDN
     email: varchar('email', { length: 255 }), // Nullable for pre-registered users
     passwordHash: varchar('password_hash', { length: 255 }), // Nullable for pre-registered users
     status: mysqlEnum('status', ['Active', 'Pending', 'Rejected', 'Pre-registered']).default('Pending'),
@@ -22,6 +21,7 @@ export const users = mysqlTable('users', {
     // New fields for student data
     programStudi: varchar('program_studi', { length: 100 }).default('Informatika'), // e.g. 'Informatika', 'Sistem Informasi'
     dosenPembimbing: varchar('dosen_pembimbing', { length: 255 }), // Stores dosen name directly (no FK relation)
+    phoneNumber: varchar('phone_number', { length: 20 }), // Optional phone number
     createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
 }, (table) => ({
     roleIdx: index('role_idx').on(table.roleId),

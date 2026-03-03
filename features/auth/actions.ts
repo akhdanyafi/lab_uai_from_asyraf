@@ -11,7 +11,7 @@ import bcrypt from 'bcryptjs';
  * Compute effective permissions for a user:
  * effective = role_defaults + user_grants - user_revocations
  */
-async function getEffectivePermissions(userId: number, roleId: number): Promise<string[]> {
+async function getEffectivePermissions(userId: string, roleId: number): Promise<string[]> {
     // 1. Get role default permission codes
     const rolePerms = await db.select({ code: permissions.code })
         .from(rolePermissions)
@@ -76,7 +76,7 @@ export async function login(formData: any) {
         const roleName = role[0]?.name;
 
         // Get effective permissions for this user
-        const effectivePermissions = await getEffectivePermissions(foundUser.id, foundUser.roleId);
+        const effectivePermissions = await getEffectivePermissions(foundUser.identifier, foundUser.roleId);
 
         // Create the session
         const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours

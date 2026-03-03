@@ -10,9 +10,9 @@ export interface Room {
 
 export interface Booking {
     id: number;
-    userId: number;
+    userId: string;
     roomId: number;
-    validatorId: number | null;
+    validatorId: string | null;
     startTime: Date;
     endTime: Date;
     purpose: string;
@@ -26,18 +26,18 @@ export interface Booking {
 
 export interface BookingWithDetails extends Booking {
     user: {
-        id: number;
+        identifier: string;
         fullName: string;
     };
     room: Room;
     validator?: {
-        id: number;
+        identifier: string;
         fullName: string;
     };
 }
 
 export interface CreateBookingInput {
-    userId: number;
+    userId: string;
     roomId: number;
     startTime: Date;
     endTime: Date;

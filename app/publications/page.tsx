@@ -65,7 +65,7 @@ export default async function PublicationsPage({
     // Get like data
     const publicationIds = result.data.map(p => p.id);
     const likeCounts = await getPublicationLikeCounts(publicationIds);
-    const userLikedIds = session ? await getUserLikedPublicationIds(session.user.id, publicationIds) : [];
+    const userLikedIds = session ? await getUserLikedPublicationIds(session.user.identifier, publicationIds) : [];
 
     const baseFilterParams = {
         search: params.search,
@@ -305,7 +305,7 @@ export default async function PublicationsPage({
                                             <td className="px-4 py-4 text-center">
                                                 <LikeButton
                                                     publicationId={pub.id}
-                                                    userId={session?.user.id}
+                                                    userId={session?.user.identifier}
                                                     initialLiked={userLikedIds.includes(pub.id)}
                                                     initialLikeCount={likeCounts[pub.id] || 0}
                                                 />
@@ -393,7 +393,7 @@ export default async function PublicationsPage({
                                             </span>
                                             <LikeButton
                                                 publicationId={pub.id}
-                                                userId={session?.user.id}
+                                                userId={session?.user.identifier}
                                                 initialLiked={userLikedIds.includes(pub.id)}
                                                 initialLikeCount={likeCounts[pub.id] || 0}
                                             />

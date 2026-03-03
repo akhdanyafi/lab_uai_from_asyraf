@@ -26,9 +26,9 @@ interface GovernanceManagerProps {
     lpjs: any[];
     users: any[];
     roles: any[];
-    lecturers: { id: number; fullName: string; identifier: string }[];
+    lecturers: { identifier: string; fullName: string }[];
     heroPhotos: HeroPhoto[];
-    adminId: number;
+    adminId: string;
     allPermissions?: any[];
     rolePermissionMap?: Record<number, string[]>;
 }

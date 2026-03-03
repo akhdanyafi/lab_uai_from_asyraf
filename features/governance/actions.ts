@@ -21,7 +21,7 @@ export async function getGovernanceDocs(type: string) {
             uploaderName: users.fullName,
         })
         .from(governanceDocs)
-        .leftJoin(users, eq(governanceDocs.adminId, users.id))
+        .leftJoin(users, eq(governanceDocs.adminId, users.identifier))
         .where(eq(governanceDocs.type, type as any))
         .orderBy(desc(governanceDocs.createdAt));
 
@@ -35,7 +35,7 @@ export async function uploadGovernanceDoc(formData: FormData) {
         const coverFile = formData.get('cover') as File | null;
         const title = formData.get('title') as string;
         const type = formData.get('type') as 'SOP' | 'LPJ Bulanan';
-        const adminId = parseInt(formData.get('adminId') as string);
+        const adminId = formData.get('adminId') as string;
 
         if (!file || file.size === 0) {
             return { success: false, error: 'Tidak ada file yang diunggah' };

@@ -162,7 +162,7 @@ export default function CustomCalendar({ bookings, practicumSchedules = [], onDa
                 >
                     <ChevronLeft className="w-5 h-5 text-gray-600" />
                 </button>
-                <h3 className="text-sm font-semibold text-gray-800">
+                <h3 className="text-xs font-semibold text-gray-800">
                     {MONTHS[currentDate.getMonth()]} {currentDate.getFullYear()}
                 </h3>
                 <button
@@ -174,19 +174,19 @@ export default function CustomCalendar({ bookings, practicumSchedules = [], onDa
             </div>
 
             {/* Day Headers */}
-            <div className="grid grid-cols-7 gap-0.5 mb-1">
+            <div className="grid grid-cols-7 gap-0 mb-1">
                 {DAYS.map(day => (
-                    <div key={day} className="text-center text-xs font-medium text-gray-500 py-1">
+                    <div key={day} className="text-center text-[10px] font-medium text-gray-500 py-0.5">
                         {day}
                     </div>
                 ))}
             </div>
 
             {/* Calendar Grid */}
-            <div className="grid grid-cols-7 gap-0.5 mb-4">
+            <div className="grid grid-cols-7 gap-0.5 mb-2">
                 {/* Empty cells for start offset */}
                 {Array.from({ length: startDay }).map((_, i) => (
-                    <div key={`empty-${i}`} className="aspect-square" />
+                    <div key={`empty-${i}`} className="aspect-square w-full max-h-[40px]" />
                 ))}
 
                 {/* Day cells */}
@@ -201,9 +201,9 @@ export default function CustomCalendar({ bookings, practicumSchedules = [], onDa
                             key={day}
                             onClick={() => handleDateClick(day)}
                             className={`
-                                aspect-square flex items-center justify-center text-sm rounded-lg transition-all relative
+                                aspect-square w-full max-h-[40px] flex flex-col items-center justify-center text-[11px] sm:text-xs rounded-md transition-all relative
                                 ${isSelectedDate
-                                    ? 'bg-[#0F4C81] text-white font-semibold shadow-md'
+                                    ? 'bg-[#0F4C81] text-white font-semibold shadow-sm'
                                     : isTodayDate
                                         ? 'bg-[#0F4C81]/10 text-[#0F4C81] font-semibold'
                                         : 'hover:bg-gray-100 text-gray-700'
@@ -232,7 +232,7 @@ export default function CustomCalendar({ bookings, practicumSchedules = [], onDa
                     {selectedPracticums.length > 0 && selectedPracticums.map(practicum => (
                         <div
                             key={`p-${practicum.id}`}
-                            className="bg-green-50 p-2.5 rounded-lg border border-green-200"
+                            className="bg-green-50 p-2 rounded-lg border border-green-200"
                         >
                             <div className="flex justify-between items-start mb-1">
                                 <span className="text-xs font-bold text-green-700 flex items-center gap-1">
@@ -255,7 +255,7 @@ export default function CustomCalendar({ bookings, practicumSchedules = [], onDa
                         selectedBookings.map(booking => (
                             <div
                                 key={booking.id}
-                                className="bg-gray-50 p-2.5 rounded-lg border border-gray-100"
+                                className="bg-gray-50 p-2 rounded-lg border border-gray-100"
                             >
                                 <div className="flex justify-between items-start mb-1">
                                     <span className="text-xs font-bold text-[#0F4C81] flex items-center gap-1">

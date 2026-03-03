@@ -43,7 +43,7 @@ export class PermissionService {
     /**
      * Get user-level permission overrides
      */
-    static async getUserOverrides(userId: number) {
+    static async getUserOverrides(userId: string) {
         return await db.select({
             id: userPermissions.id,
             permissionId: userPermissions.permissionId,
@@ -60,7 +60,7 @@ export class PermissionService {
     /**
      * Get effective permissions for a user (role defaults + user overrides)
      */
-    static async getEffectivePermissions(userId: number, roleId: number): Promise<string[]> {
+    static async getEffectivePermissions(userId: string, roleId: number): Promise<string[]> {
         const rolePerms = await db.select({ code: permissions.code })
             .from(rolePermissions)
             .innerJoin(permissions, eq(rolePermissions.permissionId, permissions.id))
@@ -90,7 +90,7 @@ export class PermissionService {
     /**
      * Set a user-level permission override (grant or revoke)
      */
-    static async setUserPermission(userId: number, permissionCode: string, granted: boolean) {
+    static async setUserPermission(userId: string, permissionCode: string, granted: boolean) {
         const perm = await db.select().from(permissions).where(eq(permissions.code, permissionCode)).limit(1);
         if (perm.length === 0) throw new Error(`Permission '${permissionCode}' not found`);
 
@@ -117,7 +117,7 @@ export class PermissionService {
     /**
      * Remove a user-level permission override (revert to role default)
      */
-    static async removeUserPermission(userId: number, permissionCode: string) {
+    static async removeUserPermission(userId: string, permissionCode: string) {
         const perm = await db.select().from(permissions).where(eq(permissions.code, permissionCode)).limit(1);
         if (perm.length === 0) return;
 
@@ -131,7 +131,7 @@ export class PermissionService {
     /**
      * Bulk set user permissions — replaces all user overrides
      */
-    static async setUserPermissions(userId: number, permissionOverrides: { code: string; granted: boolean }[]) {
+    static async setUserPermissions(userId: string, permissionOverrides: { code: string; granted: boolean }[]) {
         // Clear existing overrides for this user
         await db.delete(userPermissions).where(eq(userPermissions.userId, userId));
 

@@ -27,7 +27,7 @@ export default async function GovernancePage() {
             roles={roles}
             lecturers={lecturers}
             heroPhotos={heroPhotos}
-            adminId={session?.user.id || 0}
+            adminId={session?.user.identifier || ''}
             allPermissions={allPermissions}
             rolePermissionMap={rolePermissionMap}
         />

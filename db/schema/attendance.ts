@@ -6,7 +6,7 @@ import { rooms } from './bookings';
 // Lab Attendance (Absensi Masuk Lab)
 export const labAttendance = mysqlTable('lab_attendance', {
     id: int('id').autoincrement().primaryKey(),
-    userId: int('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    userId: varchar('user_id', { length: 50 }).notNull().references(() => users.identifier, { onDelete: 'cascade' }),
     roomId: int('room_id').notNull().references(() => rooms.id, { onDelete: 'cascade' }),
     purpose: varchar('purpose', { length: 255 }).notNull(),
     dosenPenanggungJawab: varchar('dosen_penanggung_jawab', { length: 255 }), // Optional, defaults to user's dosenPembimbing
@@ -20,7 +20,7 @@ export const labAttendance = mysqlTable('lab_attendance', {
 export const labAttendanceRelations = relations(labAttendance, ({ one }) => ({
     user: one(users, {
         fields: [labAttendance.userId],
-        references: [users.id],
+        references: [users.identifier],
     }),
     room: one(rooms, {
         fields: [labAttendance.roomId],

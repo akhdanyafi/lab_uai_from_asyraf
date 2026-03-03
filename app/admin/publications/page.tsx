@@ -20,7 +20,7 @@ export default async function AdminPublicationsPage() {
 
             <PublicationManager
                 publications={result.data}
-                userId={session.user.id}
+                userId={session.user.identifier}
             />
         </div>
     );

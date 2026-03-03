@@ -1,14 +1,13 @@
 export interface AttendanceRecord {
     id: number;
-    userId: number;
+    userId: string;
     roomId: number;
     purpose: string;
     dosenPenanggungJawab?: string | null;
     checkInTime: Date | null;
     user?: {
-        id: number;
-        fullName: string;
         identifier: string; // NIM
+        fullName: string;
     };
     room?: {
         id: number;

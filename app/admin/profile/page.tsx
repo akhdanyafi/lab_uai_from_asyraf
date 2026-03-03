@@ -20,7 +20,7 @@ export default async function AdminProfilePage() {
         })
         .from(users)
         .leftJoin(roles, eq(users.roleId, roles.id))
-        .where(eq(users.id, session.user.id))
+        .where(eq(users.identifier, session.user.identifier))
         .limit(1);
 
     const dbUser = dbUserResults[0];

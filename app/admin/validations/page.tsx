@@ -10,6 +10,12 @@ import PendingReturnsList from './_components/PendingReturnsList';
 import SearchableRiwayatSection from './_components/SearchableRiwayatSection';
 
 import LoanHistoryFilter from './_components/LoanHistoryFilter';
+import { getAvailableItems } from '@/features/inventory/actions';
+import { getLecturersForLoan } from '@/features/loans/actions';
+import ManualLoanButton from './_components/ManualLoanButton';
+import ManualBookingButton from './_components/ManualBookingButton';
+import ActiveLoansTable from './_components/ActiveLoansTable';
+import ActiveBookingsTable from './_components/ActiveBookingsTable';
 
 export default async function AdminValidationsPage({
     searchParams,
@@ -53,122 +59,49 @@ export default async function AdminValidationsPage({
     // --- Data Fetching for Returns ---
     const pendingReturns = await getPendingReturns();
 
+    // --- Data Fetching for Manual Input (Items, Lecturers) ---
+    const [availableItems, lecturers] = await Promise.all([
+        getAvailableItems(),
+        getLecturersForLoan()
+    ]);
+
 
     // --- Loans Content (Pending + Active) ---
     const activeLoans = loans.filter(l => l.status === 'Pending' || l.status === 'Disetujui');
 
     const loansContent = (
         <div>
-            {/* Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <h3 className="text-gray-500 text-sm font-medium">Pending</h3>
-                    <p className="text-3xl font-bold text-orange-500 mt-2">{pendingLoans.length}</p>
+            {/* Stats & Actions */}
+            <div className="flex flex-col md:flex-row gap-6 mb-8 justify-between items-start md:items-center">
+                <div className="flex gap-6">
+                    <div className="bg-white px-6 py-4 rounded-xl shadow-sm border border-gray-100 min-w-[150px]">
+                        <h3 className="text-gray-500 text-sm font-medium">Pending</h3>
+                        <p className="text-3xl font-bold text-orange-500 mt-1">{pendingLoans.length}</p>
+                    </div>
+                    <div className="bg-white px-6 py-4 rounded-xl shadow-sm border border-gray-100 min-w-[150px]">
+                        <h3 className="text-gray-500 text-sm font-medium">Aktif</h3>
+                        <p className="text-3xl font-bold text-green-600 mt-1">
+                            {loans.filter(l => l.status === 'Disetujui').length}
+                        </p>
+                    </div>
                 </div>
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <h3 className="text-gray-500 text-sm font-medium">Aktif</h3>
-                    <p className="text-3xl font-bold text-green-600 mt-2">
-                        {loans.filter(l => l.status === 'Disetujui').length}
-                    </p>
+                <div>
+                    <ManualLoanButton
+                        items={availableItems}
+                        lecturers={lecturers}
+                        adminId={session!.user.identifier}
+                    />
                 </div>
             </div>
 
             {/* Loans Table */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <table className="w-full text-left">
-                    <thead className="bg-gray-50 border-b border-gray-100">
-                        <tr>
-                            <th className="px-6 py-4 font-semibold text-gray-700">Mahasiswa</th>
-                            <th className="px-6 py-4 font-semibold text-gray-700">Alat</th>
-                            <th className="px-6 py-4 font-semibold text-gray-700">Tanggal Pinjam</th>
-                            <th className="px-6 py-4 font-semibold text-gray-700">Rencana Kembali</th>
-                            <th className="px-6 py-4 font-semibold text-gray-700">Status</th>
-                            <th className="px-6 py-4 font-semibold text-gray-700 text-right">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                        {activeLoans.map((loan) => (
-                            <tr key={loan.id} className="hover:bg-gray-50 transition-colors">
-                                <td className="px-6 py-4">
-                                    <div className="flex items-center gap-2">
-                                        <User className="w-4 h-4 text-gray-400" />
-                                        <div>
-                                            <p className="font-medium text-gray-900">{loan.student.fullName}</p>
-                                            <p className="text-xs text-gray-500">{loan.student.identifier}</p>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4">
-                                    <div className="flex items-center gap-2">
-                                        <Box className="w-4 h-4 text-primary" />
-                                        <div>
-                                            <p className="font-medium text-gray-900">{loan.item.name}</p>
-                                            <p className="text-xs text-gray-500">{loan.item.category.name}</p>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4 text-gray-600 text-sm">
-                                    {new Date(loan.requestDate!).toLocaleDateString('id-ID')}
-                                </td>
-                                <td className="px-6 py-4 text-gray-600 text-sm">
-                                    {new Date(loan.returnPlanDate).toLocaleDateString('id-ID')}
-                                </td>
-                                <td className="px-6 py-4">
-                                    <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${loan.status === 'Pending' ? 'bg-yellow-50 text-yellow-700' :
-                                        loan.status === 'Disetujui' ? 'bg-green-50 text-green-700' :
-                                            'bg-red-50 text-red-700'
-                                        }`}>
-                                        {loan.status}
-                                    </span>
-                                </td>
-                                <td className="px-6 py-4 text-right">
-                                    {loan.status === 'Pending' && (
-                                        <div className="flex gap-2 justify-end">
-                                            <form action={async () => {
-                                                'use server';
-                                                await updateLoanStatus(loan.id, 'Disetujui', session!.user.id);
-                                            }}>
-                                                <button className="text-green-600 hover:text-green-700 p-2 hover:bg-green-50 rounded-lg transition-colors" title="Setujui">
-                                                    <CheckCircle className="w-5 h-5" />
-                                                </button>
-                                            </form>
-                                            <form action={async () => {
-                                                'use server';
-                                                await updateLoanStatus(loan.id, 'Ditolak', session!.user.id);
-                                            }}>
-                                                <button className="text-red-600 hover:text-red-700 p-2 hover:bg-red-50 rounded-lg transition-colors" title="Tolak">
-                                                    <XCircle className="w-5 h-5" />
-                                                </button>
-                                            </form>
-                                        </div>
-                                    )}
-                                    {loan.status === 'Disetujui' && (
-                                        <form action={async () => {
-                                            'use server';
-                                            await adminDirectReturn(loan.id, session!.user.id);
-                                        }}>
-                                            <button className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition-colors" title="Konfirmasi Pengembalian">
-                                                <CheckCircle className="w-4 h-4" />
-                                                Kembalikan
-                                            </button>
-                                        </form>
-                                    )}
-                                </td>
-                            </tr>
-                        ))}
-                        {activeLoans.length === 0 && (
-                            <tr>
-                                <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
-                                    Belum ada permintaan peminjaman.
-                                </td>
-                            </tr>
-                        )}
-                    </tbody>
-                </table>
-            </div>
+            <ActiveLoansTable
+                loans={activeLoans as any}
+                sessionUserId={session!.user.identifier}
+            />
 
             {/* Section 2: Pengembalian Barang */}
-            <div className="mt-8">
+            < div className="mt-8" >
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">
                     📦 Pengembalian Barang
                     <span className="ml-2 text-sm font-normal text-gray-500">
@@ -183,7 +116,7 @@ export default async function AdminValidationsPage({
                                 <th className="px-6 py-4 font-semibold text-gray-700">Alat</th>
                                 <th className="px-6 py-4 font-semibold text-gray-700">Tanggal Pinjam</th>
                                 <th className="px-6 py-4 font-semibold text-gray-700">Request Return</th>
-                                <th className="px-6 py-4 font-semibold text-gray-700 text-right">Aksi</th>
+                                <th className="px-6 py-4 font-semibold text-gray-700 text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
@@ -212,11 +145,11 @@ export default async function AdminValidationsPage({
                                             Pending Return
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4 text-right">
-                                        <div className="flex gap-2 justify-end">
+                                    <td className="px-6 py-4">
+                                        <div className="flex gap-2 justify-center">
                                             <form action={async () => {
                                                 'use server';
-                                                await approveReturn(loan.id, session!.user.id);
+                                                await approveReturn(loan.id, session!.user.identifier);
                                             }}>
                                                 <button className="flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 transition-colors" title="Approve Return">
                                                     <CheckCircle className="w-4 h-4" />
@@ -246,8 +179,8 @@ export default async function AdminValidationsPage({
                         </tbody>
                     </table>
                 </div>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 
     // --- Rooms/Bookings Content (Pending + Active) ---
@@ -255,23 +188,32 @@ export default async function AdminValidationsPage({
 
     const roomsContent = (
         <div>
-            {/* Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <h3 className="text-gray-500 text-sm font-medium">Pending</h3>
-                    <p className="text-3xl font-bold text-orange-500 mt-2">{pendingBookings.length}</p>
+            {/* Stats & Actions */}
+            <div className="flex flex-col md:flex-row gap-6 mb-8 justify-between items-start md:items-center">
+                <div className="flex gap-6 flex-wrap">
+                    <div className="bg-white px-6 py-4 rounded-xl shadow-sm border border-gray-100 min-w-[150px]">
+                        <h3 className="text-gray-500 text-sm font-medium">Pending</h3>
+                        <p className="text-3xl font-bold text-orange-500 mt-1">{pendingBookings.length}</p>
+                    </div>
+                    <div className="bg-white px-6 py-4 rounded-xl shadow-sm border border-gray-100 min-w-[150px]">
+                        <h3 className="text-gray-500 text-sm font-medium">Disetujui</h3>
+                        <p className="text-3xl font-bold text-green-600 mt-1">
+                            {bookings.filter(b => b.status === 'Disetujui').length}
+                        </p>
+                    </div>
+                    <div className="bg-white px-6 py-4 rounded-xl shadow-sm border border-gray-100 min-w-[150px]">
+                        <h3 className="text-gray-500 text-sm font-medium">Ditolak</h3>
+                        <p className="text-3xl font-bold text-red-600 mt-1">
+                            {bookings.filter(b => b.status === 'Ditolak').length}
+                        </p>
+                    </div>
                 </div>
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <h3 className="text-gray-500 text-sm font-medium">Disetujui</h3>
-                    <p className="text-3xl font-bold text-green-600 mt-2">
-                        {bookings.filter(b => b.status === 'Disetujui').length}
-                    </p>
-                </div>
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <h3 className="text-gray-500 text-sm font-medium">Ditolak</h3>
-                    <p className="text-3xl font-bold text-red-600 mt-2">
-                        {bookings.filter(b => b.status === 'Ditolak').length}
-                    </p>
+                <div>
+                    <ManualBookingButton
+                        rooms={rooms}
+                        lecturers={lecturers}
+                        adminId={session!.user.identifier}
+                    />
                 </div>
             </div>
 
@@ -284,89 +226,11 @@ export default async function AdminValidationsPage({
             />
 
             {/* Bookings Table */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <table className="w-full text-left">
-                    <thead className="bg-gray-50 border-b border-gray-100">
-                        <tr>
-                            <th className="px-6 py-4 font-semibold text-gray-700">Pemohon</th>
-                            <th className="px-6 py-4 font-semibold text-gray-700">Ruangan</th>
-                            <th className="px-6 py-4 font-semibold text-gray-700">Tanggal & Waktu</th>
-                            <th className="px-6 py-4 font-semibold text-gray-700">Keperluan</th>
-                            <th className="px-6 py-4 font-semibold text-gray-700">Status</th>
-                            <th className="px-6 py-4 font-semibold text-gray-700 text-right">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                        {activeBookings.map((booking) => (
-                            <tr key={booking.id} className="hover:bg-gray-50 transition-colors">
-                                <td className="px-6 py-4">
-                                    <div className="flex items-center gap-2">
-                                        <User className="w-4 h-4 text-gray-400" />
-                                        <div>
-                                            <p className="font-medium text-gray-900">{booking.user.fullName}</p>
-                                            <p className="text-xs text-gray-500">{booking.user.identifier}</p>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4">
-                                    <div className="flex items-center gap-2">
-                                        <MapPin className="w-4 h-4 text-gray-400" />
-                                        <span className="font-medium text-gray-900">{booking.room.name}</span>
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4 text-gray-600 text-sm">
-                                    <div>{new Date(booking.startTime).toLocaleDateString('id-ID')}</div>
-                                    <div className="text-xs text-gray-500">
-                                        {new Date(booking.startTime).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} -
-                                        {new Date(booking.endTime).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4 text-gray-600 text-sm max-w-xs truncate">
-                                    {booking.purpose}
-                                </td>
-                                <td className="px-6 py-4">
-                                    <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${booking.status === 'Pending' ? 'bg-yellow-50 text-yellow-700' :
-                                        booking.status === 'Disetujui' ? 'bg-green-50 text-green-700' :
-                                            'bg-red-50 text-red-700'
-                                        }`}>
-                                        {booking.status}
-                                    </span>
-                                </td>
-                                <td className="px-6 py-4 text-right">
-                                    {booking.status === 'Pending' && (
-                                        <div className="flex gap-2 justify-end">
-                                            <form action={async () => {
-                                                'use server';
-                                                await updateBookingStatus(booking.id, 'Disetujui', session!.user.id);
-                                            }}>
-                                                <button className="text-green-600 hover:text-green-700 p-2 hover:bg-green-50 rounded-lg transition-colors">
-                                                    <CheckCircle className="w-5 h-5" />
-                                                </button>
-                                            </form>
-                                            <form action={async () => {
-                                                'use server';
-                                                await updateBookingStatus(booking.id, 'Ditolak', session!.user.id);
-                                            }}>
-                                                <button className="text-red-600 hover:text-red-700 p-2 hover:bg-red-50 rounded-lg transition-colors">
-                                                    <XCircle className="w-5 h-5" />
-                                                </button>
-                                            </form>
-                                        </div>
-                                    )}
-                                </td>
-                            </tr>
-                        ))}
-                        {bookings.length === 0 && (
-                            <tr>
-                                <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
-                                    Belum ada permintaan booking.
-                                </td>
-                            </tr>
-                        )}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+            <ActiveBookingsTable
+                bookings={activeBookings as any}
+                sessionUserId={session!.user.identifier}
+            />
+        </div >
     );
 
     // --- Riwayat Content (Completed Only) ---
@@ -408,7 +272,7 @@ export default async function AdminValidationsPage({
                                 <th className="px-6 py-4 font-semibold text-gray-700">Rencana Kembali</th>
                                 <th className="px-6 py-4 font-semibold text-gray-700">Status</th>
                                 <th className="px-6 py-4 font-semibold text-gray-700">Validator</th>
-                                <th className="px-6 py-4 font-semibold text-gray-700 text-right">Aksi</th>
+                                <th className="px-6 py-4 font-semibold text-gray-700 text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
@@ -451,7 +315,7 @@ export default async function AdminValidationsPage({
                                     <td className="px-6 py-4 text-gray-600 text-sm">
                                         {loan.validatorId ? 'Admin' : '-'}
                                     </td>
-                                    <td className="px-6 py-4 text-right">
+                                    <td className="px-6 py-4 text-center">
                                         <form action={async () => {
                                             'use server';
                                             await deleteLoan(loan.id);
@@ -490,7 +354,7 @@ export default async function AdminValidationsPage({
                                 <th className="px-6 py-4 font-semibold text-gray-700">Waktu</th>
                                 <th className="px-6 py-4 font-semibold text-gray-700">Status</th>
                                 <th className="px-6 py-4 font-semibold text-gray-700">Validator</th>
-                                <th className="px-6 py-4 font-semibold text-gray-700 text-right">Aksi</th>
+                                <th className="px-6 py-4 font-semibold text-gray-700 text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
@@ -525,7 +389,7 @@ export default async function AdminValidationsPage({
                                     <td className="px-6 py-4 text-gray-600 text-sm">
                                         {booking.validatorId ? 'Admin' : '-'}
                                     </td>
-                                    <td className="px-6 py-4 text-right">
+                                    <td className="px-6 py-4 text-center">
                                         <form action={async () => {
                                             'use server';
                                             await deleteBooking(booking.id);
@@ -572,23 +436,23 @@ export default async function AdminValidationsPage({
                             <th className="px-6 py-4 font-semibold text-gray-700">NIM</th>
                             <th className="px-6 py-4 font-semibold text-gray-700">Email</th>
                             <th className="px-6 py-4 font-semibold text-gray-700">Tanggal Daftar</th>
-                            <th className="px-6 py-4 font-semibold text-gray-700 text-right">Aksi</th>
+                            <th className="px-6 py-4 font-semibold text-gray-700 text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
                         {pendingUsers.map((user) => (
-                            <tr key={user.id} className="hover:bg-gray-50 transition-colors">
+                            <tr key={user.identifier} className="hover:bg-gray-50 transition-colors">
                                 <td className="px-6 py-4 font-medium text-gray-900">{user.fullName}</td>
                                 <td className="px-6 py-4 text-gray-600">{user.identifier}</td>
                                 <td className="px-6 py-4 text-gray-600">{user.email}</td>
                                 <td className="px-6 py-4 text-gray-600 text-sm">
                                     {new Date(user.createdAt!).toLocaleDateString('id-ID')}
                                 </td>
-                                <td className="px-6 py-4 text-right">
-                                    <div className="flex gap-2 justify-end">
+                                <td className="px-6 py-4">
+                                    <div className="flex gap-2 justify-center">
                                         <form action={async () => {
                                             'use server';
-                                            await updateUserStatus(user.id, 'Active');
+                                            await updateUserStatus(user.identifier, 'Active');
                                         }}>
                                             <button className="text-green-600 hover:text-green-700 p-2 hover:bg-green-50 rounded-lg transition-colors" title="Setujui">
                                                 <CheckCircle className="w-5 h-5" />
@@ -596,7 +460,7 @@ export default async function AdminValidationsPage({
                                         </form>
                                         <form action={async () => {
                                             'use server';
-                                            await updateUserStatus(user.id, 'Rejected');
+                                            await updateUserStatus(user.identifier, 'Rejected');
                                         }}>
                                             <button className="text-red-600 hover:text-red-700 p-2 hover:bg-red-50 rounded-lg transition-colors" title="Tolak">
                                                 <XCircle className="w-5 h-5" />
@@ -622,8 +486,8 @@ export default async function AdminValidationsPage({
     return (
         <div>
             <div className="mb-6">
-                <h1 className="text-2xl font-bold text-gray-900">Validasi & Persetujuan</h1>
-                <p className="text-gray-500 text-sm mt-1">Kelola permintaan peminjaman alat dan penggunaan ruangan</p>
+                <h1 className="text-2xl font-bold text-gray-900">Manajemen Layanan</h1>
+                <p className="text-gray-500 text-sm mt-1">Kelola permintaan dan input manual untuk peminjaman alat dan ruangan</p>
             </div>
 
             <ValidationTabs

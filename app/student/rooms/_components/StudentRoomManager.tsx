@@ -9,7 +9,7 @@ interface StudentRoomManagerProps {
     myBookings: any[];
     calendarBookings: any[];
     practicumSchedules: any[];
-    userId: number;
+    userId: string;
     role?: 'student' | 'lecturer';
 }
 

@@ -6,7 +6,7 @@ import { togglePublicationLike, getPublicationLikeCount, checkUserLikedPublicati
 
 interface LikeButtonProps {
     publicationId: number;
-    userId?: number; // null if not logged in
+    userId?: string; // null if not logged in
     initialLiked?: boolean;
     initialLikeCount?: number;
 }

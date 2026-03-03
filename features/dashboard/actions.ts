@@ -9,11 +9,11 @@ export async function getAdminStats() {
     return DashboardService.getAdminStats();
 }
 
-export async function getStudentDashboard(userId: number) {
+export async function getStudentDashboard(userId: string) {
     return DashboardService.getStudentDashboard(userId);
 }
 
-export async function getLecturerDashboard(userId: number, showLPJ: boolean = false) {
+export async function getLecturerDashboard(userId: string, showLPJ: boolean = false) {
     return DashboardService.getLecturerDashboard(userId, showLPJ);
 }
 

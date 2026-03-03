@@ -15,19 +15,19 @@ export default async function LecturerItemsPage({ searchParams }: { searchParams
         getAvailableItems(),
         getCategories(),
         getRooms(),
-        getMyLoans(session.user.id)
+        getMyLoans(session.user.identifier)
     ]);
 
     return (
         <div>
-            <script dangerouslySetInnerHTML={{ __html: `window.__USER_ID__ = ${session.user.id};` }} />
+            <script dangerouslySetInnerHTML={{ __html: `window.__USER_ID__ = ${session.user.identifier};` }} />
 
             <StudentItemsManager
                 items={items}
                 categories={categories}
                 rooms={rooms}
                 myLoans={myLoans}
-                userId={session.user.id}
+                userId={session.user.identifier}
                 initialTab={initialTab}
                 role="lecturer"
             />

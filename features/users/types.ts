@@ -6,12 +6,12 @@ export interface Role {
 }
 
 export interface User {
-    id: number;
     roleId: number;
     fullName: string;
     identifier: string;
     email: string;
-    status: 'Active' | 'Pending' | 'Rejected';
+    status: 'Active' | 'Pending' | 'Rejected' | 'Pre-registered';
+    phoneNumber: string | null;
     batch: number | null;
     studyType: 'Reguler' | 'Hybrid' | null;
     createdAt: Date | null;
@@ -32,13 +32,14 @@ export interface CreateUserInput {
 }
 
 export interface UpdateUserInput {
-    id: number;
+    identifier: string;
     fullName?: string;
-    identifier?: string;
     email?: string;
     roleId?: number;
     batch?: number;
     studyType?: 'Reguler' | 'Hybrid';
+    status?: 'Active' | 'Pending' | 'Rejected' | 'Pre-registered';
+    phoneNumber?: string;
 }
 
 export interface RegisterInput {

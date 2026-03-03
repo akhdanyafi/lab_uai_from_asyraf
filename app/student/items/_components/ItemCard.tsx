@@ -42,11 +42,11 @@ const SOFTWARE_OPTIONS = [
 const PC_SERVER_CATEGORIES = ['PC', 'Server', 'Komputer', 'Laptop'];
 
 interface Lecturer {
-    id: number;
+    identifier: string;
     fullName: string;
 }
 
-export default function ItemCard({ item, userId, variant = 'grid', role = 'student' }: { item: any; userId: number; variant?: 'grid' | 'list', role?: 'student' | 'lecturer' }) {
+export default function ItemCard({ item, userId, variant = 'grid', role = 'student' }: { item: any; userId: string; variant?: 'grid' | 'list', role?: 'student' | 'lecturer' }) {
     const [showModal, setShowModal] = useState(false);
     const [loading, setLoading] = useState(false);
     const router = useRouter();
@@ -313,7 +313,7 @@ export default function ItemCard({ item, userId, variant = 'grid', role = 'stude
                                         >
                                             <option value="">-- Pilih Dosen --</option>
                                             {lecturers.map(lecturer => (
-                                                <option key={lecturer.id} value={lecturer.fullName}>
+                                                <option key={lecturer.identifier} value={lecturer.fullName}>
                                                     {lecturer.fullName}
                                                 </option>
                                             ))}

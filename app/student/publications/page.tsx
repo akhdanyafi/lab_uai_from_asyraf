@@ -67,7 +67,7 @@ export default async function StudentPublicationsPage({
     // Get like data
     const publicationIds = result.data.map(p => p.id);
     const likeCounts = await getPublicationLikeCounts(publicationIds);
-    const userLikedIds = await getUserLikedPublicationIds(session.user.id, publicationIds);
+    const userLikedIds = await getUserLikedPublicationIds(session.user.identifier, publicationIds);
 
     const baseFilterParams = {
         search: params.search,
@@ -207,7 +207,7 @@ export default async function StudentPublicationsPage({
                                         <span className="text-sm text-gray-500 flex items-center justify-center gap-1"><Eye className="w-3 h-3" />{pub.viewCount}</span>
                                     </td>
                                     <td className="px-4 py-4 text-center">
-                                        <LikeButton publicationId={pub.id} userId={session.user.id} initialLiked={userLikedIds.includes(pub.id)} initialLikeCount={likeCounts[pub.id] || 0} />
+                                        <LikeButton publicationId={pub.id} userId={session.user.identifier} initialLiked={userLikedIds.includes(pub.id)} initialLikeCount={likeCounts[pub.id] || 0} />
                                     </td>
                                     <td className="px-4 py-4">
                                         {(pub.link || pub.filePath) && (
@@ -250,7 +250,7 @@ export default async function StudentPublicationsPage({
                                     <span>{formatPublishDate(pub.publishYear, pub.publishMonth, pub.publishDay)}</span>
                                     <div className="flex items-center gap-3">
                                         <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{pub.viewCount}</span>
-                                        <LikeButton publicationId={pub.id} userId={session.user.id} initialLiked={userLikedIds.includes(pub.id)} initialLikeCount={likeCounts[pub.id] || 0} />
+                                        <LikeButton publicationId={pub.id} userId={session.user.identifier} initialLiked={userLikedIds.includes(pub.id)} initialLikeCount={likeCounts[pub.id] || 0} />
                                     </div>
                                 </div>
                             </div>

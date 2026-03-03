@@ -6,7 +6,7 @@ import { requirePermission, requireAnyPermission } from '@/lib/auth';
 
 // Admin/Dosen creates and publishes directly
 export async function createPublication(data: {
-    uploaderId: number;
+    uploaderId: string;
     authorName: string;
     title: string;
     abstract?: string;
@@ -87,7 +87,7 @@ export async function getTopPublications(limit: number = 5) {
 }
 
 // Like functionality
-export async function togglePublicationLike(publicationId: number, userId: number) {
+export async function togglePublicationLike(publicationId: number, userId: string) {
     const result = await PublicationService.toggleLike(publicationId, userId);
     revalidatePath('/publications');
     revalidatePath('/');
@@ -98,7 +98,7 @@ export async function getPublicationLikeCount(publicationId: number) {
     return PublicationService.getLikeCount(publicationId);
 }
 
-export async function checkUserLikedPublication(publicationId: number, userId: number) {
+export async function checkUserLikedPublication(publicationId: number, userId: string) {
     return PublicationService.checkUserLiked(publicationId, userId);
 }
 
@@ -106,6 +106,6 @@ export async function getPublicationLikeCounts(publicationIds: number[]) {
     return PublicationService.getLikeCounts(publicationIds);
 }
 
-export async function getUserLikedPublicationIds(userId: number, publicationIds: number[]) {
+export async function getUserLikedPublicationIds(userId: string, publicationIds: number[]) {
     return PublicationService.getUserLikedIds(userId, publicationIds);
 }

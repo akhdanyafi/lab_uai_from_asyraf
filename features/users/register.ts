@@ -63,7 +63,7 @@ export async function register(formData: FormData): Promise<{ success: true } | 
                         programStudi: programStudi || preRegisteredUser[0].programStudi,
                         dosenPembimbing: dosenPembimbing || preRegisteredUser[0].dosenPembimbing,
                     })
-                    .where(eq(users.id, preRegisteredUser[0].id));
+                    .where(eq(users.identifier, preRegisteredUser[0].identifier));
 
                 return { success: true };
             } else {

@@ -8,7 +8,7 @@ export default async function LecturerPracticumPage() {
     const session = await getSession();
     if (!session || !hasPermission(session, 'dashboard.lecturer')) redirect('/login');
 
-    const courses = await getCoursesByLecturerId(session.user.id);
+    const courses = await getCoursesByLecturerId(session.user.identifier);
 
     if (courses.length === 0) {
         return (
@@ -21,7 +21,7 @@ export default async function LecturerPracticumPage() {
         );
     }
 
-    const modules = await getModulesByLecturerId(session.user.id);
+    const modules = await getModulesByLecturerId(session.user.identifier);
 
     return (
         <ModuleManager modules={modules} courses={courses} />

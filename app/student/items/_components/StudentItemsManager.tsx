@@ -10,7 +10,7 @@ interface StudentItemsManagerProps {
     categories: any[];
     rooms: any[];
     myLoans: any[];
-    userId: number;
+    userId: string;
     initialTab?: 'items' | 'loans';
     role?: 'student' | 'lecturer';
 }
@@ -162,7 +162,7 @@ export default function StudentItemsManager({
                                             <th className="px-6 py-3 font-medium">Nama Alat</th>
                                             <th className="px-4 py-3 font-medium">Kategori</th>
                                             <th className="px-4 py-3 font-medium">Ruangan</th>
-                                            <th className="px-4 py-3 font-medium text-right">Aksi</th>
+                                            <th className="px-4 py-3 font-medium text-center">Aksi</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-100">
@@ -193,7 +193,7 @@ export default function StudentItemsManager({
                                                         {item.room.name}
                                                     </span>
                                                 </td>
-                                                <td className="px-4 py-4 text-right">
+                                                <td className="px-4 py-4 text-center">
                                                     {/* We use the same ItemCard logic, but wrap it minimally. Alternatively, we can render the ItemCard button but in List view style. */}
                                                     {/* It's easier to just use ItemCard component and hide its card styling, but since it has a modal inside, we could just render a slim version. Let's just create a wrapper or use the ItemCard directly. Since ItemCard requires its own wrapper to look good in grid, we'll need to adapt it. Wait, the modal state is inside ItemCard. We can just render the ItemCard with a "variant" or extract the modal. For now, since ItemCard has all the complex loan request logic, let's just render the `Ajukan Peminjaman` button that opens a modal. Since we don't want to duplicate 400 lines of modal logic, let's keep the grid view rendering for now until we refactor ItemCard, OR we can conditionally pass `variant="list"` to ItemCard. Let's refactor ItemCard next. */}
                                                     <ItemCard item={item} userId={userId} variant="list" role={role} />

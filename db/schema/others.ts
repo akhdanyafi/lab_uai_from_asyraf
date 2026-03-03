@@ -5,7 +5,7 @@ import { users } from './users';
 // Governance Docs
 export const governanceDocs = mysqlTable('governance_docs', {
     id: int('id').autoincrement().primaryKey(),
-    adminId: int('admin_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    adminId: varchar('admin_id', { length: 50 }).notNull().references(() => users.identifier, { onDelete: 'cascade' }),
     title: varchar('title', { length: 255 }).notNull(),
     filePath: varchar('file_path', { length: 255 }).notNull(),
     coverPath: varchar('cover_path', { length: 255 }),
@@ -18,7 +18,7 @@ export const governanceDocs = mysqlTable('governance_docs', {
 // Publications (Jurnal Publikasi)
 export const publications = mysqlTable('publications', {
     id: int('id').autoincrement().primaryKey(),
-    uploaderId: int('uploader_id').references(() => users.id, { onDelete: 'set null' }),
+    uploaderId: varchar('uploader_id', { length: 50 }).references(() => users.identifier, { onDelete: 'set null' }),
     authorName: varchar('author_name', { length: 255 }).notNull(),
     title: varchar('title', { length: 255 }).notNull(),
     abstract: text('abstract'),
@@ -37,7 +37,7 @@ export const publications = mysqlTable('publications', {
 export const publicationsRelations = relations(publications, ({ one, many }) => ({
     uploader: one(users, {
         fields: [publications.uploaderId],
-        references: [users.id],
+        references: [users.identifier],
         relationName: 'uploader',
     }),
     likes: many(publicationLikes),
@@ -47,7 +47,7 @@ export const publicationsRelations = relations(publications, ({ one, many }) => 
 export const publicationLikes = mysqlTable('publication_likes', {
     id: int('id').autoincrement().primaryKey(),
     publicationId: int('publication_id').notNull().references(() => publications.id, { onDelete: 'cascade' }),
-    userId: int('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    userId: varchar('user_id', { length: 50 }).notNull().references(() => users.identifier, { onDelete: 'cascade' }),
     createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
 }, (table) => ({
     publicationIdx: index('publication_idx').on(table.publicationId),
@@ -63,7 +63,7 @@ export const publicationLikesRelations = relations(publicationLikes, ({ one }) =
     }),
     user: one(users, {
         fields: [publicationLikes.userId],
-        references: [users.id],
+        references: [users.identifier],
     }),
 }));
 

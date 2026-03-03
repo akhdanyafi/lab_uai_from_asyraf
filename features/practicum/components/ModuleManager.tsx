@@ -327,7 +327,7 @@ export default function ModuleManager({ modules, courses }: ModuleManagerProps) 
                                     <th className="text-left px-6 py-3 font-semibold text-gray-600">Nama Modul</th>
                                     <th className="text-left px-6 py-3 font-semibold text-gray-600">Mata Kuliah</th>
                                     <th className="text-left px-6 py-3 font-semibold text-gray-600">File Modul</th>
-                                    <th className="text-right px-6 py-3 font-semibold text-gray-600">Aksi</th>
+                                    <th className="text-center px-6 py-3 font-semibold text-gray-600">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
@@ -367,7 +367,7 @@ export default function ModuleManager({ modules, courses }: ModuleManagerProps) 
                                             )}
                                         </td>
                                         <td className="px-6 py-4">
-                                            <div className="flex justify-end gap-1">
+                                            <div className="flex justify-center gap-1">
                                                 <button
                                                     onClick={() => handleEdit(module)}
                                                     className="text-blue-500 hover:text-blue-700 p-1.5 hover:bg-blue-50 rounded-lg transition-colors"

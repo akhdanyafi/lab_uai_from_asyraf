@@ -37,7 +37,7 @@ interface PendingReturn {
 interface SearchableLoansProps {
     loans: Loan[];
     pendingReturns: PendingReturn[];
-    sessionUserId: number;
+    sessionUserId: string;
 }
 
 export default function SearchableLoansSection({ loans, pendingReturns, sessionUserId }: SearchableLoansProps) {
@@ -159,7 +159,7 @@ export default function SearchableLoansSection({ loans, pendingReturns, sessionU
                             <th className="px-6 py-4 font-semibold text-gray-700">Tanggal Pinjam</th>
                             <th className="px-6 py-4 font-semibold text-gray-700">Rencana Kembali</th>
                             <th className="px-6 py-4 font-semibold text-gray-700">Status</th>
-                            <th className="px-6 py-4 font-semibold text-gray-700 text-right">Aksi</th>
+                            <th className="px-6 py-4 font-semibold text-gray-700 text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
@@ -197,9 +197,9 @@ export default function SearchableLoansSection({ loans, pendingReturns, sessionU
                                         {loan.status}
                                     </span>
                                 </td>
-                                <td className="px-6 py-4 text-right">
+                                <td className="px-6 py-4">
                                     {loan.status === 'Pending' && (
-                                        <div className="flex gap-2 justify-end">
+                                        <div className="flex gap-2 justify-center">
                                             <button
                                                 onClick={() => handleApprove(loan.id)}
                                                 disabled={isPending}
@@ -220,7 +220,7 @@ export default function SearchableLoansSection({ loans, pendingReturns, sessionU
                                         <button
                                             onClick={() => handleReturn(loan.id)}
                                             disabled={isPending}
-                                            className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition-colors disabled:opacity-50"
+                                            className="mx-auto flex items-center justify-center gap-1 px-3 py-1.5 bg-[#0F4C81] text-white rounded-lg text-sm hover:bg-[#0F4C81]/90 transition-colors disabled:opacity-50"
                                         >
                                             <CheckCircle className="w-4 h-4" />
                                             Kembalikan
@@ -255,7 +255,7 @@ export default function SearchableLoansSection({ loans, pendingReturns, sessionU
                             <th className="px-6 py-4 font-semibold text-gray-700">Alat</th>
                             <th className="px-6 py-4 font-semibold text-gray-700">Tanggal Pinjam</th>
                             <th className="px-6 py-4 font-semibold text-gray-700">Status</th>
-                            <th className="px-6 py-4 font-semibold text-gray-700 text-right">Aksi</th>
+                            <th className="px-6 py-4 font-semibold text-gray-700 text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
@@ -284,8 +284,8 @@ export default function SearchableLoansSection({ loans, pendingReturns, sessionU
                                         Pending Return
                                     </span>
                                 </td>
-                                <td className="px-6 py-4 text-right">
-                                    <div className="flex gap-2 justify-end">
+                                <td className="px-6 py-4">
+                                    <div className="flex gap-2 justify-center">
                                         <button
                                             onClick={() => handleApproveReturn(loan.id)}
                                             disabled={isPending}

@@ -23,7 +23,7 @@ interface PendingReturn {
 
 interface PendingReturnsListProps {
     returns: PendingReturn[];
-    validatorId: number;
+    validatorId: string;
 }
 
 export default function PendingReturnsList({ returns, validatorId }: PendingReturnsListProps) {

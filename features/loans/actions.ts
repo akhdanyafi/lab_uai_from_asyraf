@@ -18,7 +18,7 @@ export async function getAvailableItems(categoryId?: number) {
  * Create loan request with new fields
  */
 export async function createLoanRequest(data: {
-    studentId: number;
+    studentId: string;
     itemId: number;
     returnPlanDate: Date;
     organisasi?: string;
@@ -56,7 +56,7 @@ export async function getLoanRequests(status?: string, startDate?: Date, endDate
 export async function updateLoanStatus(
     loanId: number,
     status: 'Disetujui' | 'Ditolak',
-    validatorId: number
+    validatorId: string
 ) {
     try {
         await requirePermission('loans.manage');
@@ -88,8 +88,8 @@ export async function deleteLoan(id: number) {
 /**
  * Get user's loans
  */
-export async function getMyLoans(userId: number) {
-    // Ideally check session.user.id === userId
+export async function getMyLoans(userId: string) {
+    // Ideally check session.user.identifier === userId
     return LoanService.getByUserId(userId);
 }
 
@@ -114,7 +114,7 @@ export async function requestItemReturn(loanId: number, returnPhoto?: string) {
 /**
  * Approve pending return (by admin)
  */
-export async function approveReturn(loanId: number, validatorId: number) {
+export async function approveReturn(loanId: number, validatorId: string) {
     try {
         await requirePermission('loans.manage');
         await LoanService.approveReturn(loanId, validatorId);
@@ -147,7 +147,7 @@ export async function rejectReturn(loanId: number) {
 /**
  * Admin directly returns an item (without requiring student to submit return first)
  */
-export async function adminDirectReturn(loanId: number, validatorId: number) {
+export async function adminDirectReturn(loanId: number, validatorId: string) {
     try {
         await requirePermission('loans.manage');
         await LoanService.adminDirectReturn(loanId, validatorId);
@@ -178,7 +178,7 @@ export async function getLecturersForLoan() {
 
     const lecturers = await db
         .select({
-            id: users.id,
+            identifier: users.identifier,
             fullName: users.fullName,
         })
         .from(users)
@@ -194,7 +194,7 @@ export async function getLecturersForLoan() {
  */
 export async function requestItemLoan(data: {
     itemId: number;
-    studentId: number;
+    studentId: string;
     purpose: string;
     returnPlanDate: Date;
     permitLetter?: string;
@@ -217,5 +217,85 @@ export async function requestItemLoan(data: {
     } catch (error: any) {
         return { success: false, error: error.message || 'Gagal mengajukan peminjaman' };
     }
+}
+
+/**
+ * Admin Manual Loan: Creates/upserts user and creates loan requests
+ */
+export async function adminManualLoan(data: {
+    identifier: string;
+    fullName: string;
+    phoneNumber?: string;
+    dosenPembimbing?: string;
+    itemIds: number[];
+    returnPlanDate: Date;
+    startTime?: Date;
+    endTime?: Date;
+    purpose: string;
+    organisasi: string;
+    suratIzin?: string;
+    validatorId: string;
+}) {
+    await requirePermission('loans.manage');
+    const { db } = await import('@/db');
+    const { users, roles, itemLoans } = await import('@/db/schema');
+    const { eq, and, desc } = await import('drizzle-orm');
+
+    // 1. Upsert User
+    const existingUser = await db.query.users.findFirst({
+        where: eq(users.identifier, data.identifier)
+    });
+
+    if (existingUser) {
+        await db.update(users).set({
+            phoneNumber: data.phoneNumber || existingUser.phoneNumber,
+            dosenPembimbing: data.dosenPembimbing || existingUser.dosenPembimbing
+        }).where(eq(users.identifier, data.identifier));
+    } else {
+        const studentRole = await db.query.roles.findFirst({
+            where: eq(roles.name, 'Mahasiswa')
+        });
+        if (!studentRole) throw new Error("Role Mahasiswa not found");
+
+        await db.insert(users).values({
+            identifier: data.identifier,
+            fullName: data.fullName,
+            email: `${data.identifier}@student.uai.ac.id`,
+            roleId: studentRole.id,
+            phoneNumber: data.phoneNumber || null,
+            dosenPembimbing: data.dosenPembimbing || null,
+            status: 'Active'
+        });
+    }
+
+    // 2. Create Loans
+    for (const itemId of data.itemIds) {
+        await LoanService.create({
+            itemId,
+            studentId: data.identifier,
+            purpose: data.purpose,
+            organisasi: data.organisasi,
+            returnPlanDate: data.returnPlanDate,
+            startTime: data.startTime,
+            endTime: data.endTime,
+            suratIzin: data.suratIzin,
+            suratVerified: true
+        });
+
+        const latestLoan = await db.query.itemLoans.findFirst({
+            where: and(eq(itemLoans.studentId, data.identifier), eq(itemLoans.itemId, itemId)),
+            orderBy: [desc(itemLoans.id)]
+        });
+
+        if (latestLoan) {
+            await LoanService.updateStatus(latestLoan.id, 'Disetujui', data.validatorId);
+        }
+    }
+
+    revalidatePath('/admin/loans');
+    revalidatePath('/admin/validations');
+    revalidatePath('/admin/inventory');
+    revalidatePath('/student/loans');
+    return { success: true };
 }
 

@@ -65,7 +65,7 @@ export default function CalendarView({
         <div className={`bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full ${className}`}>
 
             {/* --- 1. HEADER SECTION (Compact) --- */}
-            <div className="p-4 border-b border-gray-100 bg-white">
+            <div className="p-3 border-b border-gray-100 bg-white">
                 {/* Title Row */}
                 <div className="flex items-center gap-2 mb-2">
                     <div className="p-2 bg-[#0F4C81]/10 rounded-lg text-[#0F4C81]">
@@ -98,7 +98,7 @@ export default function CalendarView({
             </div>
 
             {/* --- 3. CALENDAR AREA --- */}
-            <div className="flex-1 p-4 bg-white overflow-hidden flex flex-col">
+            <div className="flex-1 p-3 bg-white overflow-hidden flex flex-col">
                 <CustomCalendar
                     bookings={bookings}
                     practicumSchedules={practicumSchedules}

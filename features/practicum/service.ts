@@ -33,7 +33,7 @@ export class PracticumService {
     /**
      * Get all modules for courses taught by a specific lecturer
      */
-    static async getByLecturerId(lecturerId: number) {
+    static async getByLecturerId(lecturerId: string) {
         return await db
             .select({
                 id: practicumModules.id,

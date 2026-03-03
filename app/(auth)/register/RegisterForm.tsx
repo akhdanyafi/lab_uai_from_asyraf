@@ -8,9 +8,8 @@ import Link from 'next/link';
 import { Loader2, Eye, EyeOff, CheckCircle } from 'lucide-react';
 
 interface Lecturer {
-    id: number;
-    fullName: string;
     identifier: string;
+    fullName: string;
 }
 
 interface RegisterFormProps {
@@ -201,7 +200,7 @@ export default function RegisterForm({ lecturers }: RegisterFormProps) {
                             >
                                 <option value="">Pilih Dosen</option>
                                 {lecturers.map(lecturer => (
-                                    <option key={lecturer.id} value={lecturer.fullName}>
+                                    <option key={lecturer.identifier} value={lecturer.fullName}>
                                         {lecturer.fullName}
                                     </option>
                                 ))}

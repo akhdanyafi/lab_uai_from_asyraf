@@ -39,7 +39,7 @@ export async function createUser(data: {
     revalidatePath('/admin/governance');
 }
 
-export async function updateUser(id: number, data: {
+export async function updateUser(id: string, data: {
     fullName: string;
     identifier: string;
     email: string;
@@ -55,7 +55,7 @@ export async function updateUser(id: number, data: {
     revalidatePath('/admin/governance');
 }
 
-export async function deleteUser(id: number) {
+export async function deleteUser(id: string) {
     await requirePermission('users.manage');
     await UserService.delete(id);
     revalidatePath('/admin/governance');
@@ -65,7 +65,7 @@ export async function getPendingUsers() {
     return UserService.getPending();
 }
 
-export async function updateUserStatus(userId: number, status: 'Active' | 'Rejected') {
+export async function updateUserStatus(userId: string, status: 'Active' | 'Rejected') {
     await UserService.updateStatus(userId, status);
     revalidatePath('/admin/validations');
 }
@@ -83,7 +83,7 @@ export async function updateUserProfile(data: {
         throw new Error('Unauthorized');
     }
 
-    const userId = session.user.id;
+    const userId = session.user.identifier;
 
     // Get current user and role
     const userRecord = await UserService.getById(userId);

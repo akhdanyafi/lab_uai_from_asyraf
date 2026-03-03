@@ -41,7 +41,7 @@ export class DashboardService {
                 item: items,
             })
             .from(itemLoans)
-            .leftJoin(users, eq(itemLoans.studentId, users.id))
+            .leftJoin(users, eq(itemLoans.studentId, users.identifier))
             .leftJoin(items, eq(itemLoans.itemId, items.id))
             .orderBy(desc(itemLoans.requestDate))
             .limit(5);
@@ -59,7 +59,7 @@ export class DashboardService {
                 room: rooms,
             })
             .from(roomBookings)
-            .leftJoin(users, eq(roomBookings.userId, users.id))
+            .leftJoin(users, eq(roomBookings.userId, users.identifier))
             .leftJoin(rooms, eq(roomBookings.roomId, rooms.id))
             .orderBy(desc(roomBookings.startTime))
             .limit(5);
@@ -78,7 +78,7 @@ export class DashboardService {
                 item: items,
             })
             .from(itemLoans)
-            .leftJoin(users, eq(itemLoans.studentId, users.id))
+            .leftJoin(users, eq(itemLoans.studentId, users.identifier))
             .leftJoin(items, eq(itemLoans.itemId, items.id))
             .where(and(
                 eq(itemLoans.status, 'Disetujui'),
@@ -102,7 +102,7 @@ export class DashboardService {
                 room: rooms,
             })
             .from(roomBookings)
-            .leftJoin(users, eq(roomBookings.userId, users.id))
+            .leftJoin(users, eq(roomBookings.userId, users.identifier))
             .leftJoin(rooms, eq(roomBookings.roomId, rooms.id))
             .where(and(
                 eq(roomBookings.status, 'Disetujui'),
@@ -126,7 +126,7 @@ export class DashboardService {
                 item: items,
             })
             .from(itemLoans)
-            .leftJoin(users, eq(itemLoans.studentId, users.id))
+            .leftJoin(users, eq(itemLoans.studentId, users.identifier))
             .leftJoin(items, eq(itemLoans.itemId, items.id))
             .where(and(
                 eq(itemLoans.returnStatus, 'Dikembalikan'),
@@ -165,7 +165,7 @@ export class DashboardService {
     /**
      * Get student dashboard data
      */
-    static async getStudentDashboard(userId: number) {
+    static async getStudentDashboard(userId: string) {
         const today = new Date();
 
         const activeLoansRaw = await db
@@ -242,7 +242,7 @@ export class DashboardService {
      * Get lecturer dashboard data
      * Users with governance.view permission also see latest LPJ documents
      */
-    static async getLecturerDashboard(userId: number, showLPJ: boolean = false) {
+    static async getLecturerDashboard(userId: string, showLPJ: boolean = false) {
         const today = new Date();
 
         const activeLoansRaw = await db
@@ -320,7 +320,7 @@ export class DashboardService {
                     uploaderName: users.fullName,
                 })
                 .from(governanceDocs)
-                .leftJoin(users, eq(governanceDocs.adminId, users.id))
+                .leftJoin(users, eq(governanceDocs.adminId, users.identifier))
                 .where(eq(governanceDocs.type, 'LPJ Bulanan'))
                 .orderBy(desc(governanceDocs.createdAt))
                 .limit(5);
@@ -527,7 +527,7 @@ export class DashboardService {
                 returnPlanDate: itemLoans.returnPlanDate,
             })
             .from(itemLoans)
-            .leftJoin(users, eq(itemLoans.studentId, users.id))
+            .leftJoin(users, eq(itemLoans.studentId, users.identifier))
             .leftJoin(items, eq(itemLoans.itemId, items.id))
             .where(and(
                 eq(itemLoans.status, 'Disetujui'),

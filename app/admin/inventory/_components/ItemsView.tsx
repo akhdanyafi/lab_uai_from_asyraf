@@ -228,7 +228,7 @@ export default function ItemsView({ items, rooms, categories }: ItemsViewProps) 
                             <th className="px-6 py-4 font-semibold text-gray-700">Lokasi</th>
                             <th className="px-6 py-4 font-semibold text-gray-700">Status</th>
                             <th className="px-6 py-4 font-semibold text-gray-700">QR Code</th>
-                            <th className="px-6 py-4 font-semibold text-gray-700 text-right">Aksi</th>
+                            <th className="px-6 py-4 font-semibold text-gray-700 text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
@@ -288,8 +288,8 @@ export default function ItemsView({ items, rooms, categories }: ItemsViewProps) 
                                 <td className="px-6 py-4">
                                     <QRCodeDisplay value={item.qrCode} baseUrl={process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'} />
                                 </td>
-                                <td className="px-6 py-4 text-right">
-                                    <div className="flex gap-1 justify-end">
+                                <td className="px-6 py-4">
+                                    <div className="flex gap-1 justify-center">
                                         <button
                                             onClick={() => setEditingItem(item)}
                                             className="text-blue-500 hover:text-blue-700 p-2 hover:bg-blue-50 rounded-lg transition-colors"

@@ -12,8 +12,8 @@ export default async function LecturerDashboard() {
 
     const showLPJ = hasPermission(session, 'governance.view');
     const [dashboard, schedules] = await Promise.all([
-        getLecturerDashboard(session.user.id, showLPJ),
-        getScheduledPracticumsByLecturerId(session.user.id)
+        getLecturerDashboard(session.user.identifier, showLPJ),
+        getScheduledPracticumsByLecturerId(session.user.identifier)
     ]);
 
     return (

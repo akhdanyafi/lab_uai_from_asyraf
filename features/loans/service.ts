@@ -8,7 +8,7 @@ import { itemLoans, items, itemCategories, rooms, users, roles } from '@/db/sche
 import { eq, and, desc, sql } from 'drizzle-orm';
 
 export interface CreateLoanInput {
-    studentId: number;
+    studentId: string;
     itemId: number;
     returnPlanDate: Date;
     // New fields
@@ -71,7 +71,7 @@ export class LoanService {
             .select({ roleName: roles.name })
             .from(users)
             .innerJoin(roles, eq(users.roleId, roles.id))
-            .where(eq(users.id, data.studentId))
+            .where(eq(users.identifier, data.studentId))
             .limit(1);
 
         // If user is a lecturer (Dosen), don't set dosen pembimbing
@@ -112,7 +112,7 @@ export class LoanService {
                 room: rooms,
             })
             .from(itemLoans)
-            .leftJoin(users, eq(itemLoans.studentId, users.id))
+            .leftJoin(users, eq(itemLoans.studentId, users.identifier))
             .leftJoin(items, eq(itemLoans.itemId, items.id))
             .leftJoin(itemCategories, eq(items.categoryId, itemCategories.id))
             .leftJoin(rooms, eq(items.roomId, rooms.id))
@@ -159,7 +159,7 @@ export class LoanService {
     static async updateStatus(
         loanId: number,
         status: 'Disetujui' | 'Ditolak',
-        validatorId: number
+        validatorId: string
     ) {
         const loanResult = await db
             .select()
@@ -184,7 +184,7 @@ export class LoanService {
     /**
      * Get user's loans
      */
-    static async getByUserId(userId: number) {
+    static async getByUserId(userId: string) {
         const results = await db
             .select({
                 loan: itemLoans,
@@ -282,7 +282,7 @@ export class LoanService {
     /**
      * Approve pending return (by admin)
      */
-    static async approveReturn(loanId: number, validatorId: number) {
+    static async approveReturn(loanId: number, validatorId: string) {
         const loanResult = await db
             .select()
             .from(itemLoans)
@@ -310,7 +310,7 @@ export class LoanService {
     /**
      * Admin directly returns an item (without requiring student to submit return first)
      */
-    static async adminDirectReturn(loanId: number, validatorId: number) {
+    static async adminDirectReturn(loanId: number, validatorId: string) {
         const loanResult = await db
             .select()
             .from(itemLoans)
@@ -357,7 +357,7 @@ export class LoanService {
                 item: items,
             })
             .from(itemLoans)
-            .leftJoin(users, eq(itemLoans.studentId, users.id))
+            .leftJoin(users, eq(itemLoans.studentId, users.identifier))
             .leftJoin(items, eq(itemLoans.itemId, items.id))
             .where(eq(itemLoans.returnStatus, 'Pending'))
             .orderBy(desc(itemLoans.requestDate));

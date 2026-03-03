@@ -143,7 +143,7 @@ export default function RoomsView({ rooms }: RoomsViewProps) {
                             <th className="px-6 py-4 font-semibold text-gray-700">Lokasi</th>
                             <th className="px-6 py-4 font-semibold text-gray-700">Kapasitas</th>
                             <th className="px-6 py-4 font-semibold text-gray-700">Status</th>
-                            <th className="px-6 py-4 font-semibold text-gray-700 text-right">Aksi</th>
+                            <th className="px-6 py-4 font-semibold text-gray-700 text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
@@ -173,8 +173,8 @@ export default function RoomsView({ rooms }: RoomsViewProps) {
                                         <option value="Maintenance">Maintenance</option>
                                     </select>
                                 </td>
-                                <td className="px-6 py-4 text-right">
-                                    <div className="flex gap-1 justify-end">
+                                <td className="px-6 py-4">
+                                    <div className="flex gap-1 justify-center">
                                         <button
                                             onClick={() => setEditingRoom(room)}
                                             className="text-blue-500 hover:text-blue-700 p-2 hover:bg-blue-50 rounded-lg transition-colors"

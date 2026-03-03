@@ -17,7 +17,7 @@ interface Permission {
 interface UserListProps {
     users: any[];
     roles: any[];
-    lecturers: { id: number; fullName: string; identifier: string }[];
+    lecturers: { identifier: string; fullName: string }[];
     allPermissions?: Permission[];
     rolePermissionMap?: Record<number, string[]>;
 }
@@ -61,7 +61,7 @@ export default function UserList({ users, roles, lecturers, allPermissions = [],
         setIsLoading(true);
         setSaveMessage('');
         try {
-            const overrides = await getUserPermissionOverrides(user.id);
+            const overrides = await getUserPermissionOverrides(user.identifier);
             setUserOverrides(overrides.map(o => ({ code: o.code, granted: o.granted ? true : false })));
         } catch {
             setUserOverrides([]);
@@ -105,7 +105,7 @@ export default function UserList({ users, roles, lecturers, allPermissions = [],
         if (!permUser) return;
         startTransition(async () => {
             try {
-                await updateUserPermissions(permUser.id, userOverrides);
+                await updateUserPermissions(permUser.identifier, userOverrides);
                 setSaveMessage('Berhasil disimpan! User perlu login ulang.');
             } catch {
                 setSaveMessage('Gagal menyimpan permission.');
@@ -162,12 +162,12 @@ export default function UserList({ users, roles, lecturers, allPermissions = [],
                             <th className="px-6 py-4 font-semibold text-gray-700">NIM/NIDN</th>
                             <th className="px-6 py-4 font-semibold text-gray-700">Email</th>
                             <th className="px-6 py-4 font-semibold text-gray-700">Role</th>
-                            <th className="px-6 py-4 font-semibold text-gray-700 text-right">Aksi</th>
+                            <th className="px-6 py-4 font-semibold text-gray-700 text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
                         {filteredUsers.map((user) => (
-                            <tr key={user.id} className="hover:bg-gray-50 transition-colors">
+                            <tr key={user.identifier} className="hover:bg-gray-50 transition-colors">
                                 <td className="px-6 py-4">
                                     <div className="flex items-center gap-3">
                                         <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
@@ -186,8 +186,8 @@ export default function UserList({ users, roles, lecturers, allPermissions = [],
                                         {user.roleName}
                                     </span>
                                 </td>
-                                <td className="px-6 py-4 text-right">
-                                    <div className="flex justify-end gap-1">
+                                <td className="px-6 py-4">
+                                    <div className="flex justify-center gap-1">
                                         <button
                                             onClick={() => openPermModal(user)}
                                             className="text-amber-500 hover:text-amber-700 p-2 hover:bg-amber-50 rounded-lg transition-colors"
@@ -204,7 +204,7 @@ export default function UserList({ users, roles, lecturers, allPermissions = [],
                                         </button>
                                         <form action={async () => {
                                             if (confirm('Apakah Anda yakin ingin menghapus user ini?')) {
-                                                await deleteUser(user.id);
+                                                await deleteUser(user.identifier);
                                             }
                                         }}>
                                             <button className="text-red-500 hover:text-red-700 p-2 hover:bg-red-50 rounded-lg transition-colors" title="Hapus User">
@@ -237,8 +237,8 @@ export default function UserList({ users, roles, lecturers, allPermissions = [],
                                 <h2 className="text-lg font-bold text-gray-900">Kelola Akses</h2>
                                 <p className="text-sm text-gray-500 mt-0.5">
                                     {permUser.fullName} — <span className={`font-medium ${permUser.roleName === 'Admin' ? 'text-purple-600' :
-                                            permUser.roleName === 'Dosen' ? 'text-blue-600' :
-                                                'text-green-600'
+                                        permUser.roleName === 'Dosen' ? 'text-blue-600' :
+                                            'text-green-600'
                                         }`}>{permUser.roleName}</span>
                                 </p>
                             </div>
@@ -256,66 +256,77 @@ export default function UserList({ users, roles, lecturers, allPermissions = [],
                                 </div>
                             ) : (
                                 <div className="space-y-6">
-                                    <div className="text-xs text-gray-500 bg-gray-50 px-3 py-2 rounded-lg">
-                                        <span className="inline-block w-3 h-3 rounded bg-blue-100 border border-blue-300 mr-1 align-middle" /> Default dari role &nbsp;|&nbsp;
-                                        <span className="inline-block w-3 h-3 rounded bg-green-100 border border-green-300 mr-1 align-middle" /> Custom (ditambahkan) &nbsp;|&nbsp;
-                                        <span className="inline-block w-3 h-3 rounded bg-red-100 border border-red-300 mr-1 align-middle" /> Dicabut dari default
+                                    <div className="bg-blue-50/50 border border-blue-100 p-5 rounded-xl">
+                                        <h3 className="text-sm font-bold text-blue-900 mb-4 flex items-center gap-2">
+                                            <Shield className="w-4 h-4" /> Hak Akses Bawaan Role
+                                        </h3>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                            {allPermissions.filter(p => isRoleDefault(p.code)).map((perm) => {
+                                                const override = userOverrides.find(o => o.code === perm.code);
+                                                const isRevoked = override?.granted === false;
+                                                const isEnabled = !isRevoked;
+
+                                                return (
+                                                    <div key={perm.code} className={`flex flex-col p-3.5 rounded-xl border transition-all ${isRevoked ? 'bg-red-50/50 border-red-200' : 'bg-white border-blue-100 shadow-sm hover:border-blue-300'}`}>
+                                                        <div className="flex items-start justify-between gap-3">
+                                                            <div className="min-w-0">
+                                                                <p className="text-sm font-semibold text-gray-900 leading-snug">{perm.name}</p>
+                                                                <p className="text-xs text-gray-500 mt-1 uppercase tracking-wider font-medium">{perm.category}</p>
+                                                                {isRevoked && <span className="inline-block mt-2 px-2 py-0.5 bg-red-100 text-red-700 text-[10px] font-bold rounded-md uppercase">Dicabut Khusus</span>}
+                                                            </div>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => togglePermission(perm.code)}
+                                                                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#0F4C81] focus:ring-offset-2 ${isEnabled ? 'bg-blue-500' : 'bg-gray-300'}`}
+                                                            >
+                                                                <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${isEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                            {allPermissions.filter(p => isRoleDefault(p.code)).length === 0 && (
+                                                <p className="text-sm text-gray-500 italic col-span-full py-2">Role ini tidak memiliki akses bawaan. Hak akses harus diberikan secara manual.</p>
+                                            )}
+                                        </div>
                                     </div>
 
-                                    {Object.entries(permissionsByCategory).map(([category, perms]) => (
-                                        <div key={category}>
-                                            <h3 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1.5">
-                                                <span className="w-1.5 h-1.5 rounded-full bg-[#0F4C81]" />
-                                                {category}
-                                            </h3>
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                                {perms.map((perm) => {
-                                                    const enabled = isPermissionEnabled(perm.code);
-                                                    const isDefault = isRoleDefault(perm.code);
-                                                    const override = userOverrides.find(o => o.code === perm.code);
-                                                    const hasCustomGrant = override?.granted === true;
-                                                    const hasCustomRevoke = override?.granted === false;
-
-                                                    let bgColor = 'bg-gray-50 border-gray-200';
-                                                    let checkColor = 'text-gray-300';
-
-                                                    if (enabled && isDefault && !hasCustomRevoke) {
-                                                        bgColor = 'bg-blue-50/50 border-blue-200';
-                                                        checkColor = 'text-blue-500';
-                                                    } else if (enabled && hasCustomGrant) {
-                                                        bgColor = 'bg-green-50/50 border-green-200';
-                                                        checkColor = 'text-green-500';
-                                                    } else if (!enabled && hasCustomRevoke) {
-                                                        bgColor = 'bg-red-50/50 border-red-200';
-                                                        checkColor = 'text-red-400';
-                                                    }
-
-                                                    return (
-                                                        <button
-                                                            key={perm.code}
-                                                            onClick={() => togglePermission(perm.code)}
-                                                            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-all text-left hover:shadow-sm ${bgColor}`}
-                                                        >
-                                                            <div className={`w-5 h-5 rounded flex items-center justify-center flex-shrink-0 ${checkColor}`}>
-                                                                {enabled ? (
-                                                                    <Check className="w-4 h-4" strokeWidth={3} />
-                                                                ) : (
-                                                                    <div className="w-4 h-4 rounded border-2 border-gray-300" />
-                                                                )}
-                                                            </div>
-                                                            <div className="min-w-0">
-                                                                <p className={`text-sm font-medium ${enabled ? 'text-gray-900' : 'text-gray-400'}`}>
-                                                                    {perm.name}
-                                                                </p>
-                                                                {hasCustomGrant && <span className="text-[10px] text-green-600 font-medium">CUSTOM</span>}
-                                                                {hasCustomRevoke && <span className="text-[10px] text-red-500 font-medium">DICABUT</span>}
-                                                            </div>
-                                                        </button>
-                                                    );
-                                                })}
+                                    <div className="bg-gray-50 border border-gray-200 p-5 rounded-xl">
+                                        <h3 className="text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                            <div className="w-5 h-5 bg-gray-200 rounded-md flex items-center justify-center">
+                                                <div className="w-2.5 h-2.5 bg-gray-500 rounded-sm" />
                                             </div>
+                                            Akses Tambahan Khusus
+                                        </h3>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                            {allPermissions.filter(p => !isRoleDefault(p.code)).map((perm) => {
+                                                const override = userOverrides.find(o => o.code === perm.code);
+                                                const isGranted = override?.granted === true;
+
+                                                return (
+                                                    <div key={perm.code} className={`flex flex-col p-3.5 rounded-xl border transition-all ${isGranted ? 'bg-green-50/50 border-green-200 shadow-sm' : 'bg-white border-gray-200 hover:border-gray-300'}`}>
+                                                        <div className="flex items-start justify-between gap-3">
+                                                            <div className="min-w-0">
+                                                                <p className={`text-sm font-semibold leading-snug ${isGranted ? 'text-gray-900' : 'text-gray-500'}`}>{perm.name}</p>
+                                                                <p className="text-xs text-gray-400 mt-1 uppercase tracking-wider font-medium">{perm.category}</p>
+                                                                {isGranted && <span className="inline-block mt-2 px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold rounded-md uppercase">Akses Ditambahkan</span>}
+                                                            </div>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => togglePermission(perm.code)}
+                                                                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#0F4C81] focus:ring-offset-2 ${isGranted ? 'bg-green-500' : 'bg-gray-300'}`}
+                                                            >
+                                                                <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${isGranted ? 'translate-x-5' : 'translate-x-0'}`} />
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                            {allPermissions.filter(p => !isRoleDefault(p.code)).length === 0 && (
+                                                <p className="text-sm text-gray-500 italic col-span-full py-2">Semua akses telah diberikan sebagai bawaan.</p>
+                                            )}
                                         </div>
-                                    ))}
+                                    </div>
                                 </div>
                             )}
                         </div>

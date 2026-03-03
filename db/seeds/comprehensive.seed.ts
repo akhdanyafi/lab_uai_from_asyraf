@@ -15,6 +15,7 @@ import {
     itemCategories, items, itemLoans,
     labAttendance,
     governanceDocs, publications, heroPhotos,
+    permissions, rolePermissions
 } from '@/db/schema';
 import bcrypt from 'bcryptjs';
 import { SEED_CONFIG, SAMPLE_DATA } from './seed.config';
@@ -68,7 +69,61 @@ export async function seedRoles() {
 }
 
 /**
- * 2. Seed Users (Admin, Dosen, Mahasiswa)
+ * 2. Seed Permissions & Role Permissions
+ */
+export async function seedPermissions() {
+    console.log('\n🔐 Seeding permissions...');
+
+    const existingPerms = await db.select().from(permissions);
+    if (existingPerms.length > 0) {
+        console.log('   ⏭️  Permissions already exist, skipping...');
+        return existingPerms;
+    }
+
+    const allRoles = await db.select().from(roles);
+    const adminRole = allRoles.find(r => r.name === 'Admin')!;
+    const dosenRole = allRoles.find(r => r.name === 'Dosen')!;
+
+    const permData = [
+        { code: 'dashboard.admin', name: 'Akses Dashboard Admin', category: 'General' },
+        { code: 'dashboard.lecturer', name: 'Akses Dashboard Dosen', category: 'General' },
+        { code: 'loans.manage', name: 'Validasi Peminjaman Alat', category: 'Loans' },
+        { code: 'bookings.manage', name: 'Validasi Booking Ruangan', category: 'Bookings' },
+        { code: 'users.manage', name: 'Manajemen Akun & Hak Akses', category: 'Users' },
+        { code: 'inventory.manage', name: 'Manajemen Inventaris Alat', category: 'Inventory' },
+        { code: 'courses.manage', name: 'Manajemen Mata Kuliah', category: 'Academic' },
+        { code: 'practicum.manage', name: 'Manajemen Modul & Jadwal Praktikum', category: 'Academic' },
+        { code: 'publications.manage', name: 'Manajemen Publikasi', category: 'Publications' },
+        { code: 'governance.manage', name: 'Manajemen SOP & Laporan LPJ', category: 'Governance' },
+    ];
+
+    await db.insert(permissions).values(permData);
+    const insertedPerms = await db.select().from(permissions);
+    console.log(`   ✅ Created ${insertedPerms.length} permissions`);
+
+    // Assign all to Admin
+    const adminPermData = insertedPerms.map(p => ({
+        roleId: adminRole.id,
+        permissionId: p.id
+    }));
+
+    // Assign specific academic access to Dosen
+    const dosenDefaultCodes = ['dashboard.lecturer', 'courses.manage', 'practicum.manage', 'publications.manage'];
+    const dosenPermData = insertedPerms
+        .filter(p => dosenDefaultCodes.includes(p.code))
+        .map(p => ({
+            roleId: dosenRole.id,
+            permissionId: p.id
+        }));
+
+    await db.insert(rolePermissions).values([...adminPermData, ...dosenPermData]);
+    console.log(`   ✅ Assingned permissions to Admin and Dosen roles`);
+
+    return insertedPerms;
+}
+
+/**
+ * 3. Seed Users (Admin, Dosen, Mahasiswa)
  */
 export async function seedUsers() {
     console.log('\n👥 Seeding users...');
@@ -98,6 +153,7 @@ export async function seedUsers() {
             roleId: adminRole.id,
             status: 'Active',
             dosenPembimbing: '-',
+            phoneNumber: '081200000000',
         });
         console.log('   ✅ Created admin user');
     }
@@ -117,6 +173,7 @@ export async function seedUsers() {
                 roleId: dosenRole.id,
                 status: 'Active',
                 dosenPembimbing: '-',
+                phoneNumber: `08121000${String(i + 1).padStart(3, '0')}`,
             });
         }
     }
@@ -143,6 +200,7 @@ export async function seedUsers() {
                 batch: 2024,
                 studyType: getRandomItem(['Reguler', 'Hybrid']),
                 dosenPembimbing: getRandomItem(lecturerNames),
+                phoneNumber: `08122000${String(i + 1).padStart(3, '0')}`,
             });
         }
     }
@@ -169,16 +227,16 @@ export async function seedCourses() {
     const lecturers = allUsers.filter(u => u.roleId === dosenRole.id);
 
     const courseData = [
-        { code: 'IF101', name: 'Algoritma Pemrograman', description: 'Dasar-dasar algoritma dan pemrograman komputer.', sks: 3, semester: 'Ganjil' as const, lecturerId: lecturers[0]?.id || null },
-        { code: 'IF102', name: 'Struktur Data', description: 'Konsep dan implementasi struktur data: array, linked list, tree, graph.', sks: 3, semester: 'Ganjil' as const, lecturerId: lecturers[1]?.id || null },
-        { code: 'IF201', name: 'Basis Data', description: 'Perancangan dan implementasi basis data relasional.', sks: 3, semester: 'Ganjil' as const, lecturerId: lecturers[2]?.id || null },
-        { code: 'IF202', name: 'Jaringan Komputer', description: 'Konsep jaringan komputer, protokol, dan implementasi.', sks: 3, semester: 'Ganjil' as const, lecturerId: lecturers[0]?.id || null },
-        { code: 'IF301', name: 'Rekayasa Perangkat Lunak', description: 'Metodologi pengembangan perangkat lunak dan software engineering.', sks: 3, semester: 'Genap' as const, lecturerId: lecturers[1]?.id || null },
-        { code: 'IF302', name: 'Kriptografi', description: 'Konsep dan implementasi algoritma kriptografi modern.', sks: 3, semester: 'Genap' as const, lecturerId: lecturers[2]?.id || null },
-        { code: 'IF303', name: 'Keamanan Komputer', description: 'Prinsip keamanan komputer, ethical hacking, dan cyber security.', sks: 3, semester: 'Genap' as const, lecturerId: lecturers[0]?.id || null },
-        { code: 'IF401', name: 'Komputasi Awan', description: 'Cloud computing: IaaS, PaaS, SaaS, dan deployment.', sks: 3, semester: 'Ganjil' as const, lecturerId: lecturers[1]?.id || null },
-        { code: 'IF402', name: 'Web Dinamis', description: 'Pengembangan aplikasi web dinamis dengan framework modern.', sks: 3, semester: 'Genap' as const, lecturerId: lecturers[2]?.id || null },
-        { code: 'IF403', name: 'Web Semantik', description: 'Konsep semantic web, ontologi, dan linked data.', sks: 3, semester: 'Genap' as const, lecturerId: lecturers[0]?.id || null },
+        { code: 'IF101', name: 'Algoritma Pemrograman', description: 'Dasar-dasar algoritma dan pemrograman komputer.', sks: 3, semester: 'Ganjil' as const, lecturerId: lecturers[0]?.identifier || null },
+        { code: 'IF102', name: 'Struktur Data', description: 'Konsep dan implementasi struktur data: array, linked list, tree, graph.', sks: 3, semester: 'Ganjil' as const, lecturerId: lecturers[1]?.identifier || null },
+        { code: 'IF201', name: 'Basis Data', description: 'Perancangan dan implementasi basis data relasional.', sks: 3, semester: 'Ganjil' as const, lecturerId: lecturers[2]?.identifier || null },
+        { code: 'IF202', name: 'Jaringan Komputer', description: 'Konsep jaringan komputer, protokol, dan implementasi.', sks: 3, semester: 'Ganjil' as const, lecturerId: lecturers[0]?.identifier || null },
+        { code: 'IF301', name: 'Rekayasa Perangkat Lunak', description: 'Metodologi pengembangan perangkat lunak dan software engineering.', sks: 3, semester: 'Genap' as const, lecturerId: lecturers[1]?.identifier || null },
+        { code: 'IF302', name: 'Kriptografi', description: 'Konsep dan implementasi algoritma kriptografi modern.', sks: 3, semester: 'Genap' as const, lecturerId: lecturers[2]?.identifier || null },
+        { code: 'IF303', name: 'Keamanan Komputer', description: 'Prinsip keamanan komputer, ethical hacking, dan cyber security.', sks: 3, semester: 'Genap' as const, lecturerId: lecturers[0]?.identifier || null },
+        { code: 'IF401', name: 'Komputasi Awan', description: 'Cloud computing: IaaS, PaaS, SaaS, dan deployment.', sks: 3, semester: 'Ganjil' as const, lecturerId: lecturers[1]?.identifier || null },
+        { code: 'IF402', name: 'Web Dinamis', description: 'Pengembangan aplikasi web dinamis dengan framework modern.', sks: 3, semester: 'Genap' as const, lecturerId: lecturers[2]?.identifier || null },
+        { code: 'IF403', name: 'Web Semantik', description: 'Konsep semantic web, ontologi, dan linked data.', sks: 3, semester: 'Genap' as const, lecturerId: lecturers[0]?.identifier || null },
     ];
 
     await db.insert(courses).values(courseData);
@@ -354,7 +412,7 @@ export async function seedRoomBookings() {
         endDate.setHours(startDate.getHours() + 2);
 
         bookingData.push({
-            userId: student.id,
+            userId: student.identifier,
             roomId: room.id,
             startTime: startDate,
             endTime: endDate,
@@ -408,7 +466,7 @@ export async function seedItemLoans() {
         returnPlanDate.setDate(returnPlanDate.getDate() + i + 3);
 
         loanData.push({
-            studentId: student.id,
+            studentId: student.identifier,
             itemId: item.id,
             requestDate: requestDate,
             returnPlanDate: returnPlanDate,
@@ -489,10 +547,10 @@ export async function seedGovernanceDocs() {
     });
 
     const docData = [
-        { type: 'SOP' as const, title: 'SOP Peminjaman Alat Lab', filePath: '/uploads/governance/sop-1.pdf', coverPath: '/uploads/governance/covers/sop-1.png', adminId: adminUser!.id },
-        { type: 'SOP' as const, title: 'SOP Penggunaan Ruangan', filePath: '/uploads/governance/sop-2.pdf', coverPath: '/uploads/governance/covers/sop-2.png', adminId: adminUser!.id },
-        { type: 'LPJ Bulanan' as const, title: 'LPJ Januari 2024', filePath: '/uploads/governance/lpj-bulanan-3.pdf', coverPath: '/uploads/governance/covers/lpj-bulanan-3.png', adminId: adminUser!.id },
-        { type: 'LPJ Bulanan' as const, title: 'LPJ Februari 2024', filePath: '/uploads/governance/lpj-bulanan-4.pdf', coverPath: '/uploads/governance/covers/lpj-bulanan-4.png', adminId: adminUser!.id },
+        { type: 'SOP' as const, title: 'SOP Peminjaman Alat Lab', filePath: '/uploads/governance/sop-1.pdf', coverPath: '/uploads/governance/covers/sop-1.png', adminId: adminUser!.identifier },
+        { type: 'SOP' as const, title: 'SOP Penggunaan Ruangan', filePath: '/uploads/governance/sop-2.pdf', coverPath: '/uploads/governance/covers/sop-2.png', adminId: adminUser!.identifier },
+        { type: 'LPJ Bulanan' as const, title: 'LPJ Januari 2024', filePath: '/uploads/governance/lpj-bulanan-3.pdf', coverPath: '/uploads/governance/covers/lpj-bulanan-3.png', adminId: adminUser!.identifier },
+        { type: 'LPJ Bulanan' as const, title: 'LPJ Februari 2024', filePath: '/uploads/governance/lpj-bulanan-4.pdf', coverPath: '/uploads/governance/covers/lpj-bulanan-4.png', adminId: adminUser!.identifier },
     ];
 
     await db.insert(governanceDocs).values(docData);
@@ -547,6 +605,7 @@ export async function runComprehensiveSeed() {
 
     try {
         await seedRoles();
+        await seedPermissions();
         await seedUsers();
         await seedCourses();
         await seedPracticumModules();

@@ -10,9 +10,8 @@ interface Role {
 }
 
 interface Lecturer {
-    id: number;
-    fullName: string;
     identifier: string;
+    fullName: string;
 }
 
 interface UserFormProps {
@@ -72,7 +71,7 @@ export default function UserForm({ roles, lecturers, initialData, onSuccess, onC
                     }
 
                     if (isEdit) {
-                        await updateUser(initialData.id, data);
+                        await updateUser(initialData.identifier, data);
                     } else {
                         if (!data.passwordHash) throw new Error('Password wajib diisi untuk user baru');
                         await createUser(data);
@@ -189,7 +188,7 @@ export default function UserForm({ roles, lecturers, initialData, onSuccess, onC
                             >
                                 <option value="">Pilih Dosen Pembimbing</option>
                                 {lecturers.map(lecturer => (
-                                    <option key={lecturer.id} value={lecturer.fullName}>
+                                    <option key={lecturer.identifier} value={lecturer.fullName}>
                                         {lecturer.fullName} ({lecturer.identifier})
                                     </option>
                                 ))}

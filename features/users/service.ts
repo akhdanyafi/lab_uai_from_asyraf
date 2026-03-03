@@ -39,9 +39,8 @@ export class UserService {
     static async getAll() {
         const allUsers = await db
             .select({
-                id: users.id,
-                fullName: users.fullName,
                 identifier: users.identifier,
+                fullName: users.fullName,
                 email: users.email,
                 roleId: users.roleId,
                 roleName: roles.name,
@@ -71,9 +70,8 @@ export class UserService {
     static async getLecturers() {
         const lecturers = await db
             .select({
-                id: users.id,
-                fullName: users.fullName,
                 identifier: users.identifier,
+                fullName: users.fullName,
             })
             .from(users)
             .innerJoin(roles, eq(users.roleId, roles.id))
@@ -107,10 +105,10 @@ export class UserService {
     /**
      * Update an existing user
      */
-    static async update(id: number, data: UpdateUserInput) {
+    static async update(id: string, data: UpdateUserInput) {
         const existing = await db.query.users.findFirst({
             where: (users, { or, eq, and, ne }) => and(
-                ne(users.id, id),
+                ne(users.identifier, id),
                 or(
                     eq(users.identifier, data.identifier),
                     eq(users.email, data.email)
@@ -130,14 +128,14 @@ export class UserService {
             delete updateData.passwordHash;
         }
 
-        await db.update(users).set(updateData).where(eq(users.id, id));
+        await db.update(users).set(updateData).where(eq(users.identifier, id));
     }
 
     /**
      * Delete a user
      */
-    static async delete(id: number) {
-        await db.delete(users).where(eq(users.id, id));
+    static async delete(id: string) {
+        await db.delete(users).where(eq(users.identifier, id));
     }
 
     /**
@@ -145,9 +143,8 @@ export class UserService {
      */
     static async getPending() {
         return await db.select({
-            id: users.id,
-            fullName: users.fullName,
             identifier: users.identifier,
+            fullName: users.fullName,
             email: users.email,
             createdAt: users.createdAt,
             role: roles.name,
@@ -160,16 +157,16 @@ export class UserService {
     /**
      * Update user status
      */
-    static async updateStatus(userId: number, status: 'Active' | 'Rejected') {
+    static async updateStatus(userId: string, status: 'Active' | 'Rejected') {
         await db.update(users)
             .set({ status })
-            .where(eq(users.id, userId));
+            .where(eq(users.identifier, userId));
     }
 
     /**
      * Get user by ID with role
      */
-    static async getById(userId: number) {
+    static async getById(userId: string) {
         const usersWithRoles = await db
             .select({
                 user: users,
@@ -177,7 +174,7 @@ export class UserService {
             })
             .from(users)
             .leftJoin(roles, eq(users.roleId, roles.id))
-            .where(eq(users.id, userId))
+            .where(eq(users.identifier, userId))
             .limit(1);
 
         return usersWithRoles[0] || null;
@@ -200,10 +197,10 @@ export class UserService {
     /**
      * Check if identifier is unique (excluding a specific user)
      */
-    static async isIdentifierUnique(identifier: string, excludeUserId?: number) {
+    static async isIdentifierUnique(identifier: string, excludeUserId?: string) {
         const conditions = [eq(users.identifier, identifier)];
         if (excludeUserId) {
-            conditions.push(ne(users.id, excludeUserId));
+            conditions.push(ne(users.identifier, excludeUserId));
         }
 
         const existing = await db.query.users.findFirst({
@@ -216,10 +213,10 @@ export class UserService {
     /**
      * Check if email is unique (excluding a specific user)
      */
-    static async isEmailUnique(email: string, excludeUserId?: number) {
+    static async isEmailUnique(email: string, excludeUserId?: string) {
         const conditions = [eq(users.email, email)];
         if (excludeUserId) {
-            conditions.push(ne(users.id, excludeUserId));
+            conditions.push(ne(users.identifier, excludeUserId));
         }
 
         const existing = await db.query.users.findFirst({

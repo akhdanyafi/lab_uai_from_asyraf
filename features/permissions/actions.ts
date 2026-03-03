@@ -9,30 +9,30 @@ export async function getAllPermissions() {
     return PermissionService.getAllPermissions();
 }
 
-export async function getUserPermissionOverrides(userId: number) {
+export async function getUserPermissionOverrides(userId: string) {
     await requirePermission('users.manage');
     return PermissionService.getUserOverrides(userId);
 }
 
-export async function getEffectivePermissions(userId: number, roleId: number) {
+export async function getEffectivePermissions(userId: string, roleId: number) {
     await requirePermission('users.manage');
     return PermissionService.getEffectivePermissions(userId, roleId);
 }
 
-export async function setUserPermission(userId: number, permissionCode: string, granted: boolean) {
+export async function setUserPermission(userId: string, permissionCode: string, granted: boolean) {
     await requirePermission('users.manage');
     await PermissionService.setUserPermission(userId, permissionCode, granted);
     revalidatePath('/admin/validations');
 }
 
-export async function removeUserPermission(userId: number, permissionCode: string) {
+export async function removeUserPermission(userId: string, permissionCode: string) {
     await requirePermission('users.manage');
     await PermissionService.removeUserPermission(userId, permissionCode);
     revalidatePath('/admin/validations');
 }
 
 export async function updateUserPermissions(
-    userId: number,
+    userId: string,
     permissionOverrides: { code: string; granted: boolean }[]
 ) {
     await requirePermission('users.manage');
