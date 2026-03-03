@@ -13,6 +13,13 @@ export async function getCourses() {
 }
 
 /**
+ * Get courses for a specific lecturer
+ */
+export async function getCoursesByLecturerId(lecturerId: number) {
+    return CourseService.getByLecturerId(lecturerId);
+}
+
+/**
  * Get course by ID
  */
 export async function getCourseById(id: number) {

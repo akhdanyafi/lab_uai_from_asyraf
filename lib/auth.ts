@@ -41,6 +41,20 @@ export async function requirePermission(permission: string) {
 }
 
 /**
+ * Require ANY of the specified permissions. Throws if user has none.
+ */
+export async function requireAnyPermission(permissions: string[]) {
+    const session = await getSession();
+    if (!session) {
+        throw new Error('Unauthorized: Not logged in');
+    }
+    if (!hasAnyPermission(session, permissions)) {
+        throw new Error(`Unauthorized: One of [${permissions.join(', ')}] permissions required`);
+    }
+    return session;
+}
+
+/**
  * Check if session has a specific permission (non-throwing).
  */
 export function hasPermission(session: any, permission: string): boolean {

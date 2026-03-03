@@ -33,6 +33,30 @@ export class CourseService {
     }
 
     /**
+     * Get all courses for a specific lecturer
+     */
+    static async getByLecturerId(lecturerId: number) {
+        const results = await db
+            .select({
+                id: courses.id,
+                code: courses.code,
+                name: courses.name,
+                description: courses.description,
+                sks: courses.sks,
+                semester: courses.semester,
+                lecturerId: courses.lecturerId,
+                createdAt: courses.createdAt,
+                lecturerName: users.fullName,
+            })
+            .from(courses)
+            .leftJoin(users, eq(courses.lecturerId, users.id))
+            .where(eq(courses.lecturerId, lecturerId))
+            .orderBy(desc(courses.createdAt));
+
+        return results;
+    }
+
+    /**
      * Get course by ID with lecturer info
      */
     static async getById(id: number) {

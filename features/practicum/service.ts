@@ -31,6 +31,28 @@ export class PracticumService {
     }
 
     /**
+     * Get all modules for courses taught by a specific lecturer
+     */
+    static async getByLecturerId(lecturerId: number) {
+        return await db
+            .select({
+                id: practicumModules.id,
+                courseId: practicumModules.courseId,
+                name: practicumModules.name,
+                description: practicumModules.description,
+                filePath: practicumModules.filePath,
+                createdAt: practicumModules.createdAt,
+                updatedAt: practicumModules.updatedAt,
+                courseName: courses.name,
+                courseCode: courses.code,
+            })
+            .from(practicumModules)
+            .leftJoin(courses, eq(practicumModules.courseId, courses.id))
+            .where(eq(courses.lecturerId, lecturerId))
+            .orderBy(desc(practicumModules.createdAt));
+    }
+
+    /**
      * Get module by ID with course info
      */
     static async getById(id: number) {

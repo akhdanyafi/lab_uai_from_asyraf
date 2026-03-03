@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition, useMemo } from 'react';
-import { BookOpen, Plus, Trash2, Edit, Upload, X, Search, FileText, ExternalLink } from 'lucide-react';
+import { BookOpen, Plus, Trash2, Edit, Upload, X, Search, FileText, ExternalLink, LayoutGrid, List as ListIcon } from 'lucide-react';
 import { createModule, updateModule, deleteModule } from '@/features/practicum/actions';
 import type { PracticumModuleWithCourse } from '@/features/practicum/types';
 import type { CourseWithLecturer } from '@/features/courses/types';
@@ -22,25 +22,42 @@ export default function ModuleManager({ modules, courses }: ModuleManagerProps) 
     const [searchQuery, setSearchQuery] = useState('');
     const [filterCourseId, setFilterCourseId] = useState('');
 
+    // Pagination & View Mode
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+    const [currentPage, setCurrentPage] = useState(1);
+    const perPage = 12;
+
     // Filtered modules
     const filteredModules = useMemo(() => {
         return modules.filter(m => {
-            // Search filter
             if (searchQuery) {
                 const query = searchQuery.toLowerCase();
-                if (!m.name.toLowerCase().includes(query)) {
-                    return false;
-                }
+                if (!m.name.toLowerCase().includes(query)) return false;
             }
-            // Course filter
             if (filterCourseId) {
-                if (m.courseId !== parseInt(filterCourseId)) {
-                    return false;
-                }
+                if (m.courseId !== parseInt(filterCourseId)) return false;
             }
             return true;
         });
     }, [modules, searchQuery, filterCourseId]);
+
+    // Apply pagination
+    const totalPages = Math.ceil(filteredModules.length / perPage);
+    const paginatedModules = useMemo(() => {
+        const startIndex = (currentPage - 1) * perPage;
+        return filteredModules.slice(startIndex, startIndex + perPage);
+    }, [filteredModules, currentPage, perPage]);
+
+    // Navigate back to page 1 if search/filter changes
+    const handleSearchChange = (val: string) => {
+        setSearchQuery(val);
+        setCurrentPage(1);
+    };
+
+    const handleCourseFilterChange = (val: string) => {
+        setFilterCourseId(val);
+        setCurrentPage(1);
+    };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -249,7 +266,7 @@ export default function ModuleManager({ modules, courses }: ModuleManagerProps) 
             )}
 
             {/* Search & Filter */}
-            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mt-6">
                 <div className="flex flex-col md:flex-row gap-3">
                     <div className="flex-1 relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -257,14 +274,14 @@ export default function ModuleManager({ modules, courses }: ModuleManagerProps) 
                             type="text"
                             placeholder="Cari modul..."
                             value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                            onChange={(e) => handleSearchChange(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#0F4C81]/20"
                         />
                     </div>
                     <select
                         value={filterCourseId}
-                        onChange={(e) => setFilterCourseId(e.target.value)}
-                        className="px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 min-w-[180px]"
+                        onChange={(e) => handleCourseFilterChange(e.target.value)}
+                        className="px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#0F4C81]/20 min-w-[180px]"
                     >
                         <option value="">Semua Mata Kuliah</option>
                         {courses.map(course => (
@@ -272,65 +289,210 @@ export default function ModuleManager({ modules, courses }: ModuleManagerProps) 
                         ))}
                     </select>
                 </div>
-                <p className="text-xs text-gray-500 mt-2">
-                    Menampilkan {filteredModules.length} dari {modules.length} modul
-                </p>
             </div>
 
-            {/* Module List */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredModules.map((module) => (
-                    <div key={module.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow">
-                        <div className="flex items-start justify-between mb-3">
-                            <div className="flex items-center gap-2">
-                                <BookOpen className="w-5 h-5 text-[#0F4C81]" />
-                                <h3 className="font-semibold text-gray-900 line-clamp-1">{module.name}</h3>
+            {/* Toolbar */}
+            <div className="flex items-center justify-between mb-4">
+                <p className="text-xs text-gray-500">
+                    Menampilkan {filteredModules.length > 0 ? (currentPage - 1) * perPage + 1 : 0}-{Math.min(currentPage * perPage, filteredModules.length)} dari {filteredModules.length} modul
+                </p>
+                <div className="flex items-center bg-gray-100 rounded-lg p-0.5">
+                    <button
+                        onClick={() => setViewMode('grid')}
+                        className={`p-1.5 rounded ${viewMode === 'grid' ? 'bg-white shadow-sm text-[#0F4C81]' : 'text-gray-500 hover:text-gray-700'}`} title="Tampilan Grid">
+                        <LayoutGrid className="w-4 h-4" />
+                    </button>
+                    <button
+                        onClick={() => setViewMode('list')}
+                        className={`p-1.5 rounded ${viewMode === 'list' ? 'bg-white shadow-sm text-[#0F4C81]' : 'text-gray-500 hover:text-gray-700'}`} title="Tampilan List">
+                        <ListIcon className="w-4 h-4" />
+                    </button>
+                </div>
+            </div>
+
+            {/* Module Content */}
+            {filteredModules.length === 0 ? (
+                <div className="bg-white text-center py-12 rounded-xl border border-gray-100 shadow-sm text-gray-500">
+                    <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+                    <p className="text-sm">
+                        {searchQuery || filterCourseId ? 'Tidak ada modul yang sesuai filter.' : 'Belum ada modul praktikum.'}
+                    </p>
+                </div>
+            ) : viewMode === 'list' ? (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                            <thead className="bg-gray-50 border-b border-gray-100">
+                                <tr>
+                                    <th className="text-left px-6 py-3 font-semibold text-gray-600">Nama Modul</th>
+                                    <th className="text-left px-6 py-3 font-semibold text-gray-600">Mata Kuliah</th>
+                                    <th className="text-left px-6 py-3 font-semibold text-gray-600">File Modul</th>
+                                    <th className="text-right px-6 py-3 font-semibold text-gray-600">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-50">
+                                {paginatedModules.map((module) => (
+                                    <tr key={module.id} className="hover:bg-gray-50/50 transition-colors">
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center gap-2">
+                                                <BookOpen className="w-4 h-4 text-[#0F4C81]" />
+                                                <div className="font-medium text-gray-900">{module.name}</div>
+                                            </div>
+                                            {module.description && (
+                                                <p className="text-xs text-gray-500 mt-1 line-clamp-1">{module.description}</p>
+                                            )}
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            {module.courseName ? (
+                                                <span className="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
+                                                    {module.courseCode} - {module.courseName}
+                                                </span>
+                                            ) : (
+                                                <span className="text-gray-400 text-xs">-</span>
+                                            )}
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            {module.filePath ? (
+                                                <a
+                                                    href={module.filePath}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="inline-flex items-center gap-1 text-[#0F4C81] hover:underline hover:text-blue-800 text-xs font-medium bg-blue-50/50 px-2 py-1 rounded"
+                                                >
+                                                    <ExternalLink className="w-3 h-3" />
+                                                    Lihat File
+                                                </a>
+                                            ) : (
+                                                <span className="text-gray-400 text-xs italic">Tidak ada file</span>
+                                            )}
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex justify-end gap-1">
+                                                <button
+                                                    onClick={() => handleEdit(module)}
+                                                    className="text-blue-500 hover:text-blue-700 p-1.5 hover:bg-blue-50 rounded-lg transition-colors"
+                                                    title="Edit"
+                                                >
+                                                    <Edit className="w-4 h-4" />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(module.id)}
+                                                    className="text-red-500 hover:text-red-700 p-1.5 hover:bg-red-50 rounded-lg transition-colors"
+                                                    title="Hapus"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {paginatedModules.map((module) => (
+                        <div key={module.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow">
+                            <div className="flex items-start justify-between mb-3">
+                                <div className="flex items-center gap-2">
+                                    <BookOpen className="w-5 h-5 text-[#0F4C81]" />
+                                    <h3 className="font-semibold text-gray-900 line-clamp-1">{module.name}</h3>
+                                </div>
+                                <div className="flex gap-1 ml-2 flex-shrink-0">
+                                    <button
+                                        onClick={() => handleEdit(module)}
+                                        className="text-blue-500 hover:text-blue-700 p-1.5 hover:bg-blue-50 rounded-lg transition-colors"
+                                        title="Edit"
+                                    >
+                                        <Edit className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                        onClick={() => handleDelete(module.id)}
+                                        className="text-red-500 hover:text-red-700 p-1.5 hover:bg-red-50 rounded-lg transition-colors"
+                                        title="Hapus"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
+                                </div>
                             </div>
-                            <div className="flex gap-1">
-                                <button
-                                    onClick={() => handleEdit(module)}
-                                    className="text-blue-500 hover:text-blue-700 p-1.5 hover:bg-blue-50 rounded-lg transition-colors"
-                                    title="Edit"
-                                >
-                                    <Edit className="w-4 h-4" />
-                                </button>
-                                <button
-                                    onClick={() => handleDelete(module.id)}
-                                    className="text-red-500 hover:text-red-700 p-1.5 hover:bg-red-50 rounded-lg transition-colors"
-                                    title="Hapus"
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                </button>
+                            {module.description && (
+                                <p className="text-sm text-gray-600 mb-3 line-clamp-2">{module.description}</p>
+                            )}
+                            <div className="flex items-end justify-between mt-4 top-auto">
+                                <div>
+                                    {module.courseName && (
+                                        <div className="mb-2">
+                                            <span className="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
+                                                {module.courseCode} - {module.courseName}
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+                                <div>
+                                    {module.filePath && (
+                                        <a
+                                            href={module.filePath}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center gap-1 text-xs font-medium text-[#0F4C81] hover:text-blue-800 bg-blue-50/50 hover:bg-blue-100 px-2.5 py-1.5 rounded-lg transition-colors"
+                                        >
+                                            <ExternalLink className="w-3.5 h-3.5" />
+                                            File
+                                        </a>
+                                    )}
+                                </div>
                             </div>
                         </div>
-                        {module.description && (
-                            <p className="text-sm text-gray-600 mb-3 line-clamp-2">{module.description}</p>
-                        )}
-                        {module.courseName && (
-                            <div className="mb-3">
-                                <span className="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700">
-                                    {module.courseCode} - {module.courseName}
-                                </span>
-                            </div>
-                        )}
-                        {module.filePath && (
-                            <a
-                                href={module.filePath}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 text-sm text-[#0F4C81] hover:underline"
-                            >
-                                <ExternalLink className="w-3 h-3" />
-                                Lihat File
-                            </a>
-                        )}
-                    </div>
-                ))}
-            </div>
+                    ))}
+                </div>
+            )}
 
-            {filteredModules.length === 0 && (
-                <div className="text-center py-12 text-gray-500">
-                    {searchQuery || filterCourseId ? 'Tidak ada modul yang sesuai filter.' : 'Belum ada modul praktikum.'}
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-2 mt-6">
+                    <button
+                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        disabled={currentPage === 1}
+                        className={`px-4 py-2 rounded-lg text-sm transition-colors ${currentPage === 1
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                            }`}
+                    >
+                        ← Sebelumnya
+                    </button>
+
+                    {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+                        let pageNum: number;
+                        if (totalPages <= 7) pageNum = i + 1;
+                        else if (currentPage <= 4) pageNum = i + 1;
+                        else if (currentPage >= totalPages - 3) pageNum = totalPages - 6 + i;
+                        else pageNum = currentPage - 3 + i;
+
+                        return (
+                            <button
+                                key={pageNum}
+                                onClick={() => setCurrentPage(pageNum)}
+                                className={`px-3 py-2 rounded-lg text-sm transition-colors ${pageNum === currentPage
+                                    ? 'bg-[#0F4C81] text-white'
+                                    : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                                    }`}
+                            >
+                                {pageNum}
+                            </button>
+                        );
+                    })}
+
+                    <button
+                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                        disabled={currentPage === totalPages}
+                        className={`px-4 py-2 rounded-lg text-sm transition-colors ${currentPage === totalPages
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                            }`}
+                    >
+                        Selanjutnya →
+                    </button>
                 </div>
             )}
         </div>

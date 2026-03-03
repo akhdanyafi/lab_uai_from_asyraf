@@ -46,7 +46,7 @@ interface Lecturer {
     fullName: string;
 }
 
-export default function ItemCard({ item, userId, variant = 'grid' }: { item: any; userId: number; variant?: 'grid' | 'list' }) {
+export default function ItemCard({ item, userId, variant = 'grid', role = 'student' }: { item: any; userId: number; variant?: 'grid' | 'list', role?: 'student' | 'lecturer' }) {
     const [showModal, setShowModal] = useState(false);
     const [loading, setLoading] = useState(false);
     const router = useRouter();
@@ -301,23 +301,25 @@ export default function ItemCard({ item, userId, variant = 'grid' }: { item: any
                                 </div>
 
                                 {/* Dosen Pembimbing */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-                                        <GraduationCap className="w-4 h-4" /> Dosen Pembimbing
-                                    </label>
-                                    <select
-                                        value={dosenPembimbing}
-                                        onChange={(e) => setDosenPembimbing(e.target.value)}
-                                        className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm"
-                                    >
-                                        <option value="">-- Pilih Dosen --</option>
-                                        {lecturers.map(lecturer => (
-                                            <option key={lecturer.id} value={lecturer.fullName}>
-                                                {lecturer.fullName}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
+                                {role === 'student' && (
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                                            <GraduationCap className="w-4 h-4" /> Dosen Pembimbing
+                                        </label>
+                                        <select
+                                            value={dosenPembimbing}
+                                            onChange={(e) => setDosenPembimbing(e.target.value)}
+                                            className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm"
+                                        >
+                                            <option value="">-- Pilih Dosen --</option>
+                                            {lecturers.map(lecturer => (
+                                                <option key={lecturer.id} value={lecturer.fullName}>
+                                                    {lecturer.fullName}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
 
                                 {/* Tanggal Peminjaman */}
                                 <div>

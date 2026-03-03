@@ -14,6 +14,13 @@ export async function getScheduledPracticums() {
 }
 
 /**
+ * Get scheduled practicums for a specific lecturer's courses
+ */
+export async function getScheduledPracticumsByLecturerId(lecturerId: number) {
+    return ScheduledPracticumService.getByLecturerId(lecturerId);
+}
+
+/**
  * Get scheduled practicum by ID
  */
 export async function getScheduledPracticumById(id: number) {

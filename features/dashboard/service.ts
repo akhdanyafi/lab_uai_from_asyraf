@@ -245,6 +245,32 @@ export class DashboardService {
     static async getLecturerDashboard(userId: number, showLPJ: boolean = false) {
         const today = new Date();
 
+        const activeLoansRaw = await db
+            .select({
+                loan: itemLoans,
+                item: items,
+                category: itemCategories,
+                room: rooms,
+            })
+            .from(itemLoans)
+            .leftJoin(items, eq(itemLoans.itemId, items.id))
+            .leftJoin(itemCategories, eq(items.categoryId, itemCategories.id))
+            .leftJoin(rooms, eq(items.roomId, rooms.id))
+            .where(and(
+                eq(itemLoans.studentId, userId),
+                eq(itemLoans.status, 'Disetujui')
+            ))
+            .orderBy(itemLoans.returnPlanDate);
+
+        const activeLoans = activeLoansRaw.map(row => ({
+            ...row.loan,
+            item: {
+                ...row.item!,
+                category: row.category!,
+                room: row.room!,
+            },
+        }));
+
         const upcomingBookingsRaw = await db
             .select({
                 booking: roomBookings,
@@ -262,6 +288,23 @@ export class DashboardService {
         const upcomingBookings = upcomingBookingsRaw.map(row => ({
             ...row.booking,
             room: row.room!,
+        }));
+
+        const pendingRequestsRaw = await db
+            .select({
+                loan: itemLoans,
+                item: items,
+            })
+            .from(itemLoans)
+            .leftJoin(items, eq(itemLoans.itemId, items.id))
+            .where(and(
+                eq(itemLoans.studentId, userId),
+                eq(itemLoans.status, 'Pending')
+            ));
+
+        const pendingRequests = pendingRequestsRaw.map(row => ({
+            ...row.loan,
+            item: row.item!,
         }));
 
         // Fetch LPJ documents if user has governance.view permission
@@ -284,7 +327,9 @@ export class DashboardService {
         }
 
         return {
+            activeLoans,
             upcomingBookings,
+            pendingRequests,
             totalBookings: upcomingBookings.length,
             latestLPJ,
         };

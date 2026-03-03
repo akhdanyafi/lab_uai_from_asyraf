@@ -12,6 +12,7 @@ interface StudentItemsManagerProps {
     myLoans: any[];
     userId: number;
     initialTab?: 'items' | 'loans';
+    role?: 'student' | 'lecturer';
 }
 
 export default function StudentItemsManager({
@@ -20,7 +21,8 @@ export default function StudentItemsManager({
     rooms,
     myLoans,
     userId,
-    initialTab = 'items'
+    initialTab = 'items',
+    role = 'student'
 }: StudentItemsManagerProps) {
     const [activeTab, setActiveTab] = useState<'items' | 'loans'>(initialTab);
 
@@ -59,8 +61,8 @@ export default function StudentItemsManager({
                 <button
                     onClick={() => setActiveTab('items')}
                     className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'items'
-                            ? 'bg-white text-[#0F4C81] shadow-sm'
-                            : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'
+                        ? 'bg-white text-[#0F4C81] shadow-sm'
+                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'
                         }`}
                 >
                     <Box className="w-4 h-4" />
@@ -69,8 +71,8 @@ export default function StudentItemsManager({
                 <button
                     onClick={() => setActiveTab('loans')}
                     className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'loans'
-                            ? 'bg-white text-[#0F4C81] shadow-sm'
-                            : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'
+                        ? 'bg-white text-[#0F4C81] shadow-sm'
+                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'
                         }`}
                 >
                     <ClipboardList className="w-4 h-4" />
@@ -194,7 +196,7 @@ export default function StudentItemsManager({
                                                 <td className="px-4 py-4 text-right">
                                                     {/* We use the same ItemCard logic, but wrap it minimally. Alternatively, we can render the ItemCard button but in List view style. */}
                                                     {/* It's easier to just use ItemCard component and hide its card styling, but since it has a modal inside, we could just render a slim version. Let's just create a wrapper or use the ItemCard directly. Since ItemCard requires its own wrapper to look good in grid, we'll need to adapt it. Wait, the modal state is inside ItemCard. We can just render the ItemCard with a "variant" or extract the modal. For now, since ItemCard has all the complex loan request logic, let's just render the `Ajukan Peminjaman` button that opens a modal. Since we don't want to duplicate 400 lines of modal logic, let's keep the grid view rendering for now until we refactor ItemCard, OR we can conditionally pass `variant="list"` to ItemCard. Let's refactor ItemCard next. */}
-                                                    <ItemCard item={item} userId={userId} variant="list" />
+                                                    <ItemCard item={item} userId={userId} variant="list" role={role} />
                                                 </td>
                                             </tr>
                                         ))}
@@ -204,7 +206,7 @@ export default function StudentItemsManager({
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {filteredItems.map(item => (
-                                    <ItemCard key={item.id} item={item} userId={userId} variant="grid" />
+                                    <ItemCard key={item.id} item={item} userId={userId} variant="grid" role={role} />
                                 ))}
                             </div>
                         )}

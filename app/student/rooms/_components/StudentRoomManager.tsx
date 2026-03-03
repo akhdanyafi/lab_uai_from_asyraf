@@ -10,6 +10,7 @@ interface StudentRoomManagerProps {
     calendarBookings: any[];
     practicumSchedules: any[];
     userId: number;
+    role?: 'student' | 'lecturer';
 }
 
 export default function StudentRoomManager({
@@ -17,7 +18,8 @@ export default function StudentRoomManager({
     myBookings,
     calendarBookings,
     practicumSchedules,
-    userId
+    userId,
+    role = 'student'
 }: StudentRoomManagerProps) {
     const [activeTab, setActiveTab] = useState<'booking' | 'history'>('booking');
 
@@ -46,8 +48,8 @@ export default function StudentRoomManager({
                 <button
                     onClick={() => setActiveTab('booking')}
                     className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'booking'
-                            ? 'bg-white text-[#0F4C81] shadow-sm'
-                            : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'
+                        ? 'bg-white text-[#0F4C81] shadow-sm'
+                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'
                         }`}
                 >
                     <CalendarDays className="w-4 h-4" />
@@ -56,8 +58,8 @@ export default function StudentRoomManager({
                 <button
                     onClick={() => setActiveTab('history')}
                     className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'history'
-                            ? 'bg-white text-[#0F4C81] shadow-sm'
-                            : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'
+                        ? 'bg-white text-[#0F4C81] shadow-sm'
+                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'
                         }`}
                 >
                     <ClipboardList className="w-4 h-4" />
@@ -78,6 +80,7 @@ export default function StudentRoomManager({
                         calendarBookings={calendarBookings}
                         practicumSchedules={practicumSchedules}
                         userId={userId}
+                        userRole={role === 'lecturer' ? 'Dosen' : 'Mahasiswa'}
                     />
                 )}
 

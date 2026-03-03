@@ -1,11 +1,11 @@
 import { getPublications } from '@/features/publications/actions';
-import { getSession, hasPermission } from '@/lib/auth';
+import { getSession, hasAnyPermission } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import PublicationManager from '@/features/publications/components/PublicationManager';
 
 export default async function LecturerPublicationsPage() {
     const session = await getSession();
-    if (!session || !hasPermission(session, 'publications.manage')) {
+    if (!session || !hasAnyPermission(session, ['publications.manage', 'dashboard.lecturer'])) {
         redirect('/login');
     }
 

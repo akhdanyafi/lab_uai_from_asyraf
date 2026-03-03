@@ -50,6 +50,38 @@ export class ScheduledPracticumService {
     }
 
     /**
+     * Get scheduled practicums for a specific lecturer's courses
+     */
+    static async getByLecturerId(lecturerId: number) {
+        return await db
+            .select({
+                id: scheduledPracticums.id,
+                courseId: scheduledPracticums.courseId,
+                roomId: scheduledPracticums.roomId,
+                moduleId: scheduledPracticums.moduleId,
+                createdBy: scheduledPracticums.createdBy,
+                dayOfWeek: scheduledPracticums.dayOfWeek,
+                startTime: scheduledPracticums.startTime,
+                endTime: scheduledPracticums.endTime,
+                scheduledDate: scheduledPracticums.scheduledDate,
+                status: scheduledPracticums.status,
+                createdAt: scheduledPracticums.createdAt,
+                courseName: courses.name,
+                courseCode: courses.code,
+                roomName: rooms.name,
+                moduleName: practicumModules.name,
+                createdByName: users.fullName,
+            })
+            .from(scheduledPracticums)
+            .leftJoin(courses, eq(scheduledPracticums.courseId, courses.id))
+            .leftJoin(rooms, eq(scheduledPracticums.roomId, rooms.id))
+            .leftJoin(practicumModules, eq(scheduledPracticums.moduleId, practicumModules.id))
+            .leftJoin(users, eq(scheduledPracticums.createdBy, users.id))
+            .where(eq(courses.lecturerId, lecturerId))
+            .orderBy(scheduledPracticums.scheduledDate, scheduledPracticums.dayOfWeek);
+    }
+
+    /**
      * Get by ID with details
      */
     static async getById(id: number) {

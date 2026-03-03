@@ -2,6 +2,7 @@
 
 import { useState, useTransition, useMemo, useCallback } from 'react';
 import { Plus, Trash2, Edit, X, Clock, MapPin, ChevronLeft, ChevronRight, BookOpen } from 'lucide-react';
+import TimeSelect from '@/components/shared/TimeSelect';
 import { createScheduledPracticum, updateScheduledPracticum, deleteScheduledPracticum } from '@/features/scheduled-practicum/actions';
 import type { ScheduledPracticumWithDetails } from '@/features/scheduled-practicum/types';
 import { DAY_NAMES } from '@/features/scheduled-practicum/types';
@@ -73,6 +74,8 @@ export default function ScheduledPracticumManager({ schedules, courses, modules,
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
     const [selectedCourseId, setSelectedCourseId] = useState<string>('');
+    const [startTime, setStartTime] = useState('08:00');
+    const [endTime, setEndTime] = useState('10:00');
 
     // Map: dateKey → schedules (by scheduledDate)
     const dateMap = useMemo(() => {
@@ -111,6 +114,8 @@ export default function ScheduledPracticumManager({ schedules, courses, modules,
         setFormDate(formatDateStr(selectedDate));
         setEditing(null);
         setSelectedCourseId('');
+        setStartTime('08:00');
+        setEndTime('10:00');
         setShowForm(true);
     };
 
@@ -160,6 +165,8 @@ export default function ScheduledPracticumManager({ schedules, courses, modules,
     const handleEdit = (s: ScheduledPracticumWithDetails) => {
         setEditing(s);
         setSelectedCourseId(String(s.courseId));
+        setStartTime(s.startTime);
+        setEndTime(s.endTime);
         setFormDate('');
         setShowForm(true);
     };
@@ -461,16 +468,20 @@ export default function ScheduledPracticumManager({ schedules, courses, modules,
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Jam Mulai *</label>
-                                    <input name="startTime" type="time" required
-                                        defaultValue={editing?.startTime || '08:00'}
-                                        className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-200"
+                                    <TimeSelect
+                                        name="startTime"
+                                        value={startTime}
+                                        onChange={setStartTime}
+                                        required
                                     />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Jam Selesai *</label>
-                                    <input name="endTime" type="time" required
-                                        defaultValue={editing?.endTime || '10:00'}
-                                        className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-200"
+                                    <TimeSelect
+                                        name="endTime"
+                                        value={endTime}
+                                        onChange={setEndTime}
+                                        required
                                     />
                                 </div>
                             </div>
