@@ -129,6 +129,11 @@ export default function ItemCard({ item, userId, variant = 'grid', role = 'stude
                     suratIzinPath = uploadData.path;
                     isVerified = uploadData.verification?.valid === true;
                     setSuratVerified(isVerified);
+
+                    // Log OCR usage for debugging
+                    if (uploadData.verification?.ocrUsed) {
+                        console.log(`[ItemCard] OCR was used. Method: ${uploadData.verification.extractionMethod}, Score: ${uploadData.verification.score}%`);
+                    }
                 }
             }
 
@@ -173,7 +178,7 @@ export default function ItemCard({ item, userId, variant = 'grid', role = 'stude
             const statusMessage = suratIzinPath && isVerified
                 ? 'Permintaan peminjaman berhasil! Surat izin terverifikasi, peminjaman langsung disetujui.'
                 : suratIzinPath && !isVerified
-                    ? 'Permintaan peminjaman berhasil dikirim! Surat izin perlu review manual oleh admin.'
+                    ? 'Permintaan peminjaman berhasil dikirim! Surat izin tidak dapat diverifikasi otomatis dan akan divalidasi manual oleh admin.'
                     : 'Permintaan peminjaman berhasil dikirim! Mohon tunggu validasi dari admin.';
             alert(statusMessage);
 

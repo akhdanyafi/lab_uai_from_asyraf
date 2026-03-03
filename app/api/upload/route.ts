@@ -78,6 +78,8 @@ export async function POST(request: NextRequest) {
                             matchedKeywords: [],
                             missingKeywords: [],
                             reason: result.reason,
+                            ocrUsed: false,
+                            extractionMethod: 'text',
                         },
                     });
                 }

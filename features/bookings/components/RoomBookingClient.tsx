@@ -153,6 +153,11 @@ export default function RoomBookingClient({ rooms, calendarBookings, practicumSc
                     suratPermohonanPath = uploadData.path;
                     isVerified = uploadData.verification?.valid === true;
                     setSuratVerified(isVerified);
+
+                    // Log OCR usage for debugging
+                    if (uploadData.verification?.ocrUsed) {
+                        console.log(`[RoomBooking] OCR was used. Method: ${uploadData.verification.extractionMethod}, Score: ${uploadData.verification.score}%`);
+                    }
                 }
             }
 
@@ -179,7 +184,7 @@ export default function RoomBookingClient({ rooms, calendarBookings, practicumSc
             const statusMessage = suratPermohonanPath && isVerified
                 ? 'Booking berhasil! Surat terverifikasi, pengajuan langsung disetujui.'
                 : suratPermohonanPath && !isVerified
-                    ? 'Booking berhasil diajukan! Surat perlu review manual oleh admin.'
+                    ? 'Booking berhasil diajukan! Surat tidak dapat diverifikasi otomatis dan akan divalidasi manual oleh admin.'
                     : 'Booking berhasil diajukan! Mohon tunggu validasi dari admin.';
             alert(statusMessage);
 
